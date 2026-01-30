@@ -1,39 +1,54 @@
 <template>
   <view class="container">
-    <!-- 搜索栏 -->
+    <!-- 搜索栏 (Floating Style) -->
     <view class="search-bar">
-      <u-search placeholder="输入姓名或手机号查找" v-model="keyword" :showAction="false" @search="onSearch"></u-search>
+      <u-search placeholder="搜索姓名或手机号" v-model="keyword" :showAction="false" bg-color="#F5F7FA" height="36" @search="onSearch"></u-search>
     </view>
 
     <!-- 筛选栏 -->
     <view class="filter-bar">
-      <u-tabs :list="tabs" :current="currentTab" @change="onTabChange" lineColor="#FF4D6A" activeColor="#FF4D6A"></u-tabs>
+      <u-tabs :list="tabs" :current="currentTab" @change="onTabChange" 
+        lineColor="#FF5E5E" 
+        activeColor="#FF5E5E" 
+        inactiveColor="#909399"
+        :itemStyle="{ height: '44px' }"
+      ></u-tabs>
     </view>
 
     <!-- 客户列表 -->
     <view class="client-list">
       <view class="client-card" v-for="(item, index) in clientList" :key="index" @click="goDetail(item.id)">
         <view class="card-left">
-          <u-avatar :src="item.avatar" size="50"></u-avatar>
+          <u-avatar :src="item.avatar" size="48" :sex-icon="item.gender === 1 ? 'man' : 'woman'"></u-avatar>
         </view>
         <view class="card-center">
-          <view class="name-row">
+          <view class="header-row">
             <text class="name">{{ item.name }}</text>
-            <u-icon :name="item.gender === 1 ? 'man' : 'woman'" :color="item.gender === 1 ? '#2979ff' : '#FF4D6A'" size="16"></u-icon>
-            <text class="age" v-if="item.birthday">{{ calculateAge(item.birthday) }}岁</text>
+            <view class="status-badge" :class="item.gender === 1 ? 'male' : 'female'">
+              <u-icon :name="item.gender === 1 ? 'man' : 'woman'" size="10" color="#fff"></u-icon>
+              <text class="age">{{ calculateAge(item.birthday) }}岁</text>
+            </view>
           </view>
+          
+          <view class="info-row">
+            <text>{{ getEducationText(item.education) }}</text>
+            <text class="divider">·</text>
+            <text>{{ item.height }}cm</text>
+            <text class="divider">·</text>
+            <text>{{ item.income }}元</text>
+          </view>
+          
           <view class="tags-row">
-            <u-tag :text="getEducationText(item.education)" size="mini" type="info" plain v-if="item.education"></u-tag>
-            <u-tag :text="item.height + 'cm'" size="mini" type="info" plain v-if="item.height"></u-tag>
-            <u-tag :text="item.income + '元'" size="mini" type="warning" plain v-if="item.income"></u-tag>
+            <view class="tag" v-if="item.profession">{{ item.profession }}</view>
+            <view class="tag" v-if="item.house_status === 1">有房</view>
           </view>
         </view>
+        
         <view class="card-right">
-          <!-- 状态暂时写死 -->
-          <u-tag text="待匹配" size="mini" type="primary"></u-tag>
+           <u-icon name="arrow-right" color="#DCDFE6" size="16"></u-icon>
         </view>
       </view>
-      <u-loadmore :status="loadStatus" @loadmore="loadMore" />
+      <u-loadmore :status="loadStatus" @loadmore="loadMore" color="#C0C4CC" />
     </view>
   </view>
 </template>
@@ -45,12 +60,12 @@ import { onReachBottom, onPullDownRefresh } from '@dcloudio/uni-app';
 
 const keyword = ref('');
 const currentTab = ref(0);
-const tabs = [{ name: '全部' }, { name: '男宾' }, { name: '女宾' }]; // VIP 暂未实现
+const tabs = [{ name: '全部' }, { name: '男宾' }, { name: '女宾' }];
 
 const clientList = ref<Client[]>([]);
 const page = ref(1);
 const pageSize = 10;
-const loadStatus = ref('loadmore'); // loadmore, loading, nomore
+const loadStatus = ref('loadmore');
 
 const fetchData = async (refresh = false) => {
   if (refresh) {
@@ -69,7 +84,6 @@ const fetchData = async (refresh = false) => {
       name: keyword.value
     };
     
-    // Gender Filter
     if (currentTab.value === 1) params.gender = 1;
     if (currentTab.value === 2) params.gender = 2;
 
@@ -121,7 +135,6 @@ onPullDownRefresh(() => {
   fetchData(true);
 });
 
-// Helper functions
 const calculateAge = (birthday: string) => {
   if (!birthday) return 0;
   const birthDate = new Date(birthday);
@@ -144,53 +157,103 @@ const getEducationText = (level: number) => {
 
 .search-bar {
   background: #fff;
-  padding: 10px 15px;
+  padding: 8px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .filter-bar {
   background: #fff;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #F2F3F5;
+  margin-bottom: 10px;
 }
 
 .client-list {
-  padding: 10px 15px;
+  padding: 0 16px 16px;
 
   .client-card {
     background: #fff;
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 10px;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    box-shadow: $uni-shadow-base;
+    transition: all 0.2s;
+    
+    &:active {
+        transform: scale(0.98);
+    }
 
     .card-left {
-      margin-right: 15px;
+      margin-right: 12px;
     }
 
     .card-center {
       flex: 1;
       
-      .name-row {
+      .header-row {
         display: flex;
         align-items: center;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
         
         .name {
           font-size: 16px;
-          font-weight: bold;
+          font-weight: 600;
+          color: $uni-text-color;
           margin-right: 8px;
         }
-        .age {
-          font-size: 12px;
-          color: #999;
-          margin-left: 5px;
+        
+        .status-badge {
+            display: flex;
+            align-items: center;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            color: #fff;
+            
+            &.male { background: #3E7BFA; }
+            &.female { background: #FF5E5E; }
+            
+            .age { margin-left: 2px; }
         }
+      }
+      
+      .info-row {
+          font-size: 13px;
+          color: $uni-text-color-grey;
+          margin-bottom: 8px;
+          display: flex;
+          align-items: center;
+          
+          .divider {
+              margin: 0 6px;
+              color: #E4E7ED;
+              font-weight: bold;
+          }
       }
 
       .tags-row {
         display: flex;
-        gap: 5px;
+        flex-wrap: wrap;
+        gap: 6px;
+        
+        .tag {
+            font-size: 11px;
+            color: #606266;
+            background: #F5F7FA;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
       }
+    }
+    
+    .card-right {
+        display: flex;
+        align-items: center;
+        align-self: center;
+        margin-left: 8px;
     }
   }
 }
