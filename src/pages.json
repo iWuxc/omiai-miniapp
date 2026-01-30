@@ -1,0 +1,63 @@
+{
+  "pages": [
+    {
+      "path": "pages/home/index",
+      "style": {
+        "navigationBarTitleText": "红娘工作台",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/client/list",
+      "style": {
+        "navigationBarTitleText": "客户资源池",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/form/index",
+      "style": {
+        "navigationBarTitleText": "录入档案",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/client/detail",
+      "style": {
+        "navigationBarTitleText": "客户详情"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "红娘助手",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "color": "#909399",
+    "selectedColor": "#FF4D6A",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "工作台",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/client/list",
+        "text": "客户池",
+        "iconPath": "static/tabbar/client.png",
+        "selectedIconPath": "static/tabbar/client-active.png"
+      },
+      {
+        "pagePath": "pages/form/index",
+        "text": "录入",
+        "iconPath": "static/tabbar/add.png",
+        "selectedIconPath": "static/tabbar/add-active.png"
+      }
+    ]
+  }
+}
