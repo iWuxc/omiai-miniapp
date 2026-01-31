@@ -119,7 +119,11 @@ const onTabChange = (item: any) => {
   fetchData(true);
 };
 
-const goDetail = (id: number) => {
+const goDetail = (id?: number) => {
+  if (!id) {
+    uni.showToast({ title: '缺少客户信息', icon: 'none' });
+    return;
+  }
   uni.navigateTo({ url: `/pages/client/detail?id=${id}` });
 };
 
@@ -143,9 +147,9 @@ const calculateAge = (birthday: string) => {
   return Math.abs(ageDate.getUTCFullYear() - 1970);
 };
 
-const getEducationText = (level: number) => {
+const getEducationText = (level?: number) => {
   const map: any = { 1: '高中', 2: '大专', 3: '本科', 4: '硕士', 5: '博士' };
-  return map[level] || '未知';
+  return map[level ?? 0] || '未知';
 };
 </script>
 
