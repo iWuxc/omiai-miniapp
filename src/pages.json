@@ -52,6 +52,13 @@
       "style": {
         "navigationBarTitleText": "匹配详情"
       }
+    },
+    {
+      "path": "pages/auth/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {

@@ -48,13 +48,21 @@
             </u-radio-group>
           </u-form-item>
 
-          <u-form-item label="出生日期" prop="birthday" required borderBottom @click="showCalendar = true">
-            <u-input v-model="form.birthday" placeholder="请选择日期" disabled disabledColor="#fff" border="none"></u-input>
+          <u-form-item label="出生年月" prop="birthday" required borderBottom @click="showCalendar = true">
+            <u-input v-model="form.birthday" placeholder="请选择YYYY-MM" disabled disabledColor="#fff" border="none"></u-input>
             <u-icon slot="right" name="calendar" :color="primaryColor" size="18"></u-icon>
           </u-form-item>
 
+          <u-form-item label="年龄" prop="age" required borderBottom>
+            <u-input v-model="form.age" type="number" placeholder="请输入您的年龄" border="none"></u-input>
+          </u-form-item>
+
+          <u-form-item label="属相" prop="zodiac" required borderBottom>
+            <u-input v-model="form.zodiac" placeholder="例如：猴" border="none"></u-input>
+          </u-form-item>
+
           <u-form-item label="联系电话" prop="phone" required borderBottom>
-            <u-input v-model="form.phone" type="number" placeholder="请输入手机号" border="none"></u-input>
+            <u-input v-model="form.phone" type="number" placeholder="请输入11位手机号" border="none" maxlength="11"></u-input>
           </u-form-item>
 
           <view class="section-title mt-30">
@@ -64,18 +72,18 @@
 
           <view class="row">
              <view class="col">
-                <u-form-item label="身高(cm)" prop="height" borderBottom labelWidth="60">
+                <u-form-item label="身高(cm)" prop="height" required borderBottom labelWidth="60">
                   <u-input v-model="form.height" type="number" placeholder="0" border="none"></u-input>
                 </u-form-item>
              </view>
              <view class="col">
-                <u-form-item label="体重(kg)" prop="weight" borderBottom labelWidth="60">
+                <u-form-item label="体重(kg)" prop="weight" required borderBottom labelWidth="60">
                   <u-input v-model="form.weight" type="number" placeholder="0" border="none"></u-input>
                 </u-form-item>
              </view>
           </view>
 
-          <u-form-item label="最高学历" prop="education" borderBottom>
+          <u-form-item label="最高学历" prop="education" required borderBottom>
             <u-radio-group v-model="form.education">
               <u-radio label="大专" :name="2" :activeColor="primaryColor" style="margin-right: 8px"></u-radio>
               <u-radio label="本科" :name="3" :activeColor="primaryColor" style="margin-right: 8px"></u-radio>
@@ -84,24 +92,66 @@
             </u-radio-group>
           </u-form-item>
 
-          <u-form-item label="婚姻状况" prop="marital_status" borderBottom>
+          <u-form-item label="婚姻状况" prop="marital_status" required borderBottom>
             <u-radio-group v-model="form.marital_status">
               <u-radio label="未婚" :name="1" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
-              <u-radio label="离异" :name="2" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
-              <u-radio label="丧偶" :name="3" :activeColor="primaryColor"></u-radio>
+              <u-radio label="已婚" :name="2" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
+              <u-radio label="离异" :name="3" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
+              <u-radio label="丧偶" :name="4" :activeColor="primaryColor"></u-radio>
             </u-radio-group>
           </u-form-item>
           
-          <u-form-item label="月收入" prop="income" borderBottom>
+          <u-form-item label="月收入(元)" prop="income" required borderBottom>
             <u-input v-model="form.income" type="number" placeholder="请输入月收入" border="none"></u-input>
           </u-form-item>
 
-          <u-form-item label="现居城市" prop="address" borderBottom>
-            <u-input v-model="form.address" placeholder="例如：上海市浦东新区" border="none"></u-input>
+          <u-form-item label="家庭住址" prop="address" required borderBottom>
+            <u-input v-model="form.address" placeholder="省市区+详细地址" border="none"></u-input>
           </u-form-item>
 
-          <u-form-item label="具体职业" prop="profession" borderBottom>
-            <u-input v-model="form.profession" placeholder="例如：互联网产品经理" border="none"></u-input>
+          <u-form-item label="工作单位" prop="work_unit" required borderBottom>
+            <u-input v-model="form.work_unit" placeholder="具体工作单位" border="none"></u-input>
+          </u-form-item>
+
+          <u-form-item label="职位" prop="position" required borderBottom>
+            <u-input v-model="form.position" placeholder="具体职位" border="none"></u-input>
+          </u-form-item>
+
+          <u-form-item label="房产情况" prop="house_status" required borderBottom>
+            <u-radio-group v-model="form.house_status">
+              <u-radio label="无房" :name="1" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
+              <u-radio label="已购房" :name="2" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
+              <u-radio label="贷款购房" :name="3" :activeColor="primaryColor"></u-radio>
+            </u-radio-group>
+          </u-form-item>
+
+          <u-form-item label="买房地址" prop="house_address" v-if="form.house_status === 2 || form.house_status === 3" required borderBottom>
+            <u-input v-model="form.house_address" placeholder="请输入您的购房详细地址" border="none"></u-input>
+          </u-form-item>
+
+          <u-form-item label="车辆情况" prop="car_status" required borderBottom>
+            <u-radio-group v-model="form.car_status">
+              <u-radio label="无车" :name="1" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
+              <u-radio label="有车" :name="2" :activeColor="primaryColor"></u-radio>
+            </u-radio-group>
+          </u-form-item>
+
+          <u-form-item label="家庭成员" prop="family_description" required labelPosition="top">
+            <u-textarea 
+              v-model="form.family_description" 
+              placeholder="请填写：关系+姓名+年龄" 
+              height="80" 
+              :customStyle="{ background: '#F7F8FA', border: 'none', borderRadius: '12px', padding: '12px', marginTop: '8px' }"
+            ></u-textarea>
+          </u-form-item>
+
+          <u-form-item label="对另一半要求" prop="partner_requirements" required labelPosition="top">
+            <u-textarea 
+              v-model="form.partner_requirements" 
+              placeholder="年龄范围、学历要求、身高要求、其他要求..." 
+              height="100" 
+              :customStyle="{ background: '#F7F8FA', border: 'none', borderRadius: '12px', padding: '12px', marginTop: '8px' }"
+            ></u-textarea>
           </u-form-item>
 
           <u-form-item label="自我介绍" prop="remark" labelPosition="top">
@@ -153,6 +203,7 @@
     </view>
     
     <u-calendar :show="showCalendar" @confirm="onCalendarConfirm" @close="showCalendar = false" :color="primaryColor"></u-calendar>
+    <u-modal :show="showConfirm" title="确认提交" content="请核对您的信息是否准确，提交后红娘姐姐将开始为您牵线匹配" @confirm="confirmSubmit" @cancel="showConfirm = false" showCancelButton></u-modal>
     
     <!-- 提交成功弹窗 -->
     <u-modal :show="showSuccess" title="提交成功" content="红娘姐姐已收到您的资料，会尽快为您匹配哦！" @confirm="onSuccessConfirm"></u-modal>
@@ -173,11 +224,14 @@ const showSuccess = ref(false);
 
 const avatarList = ref<any[]>([]);
 const photoList = ref<any[]>([]);
+const showConfirm = ref(false);
 
 const form = reactive({
   name: '',
   gender: 1,
   birthday: '',
+  age: undefined,
+  zodiac: '',
   avatar: '',
   height: undefined,
   weight: undefined,
@@ -186,15 +240,25 @@ const form = reactive({
   education: 3,
   marital_status: 1,
   address: '',
-  profession: '',
-  remark: '',
+  work_unit: '',
+  position: '',
+  house_status: 1,
+  house_address: '',
+  car_status: 1,
+  family_description: '',
   partner_requirements: '',
+  remark: '',
   photos: ''
 });
 
 const onCalendarConfirm = (e: any) => {
   showCalendar.value = false;
-  form.birthday = e[0];
+  // 格式化为 YYYY-MM
+  const date = e[0];
+  if (date) {
+    const parts = date.split('-');
+    form.birthday = `${parts[0]}-${parts[1]}`;
+  }
 };
 
 const validateFile = (file: any) => {
@@ -263,18 +327,36 @@ const syncPhotos = () => {
   form.photos = JSON.stringify(urls);
 };
 
-const submit = async () => {
-  if (!form.name || !form.phone || !form.birthday) {
-    uni.showToast({ title: '请填写必选项', icon: 'none' });
+const submit = () => {
+  if (!form.name || !form.phone || !form.birthday || !form.age || !form.zodiac || 
+      !form.height || !form.weight || !form.income || !form.address || 
+      !form.work_unit || !form.position || !form.family_description || !form.partner_requirements) {
+    uni.showToast({ title: '请填写所有必填项', icon: 'none' });
+    return;
+  }
+
+  if ((form.house_status === 2 || form.house_status === 3) && !form.house_address) {
+    uni.showToast({ title: '请输入买房地址', icon: 'none' });
     return;
   }
   
+  if (form.phone.length !== 11) {
+    uni.showToast({ title: '请输入11位手机号', icon: 'none' });
+    return;
+  }
+
+  showConfirm.value = true;
+};
+
+const confirmSubmit = async () => {
+  showConfirm.value = false;
   submitting.value = true;
   try {
     const payload: any = { ...form };
     if (payload.height) payload.height = Number(payload.height);
     if (payload.weight) payload.weight = Number(payload.weight);
     if (payload.income) payload.income = Number(payload.income);
+    if (payload.age) payload.age = Number(payload.age);
     
     await createClient(payload);
     showSuccess.value = true;

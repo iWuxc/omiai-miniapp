@@ -16,11 +16,13 @@ http.setConfig((config) => {
 
 // 请求拦截器
 http.interceptors.request.use((config) => {
-  // 可在此注入 Token
-  // const token = uni.getStorageSync('token');
-  // if (token) {
-  //   config.header.Authorization = `Bearer ${token}`;
-  // }
+  const token = uni.getStorageSync('token');
+  if (token) {
+    if (!config.header) {
+      config.header = {};
+    }
+    config.header.Authorization = `Bearer ${token}`;
+  }
   return config;
 }, (config) => {
   return Promise.reject(config);
@@ -29,10 +31,15 @@ http.interceptors.request.use((config) => {
 // 响应拦截器
 http.interceptors.response.use((response) => {
   const { data } = response;
-  // 假设后端返回格式: { code: 0, message: "ok", data: {} }
   if (data.code === 0) {
-    return data.data; // 直接返回 data 字段
+    return data.data; 
   } else {
+    // 处理 Token 失效
+    if (data.code === 10001) { // 假设 10001 是 Token 失效的错误码
+      uni.removeStorageSync('token');
+      uni.reLaunch({ url: '/pages/auth/login' });
+    }
+    
     uni.showToast({
       title: data.message || '请求失败',
       icon: 'none'
@@ -40,6 +47,11 @@ http.interceptors.response.use((response) => {
     return Promise.reject(data);
   }
 }, (response) => {
+  if (response.statusCode === 401) {
+    uni.removeStorageSync('token');
+    uni.reLaunch({ url: '/pages/auth/login' });
+  }
+  
   uni.showToast({
     title: '网络请求错误',
     icon: 'none'
