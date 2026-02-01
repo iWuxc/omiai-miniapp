@@ -1,36 +1,52 @@
 <template>
   <view class="container">
-    <view class="header-bg"></view>
+    <!-- 1) 顶部背景 (中式温馨：品牌色渐变) - 改为直接作为背景或置顶节点 -->
+    <view class="header-bg-fixed"></view>
+
+    <!-- 0) 自定义导航栏 (透明 -> 白色) -->
+    <view class="nav-bar">
+      <view class="back-btn" @click="goBack">
+        <u-icon name="arrow-left" size="20" color="#fff"></u-icon>
+      </view>
+      <text class="nav-title">客户详情</text>
+    </view>
     
-    <view class="profile-card">
+    <!-- 2) 核心资料卡片 (中式亲和力：圆润阴影卡片) -->
+    <view class="profile-card omiai-card fade-in">
       <view class="avatar-box">
-        <u-avatar :src="client.avatar" size="88" :sex-icon="client.gender === 1 ? 'man' : 'woman'"></u-avatar>
+        <u-avatar :src="client.avatar" size="90" shape="circle"></u-avatar>
+        <view class="gender-tag" :class="client.gender === 1 ? 'male' : 'female'">
+          <u-icon :name="client.gender === 1 ? 'man' : 'woman'" size="12" color="#fff"></u-icon>
+        </view>
       </view>
       <view class="info-box">
-        <text class="name">{{ client.name }}</text>
+        <text class="omiai-title-xl">{{ client.name }}</text>
         <view class="tags">
-          <view class="tag">{{ calculateAge(client.birthday) }}岁</view>
-          <view class="tag" v-if="client.zodiac">{{ client.zodiac }}</view>
-          <view class="tag" v-if="client.education">{{ getEducationText(client.education) }}</view>
-          <view class="tag highlight" v-if="client.marital_status">{{ getMaritalStatusText(client.marital_status) }}</view>
+          <text class="tag-item">{{ client.age }}岁</text>
+          <text class="tag-item" v-if="client.zodiac">{{ client.zodiac }}</text>
+          <text class="tag-item" v-if="client.education">{{ getEducationText(client.education) }}</text>
+          <text class="tag-item highlight" v-if="client.marital_status">{{ getMaritalStatusText(client.marital_status) }}</text>
         </view>
       </view>
     </view>
 
-    <view class="tab-container">
+    <!-- 3) 选项卡 (品牌一致性) -->
+    <view class="tab-container fade-in">
       <u-tabs :list="tabs" :current="currentTab" @change="onTabChange" 
-        lineColor="#FF5E5E" 
-        activeColor="#FF5E5E" 
-        inactiveColor="#909399"
-        :itemStyle="{ height: '48px', fontSize: '15px' }"
+        :lineColor="primaryColor" 
+        :activeColor="primaryColor" 
+        inactiveColor="#86909C"
+        :itemStyle="{ height: '50px', fontSize: '15px', fontWeight: '500' }"
       ></u-tabs>
     </view>
     
     <view class="content">
-      <!-- Tab 1: 基本资料 -->
-      <view v-if="currentTab === 0" class="info-section animate__animated animate__fadeIn">
-        <!-- 详细资料 -->
-        <view class="section-title">基础档案</view>
+      <!-- Tab 1: 档案详情 -->
+      <view v-if="currentTab === 0" class="info-section fade-in">
+        <view class="section-title">
+          <view class="title-line"></view>
+          <text>详细画像</text>
+        </view>
         <view class="grid-info">
           <view class="grid-item">
             <text class="label">身高</text>
@@ -42,10 +58,10 @@
           </view>
           <view class="grid-item">
             <text class="label">月收入</text>
-            <text class="value">{{ client.income ? client.income : '-' }}</text>
+            <text class="value">{{ client.income ? client.income + '元' : '-' }}</text>
           </view>
           <view class="grid-item">
-            <text class="label">职业</text>
+            <text class="label">具体工作</text>
             <text class="value">{{ client.profession || '-' }}</text>
           </view>
           <view class="grid-item full">
@@ -53,66 +69,85 @@
             <text class="value">{{ getAssetsText(client) }}</text>
           </view>
           <view class="grid-item full">
-            <text class="label">居住地址</text>
+            <text class="label">家庭住址</text>
             <text class="value">{{ client.address || '未填写' }}</text>
           </view>
         </view>
 
-        <!-- 独白与家庭 -->
-        <view class="section-title mt-30">自我介绍</view>
-        <view class="text-box">
-          {{ client.remark || '暂无介绍' }}
+        <view class="section-title mt-30">
+          <view class="title-line"></view>
+          <text>自我介绍</text>
+        </view>
+        <view class="text-box omiai-text-md">
+          {{ client.remark || '暂无详细介绍' }}
         </view>
         
-        <view class="section-title mt-30" v-if="client.family_description">家庭背景</view>
-        <view class="text-box" v-if="client.family_description">
-          {{ client.family_description }}
+        <view v-if="client.family_description">
+          <view class="section-title mt-30">
+            <view class="title-line"></view>
+            <text>家庭背景</text>
+          </view>
+          <view class="text-box omiai-text-md">
+            {{ client.family_description }}
+          </view>
         </view>
 
-        <view class="section-title mt-30" v-if="client.partner_requirements">择偶标准</view>
-        <view class="text-box" v-if="client.partner_requirements">
-          {{ client.partner_requirements }}
+        <view v-if="client.partner_requirements">
+          <view class="section-title mt-30">
+            <view class="title-line"></view>
+            <text>择偶标准</text>
+          </view>
+          <view class="text-box omiai-text-md">
+            {{ client.partner_requirements }}
+          </view>
         </view>
         
         <view class="contact-actions">
-           <u-button type="info" plain shape="circle" icon="phone" text="拨打电话" @click="makePhoneCall(client.phone)"></u-button>
+           <u-button 
+             customStyle="background: #F2F3F5; color: #1D2129; border: none; border-radius: 999rpx; height: 48px; font-weight: 500;" 
+             icon="phone-fill" 
+             @click="makePhoneCall(client.phone)"
+           >联系客户</u-button>
         </view>
       </view>
       
-      <!-- Tab 2: 匹配结果 -->
-      <view v-if="currentTab === 1" class="match-section animate__animated animate__fadeIn">
-        <u-empty mode="list" text="暂无匹配记录" v-if="matchList.length === 0">
-          <u-button slot="bottom" type="primary" size="small" shape="circle" color="#FF5E5E" @click="match" style="margin-top: 20px;">立即开始匹配</u-button>
-        </u-empty>
+      <!-- Tab 2: 智能匹配 -->
+      <view v-if="currentTab === 1" class="match-section fade-in">
+        <view v-if="matchList.length === 0" class="empty-box">
+          <u-empty mode="search" text="暂无匹配结果" icon-color="#F2F3F5">
+            <u-button slot="bottom" @click="match" class="omiai-btn-primary" customStyle="margin-top: 24px; width: 180px;">立即智能匹配</u-button>
+          </u-empty>
+        </view>
         
         <view class="match-list" v-else>
            <view class="match-header">
-             <text>匹配到 {{ matchList.length }} 位嘉宾</text>
+             <text class="omiai-text-sm">匹配到 {{ matchList.length }} 位理想嘉宾</text>
              <view class="refresh-btn" @click="match">
-               <u-icon name="refresh" color="#FF5E5E" size="14"></u-icon>
-               <text>刷新</text>
+               <u-icon name="reload" :color="primaryColor" size="14"></u-icon>
+               <text>重新匹配</text>
              </view>
            </view>
 
-           <view class="client-card" v-for="(item, index) in matchList" :key="index" @click="goDetail(item.id)">
-            <view class="card-left">
-              <u-avatar :src="item.avatar" size="48" :sex-icon="item.gender === 1 ? 'man' : 'woman'"></u-avatar>
-            </view>
-            <view class="card-center">
-              <view class="header-row">
-                <text class="name">{{ item.name }}</text>
-                <text class="age">{{ calculateAge(item.birthday) }}岁</text>
+           <view class="match-card omiai-card" v-for="(item, index) in matchList" :key="index" @click="goDetail(item.id)">
+            <view class="card-body">
+              <view class="avatar-box">
+                <u-avatar :src="item.avatar" size="60" shape="circle"></u-avatar>
               </view>
-              <view class="info-row">
-                 <text>{{ getEducationText(item.education) }}</text>
-                 <text class="divider">·</text>
-                 <text>{{ item.height ? item.height + 'cm' : '-' }}</text>
-                 <text class="divider">·</text>
-                 <text>{{ item.income ? item.income : '-' }}</text>
+              <view class="info-box">
+                <view class="name-row">
+                  <text class="omiai-title-lg">{{ item.name }}</text>
+                  <text class="age-info">{{ item.age }}岁</text>
+                </view>
+                <view class="detail-row omiai-text-sm">
+                   <text>{{ getEducationText(item.education) }}</text>
+                   <text class="sep">·</text>
+                   <text>{{ item.height }}cm</text>
+                </view>
               </view>
-            </view>
-            <view class="card-right">
-              <view class="match-score">98%</view>
+              <view class="score-box">
+                <view class="score-val">98<text class="unit">%</text></view>
+                <text class="score-label">匹配度</text>
+              </view>
             </view>
           </view>
         </view>
@@ -121,7 +156,12 @@
     
     <view class="footer-placeholder"></view>
     <view class="footer" v-if="currentTab === 0">
-      <u-button type="primary" shape="circle" color="#FF5E5E" :loading="matching" @click="match" customStyle="box-shadow: 0 4px 12px rgba(255, 94, 94, 0.3);">一键智能匹配</u-button>
+      <u-button 
+        :loading="matching" 
+        @click="match" 
+        class="omiai-btn-primary"
+        customStyle="height: 50px; font-size: 16px; border: none;"
+      >一键智能匹配</u-button>
     </view>
   </view>
 </template>
@@ -131,12 +171,17 @@ import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { getClientDetail, matchClient, type Client } from '@/api/client';
 
+const primaryColor = '#FF5E78';
 const client = ref<Client>({} as Client);
 const matchList = ref<Client[]>([]);
 const currentTab = ref(0);
 const tabs = [{ name: '档案详情' }, { name: '智能匹配' }];
 const matching = ref(false);
 const clientId = ref<number>(0);
+
+const goBack = () => {
+  uni.navigateBack();
+};
 
 onLoad(async (options: any) => {
   if (options.id) {
@@ -159,28 +204,20 @@ const onTabChange = (item: any) => {
 };
 
 const match = async () => {
-  console.log('Match clicked, clientId:', clientId.value);
-  if (!clientId.value) {
-    uni.showToast({ title: '未找到客户ID', icon: 'none' });
-    return;
-  }
+  if (!clientId.value) return;
   
   matching.value = true;
   try {
-    console.log('Calling matchClient API...');
     const res: any = await matchClient(clientId.value);
-    console.log('Match result:', res);
-    
     matchList.value = res.list || [];
     currentTab.value = 1; 
     
     if (matchList.value.length > 0) {
-        uni.showToast({ title: `匹配成功`, icon: 'success' });
+        uni.showToast({ title: '匹配成功', icon: 'success' });
     } else {
-        uni.showToast({ title: `暂无匹配对象`, icon: 'none' });
+        uni.showToast({ title: '暂无合适匹配', icon: 'none' });
     }
   } catch (e) {
-    console.error('Match failed:', e);
     uni.showToast({ title: '匹配请求失败', icon: 'none' });
   } finally {
     matching.value = false;
@@ -197,19 +234,9 @@ const makePhoneCall = (phone: string) => {
     }
 };
 
-// Helper functions
-const calculateAge = (birthday: string) => {
-  if (!birthday) return 0;
-  const birthDate = new Date(birthday);
-  const ageDifMs = Date.now() - birthDate.getTime();
-  const ageDate = new Date(ageDifMs);
-  return Math.abs(ageDate.getUTCFullYear() - 1970);
-};
-
 const getEducationText = (level: number | undefined) => {
-  if (!level) return '未知';
   const map: any = { 1: '高中', 2: '大专', 3: '本科', 4: '硕士', 5: '博士' };
-  return map[level] || '未知';
+  return map[level ?? 0] || '未知';
 };
 
 const getMaritalStatusText = (status: number | undefined) => {
@@ -229,63 +256,107 @@ const getAssetsText = (c: Client) => {
 <style lang="scss" scoped>
 .container {
   min-height: 100vh;
-  background-color: $uni-bg-color;
+  background-color: $omiai-bg-page;
   position: relative;
 }
 
-.header-bg {
-    height: 180px;
-    background: linear-gradient(180deg, #FFEEEE 0%, #F8F9FB 100%);
-    position: absolute;
+.nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 88px;
+  padding-top: 44px;
+  display: flex;
+  align-items: center;
+  padding-left: 16px;
+  z-index: 1000;
+  /* 移除背景色，确保能看到下方的渐变 */
+  background: transparent;
+  
+  .back-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+  }
+  
+  .nav-title {
+    flex: 1;
+    text-align: center;
+    margin-right: 48px;
+    font-size: 17px;
+    font-weight: 600;
+    color: #fff;
+  }
+}
+
+.header-bg-fixed {
+    height: 300px;
+    background: linear-gradient(180deg, $omiai-primary 0%, $omiai-bg-page 100%);
+    position: fixed; /* 改为 fixed 确保始终顶在最上方 */
     top: 0;
     left: 0;
     right: 0;
-    z-index: 0;
+    z-index: 1;
 }
 
 .profile-card {
+    margin: 140px 16px 0; /* 增加边距，确保不被固定导航栏遮挡 */
     position: relative;
-    z-index: 1;
-    margin: 20px 16px 0;
-    background: #fff;
-    border-radius: 16px;
-    padding: 24px 20px;
-    box-shadow: $uni-shadow-base;
+    z-index: 10;
+    border: none;
     text-align: center;
+    background: $omiai-white;
+    box-shadow: $omiai-shadow-md;
+    overflow: visible !important; /* 确保负边距的头像不被裁切 */
     
     .avatar-box {
-        margin-top: -50px;
-        margin-bottom: 12px;
+        margin-top: -45px;
+        margin-bottom: 16px;
         display: inline-block;
-        border: 4px solid #fff;
+        position: relative;
+        padding: 4px;
+        background: $omiai-white;
         border-radius: 50%;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        
+        .gender-tag {
+          position: absolute;
+          bottom: 4px;
+          right: 4px;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          border: 2px solid #fff;
+          
+          &.male { background-color: $omiai-male; }
+          &.female { background-color: $omiai-female; }
+        }
     }
     
     .info-box {
-        .name {
-            font-size: 20px;
-            font-weight: 600;
-            color: $uni-text-color;
-            margin-bottom: 12px;
-            display: block;
-        }
-        
         .tags {
             display: flex;
             justify-content: center;
             gap: 8px;
+            margin-top: 12px;
             
-            .tag {
-                font-size: 12px;
-                color: $uni-text-color-grey;
-                background: #F5F7FA;
-                padding: 4px 10px;
-                border-radius: 6px;
+            .tag-item {
+                font-size: 11px;
+                color: $omiai-text-second;
+                background: $omiai-bg-page;
+                padding: 3px 10px;
+                border-radius: 4px;
                 
                 &.highlight {
-                    color: $uni-color-primary;
-                    background: rgba(255, 94, 94, 0.08);
+                    color: $omiai-primary;
+                    background: $omiai-primary-light;
                 }
             }
         }
@@ -293,36 +364,27 @@ const getAssetsText = (c: Client) => {
 }
 
 .tab-container {
-    margin-top: 16px;
-    background: #fff;
-    border-radius: 16px 16px 0 0;
+    margin-top: 12px;
     padding: 0 16px;
-    position: relative;
-    z-index: 1;
 }
 
 .content {
-  background: #fff;
-  min-height: 400px;
-  padding: 20px 20px 80px;
+  padding: 20px 16px 100px;
   
   .section-title {
-      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 16px;
       font-weight: 600;
-      color: $uni-text-color;
-      margin-bottom: 12px;
-      position: relative;
-      padding-left: 10px;
+      color: $omiai-text-main;
       
-      &::before {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 4px;
-          bottom: 4px;
-          width: 3px;
-          background: $uni-color-primary;
-          border-radius: 2px;
+      .title-line {
+        width: 4px;
+        height: 16px;
+        background: $omiai-primary;
+        border-radius: 2px;
       }
   }
   
@@ -331,108 +393,119 @@ const getAssetsText = (c: Client) => {
   .grid-info {
       display: flex;
       flex-wrap: wrap;
-      margin: 0 -8px;
+      background: $omiai-white;
+      padding: 8px;
+      border-radius: $omiai-radius-md;
       
       .grid-item {
           width: 50%;
-          padding: 8px;
-          box-sizing: border-box;
+          margin-bottom: 16px;
+          padding: 0 8px;
           
           &.full { width: 100%; }
           
           .label {
               font-size: 12px;
-              color: $uni-text-color-grey;
+              color: $omiai-text-tip;
               display: block;
               margin-bottom: 4px;
           }
           .value {
               font-size: 14px;
-              color: $uni-text-color;
+              color: $omiai-text-main;
               font-weight: 500;
           }
       }
   }
   
   .text-box {
-      font-size: 14px;
-      color: #555;
+      color: $omiai-text-second;
       line-height: 1.6;
-      background: #F8F9FB;
-      padding: 12px;
-      border-radius: 8px;
+      background: $omiai-white;
+      padding: 16px;
+      border-radius: $omiai-radius-md;
   }
   
   .contact-actions {
-      margin-top: 30px;
+      margin-top: 32px;
   }
 }
 
 .match-section {
+    .empty-box {
+      padding: 40px 0;
+    }
+
     .match-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 16px;
-        font-size: 13px;
-        color: $uni-text-color-grey;
+        color: $omiai-text-tip;
         
         .refresh-btn {
             display: flex;
             align-items: center;
             gap: 4px;
-            color: $uni-color-primary;
+            color: $omiai-primary;
+            font-weight: 500;
         }
     }
     
-    .client-card {
-        background: #fff;
-        border: 1px solid #F0F0F0;
-        border-radius: 12px;
-        padding: 16px;
+    .match-card {
         margin-bottom: 12px;
-        display: flex;
-        align-items: center;
+        border: none;
+        padding: 16px;
+        background: $omiai-white;
         
-        .card-left { margin-right: 12px; }
+        .card-body {
+          display: flex;
+          align-items: center;
+        }
+
+        .avatar-box { margin-right: 16px; }
         
-        .card-center {
+        .info-box {
             flex: 1;
-            .header-row {
+            .name-row {
                 display: flex;
-                align-items: center;
-                margin-bottom: 6px;
-                .name { font-size: 15px; font-weight: 600; margin-right: 8px; }
-                .age { font-size: 12px; color: $uni-text-color-grey; }
+                align-items: baseline;
+                margin-bottom: 4px;
+                .age-info { margin-left: 8px; font-size: 12px; color: $omiai-text-tip; }
             }
-            .info-row {
-                font-size: 12px;
-                color: $uni-text-color-grey;
-                .divider { margin: 0 4px; }
+            .detail-row {
+                color: $omiai-text-second;
+                .sep { margin: 0 6px; color: $omiai-border; }
             }
         }
         
-        .card-right {
-            .match-score {
-                font-size: 16px;
-                font-weight: bold;
-                color: $uni-color-primary;
-                font-family: 'DIN Alternate';
+        .score-box {
+            text-align: right;
+            .score-val {
+                font-size: 20px;
+                font-weight: 600;
+                color: $omiai-primary;
+                .unit { font-size: 10px; margin-left: 1px; }
+            }
+            .score-label {
+                font-size: 10px;
+                color: $omiai-text-tip;
             }
         }
     }
 }
 
-.footer-placeholder { height: 80px; }
+.footer-placeholder { height: 100px; }
 
 .footer {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 12px 20px 30px;
-  background: #fff;
-  border-top: 1px solid #F0F0F0;
+  padding: 16px 16px 32px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid $omiai-border;
   z-index: 100;
 }
 </style>

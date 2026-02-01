@@ -5,21 +5,44 @@
 /* 引入 uview-plus 主题样式 */
 @import 'uview-plus/theme.scss';
 
-/* 颜色变量 - 现代清爽风格 */
-$uni-color-primary: #FF5E5E; /* 珊瑚红，比之前的玫红更暖一点，但保持活力 */
-$uni-color-success: #19BE6B; /* 清爽绿 */
-$uni-color-warning: #FF9900;
-$uni-color-error: #FA3534;
+/* 1) 中国式审美 UI 设计系统 - 温润与专业 */
+/* 核心品牌色：珊瑚粉/相亲红，象征温暖与缘分 */
+$omiai-primary: #FF5E78;    
+$omiai-primary-light: #FFF0F2;
+$omiai-primary-gradient: linear-gradient(135deg, #FF8E9D 0%, #FF5E78 100%);
 
-/* 文字颜色 */
-$uni-text-color: #303133; /* 主要文字 */
-$uni-text-color-grey: #909399; /* 次要文字 */
-$uni-text-color-placeholder: #C0C4CC;
+/* 辅助色 */
+$omiai-male: #4A90E2;       /* 稳重蓝 */
+$omiai-female: #FF6B9D;     /* 柔美粉 */
+$omiai-success: #07C160;    /* 微信绿风格 */
+$omiai-warning: #FF9F00;
+$omiai-error: #FA5151;
 
-/* 背景颜色 */
-$uni-bg-color: #F8F9FB; /* 极淡的灰蓝背景，比纯白更有质感，比灰色更清透 */
-$uni-bg-color-white: #FFFFFF;
+/* 中性色体系 - 柔和过渡 */
+$omiai-text-main: #1D2129;   /* 主要文字，接近黑但有温度 */
+$omiai-text-second: #4E5969; /* 次要文字 */
+$omiai-text-tip: #86909C;    /* 辅助/提示文字 */
+$omiai-border: #F2F3F5;      /* 边框色 */
+$omiai-bg-page: #F7F8FA;     /* 页面底色，清爽灰白 */
+$omiai-white: #FFFFFF;
 
-/* 边框与圆角 */
-$uni-border-radius-base: 12px; /* 更大的圆角，更柔和 */
-$uni-shadow-base: 0 4px 16px rgba(0, 0, 0, 0.04); /* 极轻的投影 */
+/* 2) 布局与圆角规范 - 更加圆润亲和 */
+$omiai-radius-sm: 6px;
+$omiai-radius-md: 12px;
+$omiai-radius-lg: 20px;
+$omiai-radius-card: 16px;
+
+/* 3) 投影规范 - 层次感与通透感 */
+$omiai-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+$omiai-shadow-md: 0 8px 24px rgba(255, 94, 120, 0.08); /* 带品牌色倾向的柔和阴影 */
+
+/* 4) 字体排版 */
+$omiai-font-family: -apple-system, system-ui, "Microsoft YaHei", sans-serif;
+
+/* 兼容旧变量 */
+$uni-color-primary: $omiai-primary;
+$uni-text-color: $omiai-text-main;
+$uni-text-color-grey: $omiai-text-second;
+$uni-bg-color: $omiai-bg-page;
+$uni-border-radius-base: $omiai-radius-md;
+$uni-shadow-base: $omiai-shadow-sm;

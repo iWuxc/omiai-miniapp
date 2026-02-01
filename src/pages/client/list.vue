@@ -1,54 +1,70 @@
 <template>
   <view class="container">
-    <!-- 搜索栏 (Floating Style) -->
-    <view class="search-bar">
-      <u-search placeholder="搜索姓名或手机号" v-model="keyword" :showAction="false" bg-color="#F5F7FA" height="36" @search="onSearch"></u-search>
+    <!-- 1) 顶部固定栏 (中式清晰感：白色背景 + 细微分割线) -->
+    <view class="header-fixed fade-in">
+      <view class="search-section">
+        <u-search 
+          placeholder="搜索姓名或手机号" 
+          v-model="keyword" 
+          :showAction="false" 
+          bg-color="#F7F8FA" 
+          height="40" 
+          :border="false"
+          @search="onSearch"
+        ></u-search>
+      </view>
+
+      <!-- 2) 筛选栏 (品牌强调：珊瑚粉下划线) -->
+      <view class="filter-section">
+        <u-tabs 
+          :list="tabs" 
+          :current="currentTab" 
+          @change="onTabChange" 
+          :lineColor="primaryColor" 
+          :activeColor="primaryColor" 
+          inactiveColor="#86909C"
+          :itemStyle="{ height: '44px', fontWeight: '500', fontSize: '15px' }"
+        ></u-tabs>
+      </view>
     </view>
 
-    <!-- 筛选栏 -->
-    <view class="filter-bar">
-      <u-tabs :list="tabs" :current="currentTab" @change="onTabChange" 
-        lineColor="#FF5E5E" 
-        activeColor="#FF5E5E" 
-        inactiveColor="#909399"
-        :itemStyle="{ height: '44px' }"
-      ></u-tabs>
-    </view>
-
-    <!-- 客户列表 -->
-    <view class="client-list">
-      <view class="client-card" v-for="(item, index) in clientList" :key="index" @click="goDetail(item.id)">
-        <view class="card-left">
-          <u-avatar :src="item.avatar" size="48" :sex-icon="item.gender === 1 ? 'man' : 'woman'"></u-avatar>
-        </view>
-        <view class="card-center">
-          <view class="header-row">
-            <text class="name">{{ item.name }}</text>
-            <view class="status-badge" :class="item.gender === 1 ? 'male' : 'female'">
+    <!-- 3) 客户列表 (中式温润感：大圆角卡片 + 细致标签) -->
+    <view class="client-list fade-in">
+      <view class="client-card omiai-card" v-for="(item, index) in clientList" :key="index" @click="goDetail(item.id)">
+        <view class="card-body">
+          <view class="avatar-box">
+            <u-avatar :src="item.avatar" size="64" shape="circle"></u-avatar>
+            <view class="gender-icon" :class="item.gender === 1 ? 'male' : 'female'">
               <u-icon :name="item.gender === 1 ? 'man' : 'woman'" size="10" color="#fff"></u-icon>
-              <text class="age">{{ calculateAge(item.birthday) }}岁</text>
             </view>
           </view>
           
-          <view class="info-row">
-            <text>{{ getEducationText(item.education) }}</text>
-            <text class="divider">·</text>
-            <text>{{ item.height }}cm</text>
-            <text class="divider">·</text>
-            <text>{{ item.income }}元</text>
+          <view class="info-box">
+            <view class="name-row">
+              <text class="omiai-title-lg">{{ item.name }}</text>
+              <view class="age-tag">{{ item.age }}岁</view>
+            </view>
+            
+            <view class="detail-row">
+              <text class="omiai-text-sm">{{ getEducationText(item.education) }}</text>
+              <text class="separator">·</text>
+              <text class="omiai-text-sm">{{ item.height }}cm</text>
+              <text class="separator">·</text>
+              <text class="omiai-text-sm">{{ item.income }}元</text>
+            </view>
+            
+            <view class="tags-row">
+              <text class="tag-item" v-if="item.profession">{{ item.profession }}</text>
+              <text class="tag-item highlight" v-if="item.house_status === 1">有房</text>
+            </view>
           </view>
           
-          <view class="tags-row">
-            <view class="tag" v-if="item.profession">{{ item.profession }}</view>
-            <view class="tag" v-if="item.house_status === 1">有房</view>
+          <view class="action-box">
+             <u-icon name="arrow-right" color="#C0C4CC" size="16"></u-icon>
           </view>
         </view>
-        
-        <view class="card-right">
-           <u-icon name="arrow-right" color="#DCDFE6" size="16"></u-icon>
-        </view>
       </view>
-      <u-loadmore :status="loadStatus" @loadmore="loadMore" color="#C0C4CC" />
+      <u-loadmore :status="loadStatus" @loadmore="loadMore" color="#86909C" font-size="12" />
     </view>
   </view>
 </template>
@@ -58,6 +74,7 @@ import { ref, onMounted } from 'vue';
 import { getClientList, type Client } from '@/api/client';
 import { onReachBottom, onPullDownRefresh } from '@dcloudio/uni-app';
 
+const primaryColor = '#FF5E78';
 const keyword = ref('');
 const currentTab = ref(0);
 const tabs = [{ name: '全部' }, { name: '男宾' }, { name: '女宾' }];
@@ -121,7 +138,7 @@ const onTabChange = (item: any) => {
 
 const goDetail = (id?: number) => {
   if (!id) {
-    uni.showToast({ title: '缺少客户信息', icon: 'none' });
+    uni.showToast({ title: '缺少客户ID', icon: 'none' });
     return;
   }
   uni.navigateTo({ url: `/pages/client/detail?id=${id}` });
@@ -139,14 +156,6 @@ onPullDownRefresh(() => {
   fetchData(true);
 });
 
-const calculateAge = (birthday: string) => {
-  if (!birthday) return 0;
-  const birthDate = new Date(birthday);
-  const ageDifMs = Date.now() - birthDate.getTime();
-  const ageDate = new Date(ageDifMs);
-  return Math.abs(ageDate.getUTCFullYear() - 1970);
-};
-
 const getEducationText = (level?: number) => {
   const map: any = { 1: '高中', 2: '大专', 3: '本科', 4: '硕士', 5: '博士' };
   return map[level ?? 0] || '未知';
@@ -155,87 +164,95 @@ const getEducationText = (level?: number) => {
 
 <style lang="scss" scoped>
 .container {
-  min-height: 100vh;
-  background-color: $uni-bg-color;
+  padding-top: 100px;
+  background-color: $omiai-bg-page;
 }
 
-.search-bar {
-  background: #fff;
-  padding: 8px 16px;
-  position: sticky;
+.header-fixed {
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
-}
-
-.filter-bar {
-  background: #fff;
-  border-bottom: 1px solid #F2F3F5;
-  margin-bottom: 10px;
+  background-color: $omiai-white;
+  box-shadow: 0 1px 0 $omiai-border;
+  
+  .search-section {
+    padding: 12px 16px;
+  }
+  
+  .filter-section {
+    padding: 0 4px;
+  }
 }
 
 .client-list {
-  padding: 0 16px 16px;
+  padding: 12px 16px;
 
   .client-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 16px;
     margin-bottom: 12px;
-    display: flex;
-    align-items: flex-start;
-    box-shadow: $uni-shadow-base;
-    transition: all 0.2s;
+    border: none;
+    padding: 16px;
+    background: $omiai-white;
     
-    &:active {
-        transform: scale(0.98);
+    .card-body {
+      display: flex;
+      align-items: center;
     }
 
-    .card-left {
-      margin-right: 12px;
+    .avatar-box {
+      margin-right: 16px;
+      position: relative;
+      
+      .gender-icon {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 2px solid #fff;
+        
+        &.male { background-color: $omiai-male; }
+        &.female { background-color: $omiai-female; }
+      }
     }
 
-    .card-center {
+    .info-box {
       flex: 1;
       
-      .header-row {
+      .name-row {
         display: flex;
         align-items: center;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
+        gap: 8px;
         
-        .name {
-          font-size: 16px;
-          font-weight: 600;
-          color: $uni-text-color;
-          margin-right: 8px;
-        }
-        
-        .status-badge {
-            display: flex;
-            align-items: center;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 10px;
-            color: #fff;
-            
-            &.male { background: #3E7BFA; }
-            &.female { background: #FF5E5E; }
-            
-            .age { margin-left: 2px; }
+        .age-tag {
+          font-size: 11px;
+          color: $omiai-text-tip;
+          background: $omiai-bg-page;
+          padding: 1px 6px;
+          border-radius: 4px;
         }
       }
       
-      .info-row {
-          font-size: 13px;
-          color: $uni-text-color-grey;
-          margin-bottom: 8px;
-          display: flex;
-          align-items: center;
-          
-          .divider {
-              margin: 0 6px;
-              color: #E4E7ED;
-              font-weight: bold;
-          }
+      .detail-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        
+        .separator {
+          margin: 0 6px;
+          color: $omiai-border;
+          font-size: 12px;
+        }
+        
+        text {
+          color: $omiai-text-second;
+        }
       }
 
       .tags-row {
@@ -243,21 +260,23 @@ const getEducationText = (level?: number) => {
         flex-wrap: wrap;
         gap: 6px;
         
-        .tag {
-            font-size: 11px;
-            color: #606266;
-            background: #F5F7FA;
-            padding: 2px 8px;
-            border-radius: 4px;
+        .tag-item {
+          font-size: 11px;
+          color: $omiai-text-second;
+          background: $omiai-bg-page;
+          padding: 2px 8px;
+          border-radius: 4px;
+          
+          &.highlight {
+            color: $omiai-primary;
+            background: $omiai-primary-light;
+          }
         }
       }
     }
     
-    .card-right {
-        display: flex;
-        align-items: center;
-        align-self: center;
-        margin-left: 8px;
+    .action-box {
+      margin-left: 8px;
     }
   }
 }

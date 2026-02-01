@@ -1,4 +1,10 @@
 {
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^u-(.*)": "uview-plus/components/u-$1/u-$1.vue"
+    }
+  },
   "pages": [
     {
       "path": "pages/home/index",
@@ -24,7 +30,27 @@
     {
       "path": "pages/client/detail",
       "style": {
-        "navigationBarTitleText": "客户详情"
+        "navigationBarTitleText": "客户详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/invite/index",
+      "style": {
+        "navigationBarTitleText": "填写档案",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/match/list",
+      "style": {
+        "navigationBarTitleText": "情侣管理"
+      }
+    },
+    {
+      "path": "pages/match/detail",
+      "style": {
+        "navigationBarTitleText": "匹配详情"
       }
     }
   ],

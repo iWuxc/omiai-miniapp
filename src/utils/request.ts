@@ -1,12 +1,11 @@
 import Request from 'luch-request';
+import { config as appConfig } from '@/config';
 
 const http = new Request();
 
 // 配置全局基础参数
 http.setConfig((config) => {
-  // 替换为您的后端接口地址，本地开发如果是H5可配置代理，小程序需配置合法域名
-  // 暂时假设本地服务运行在 9071 端口
-  config.baseURL = 'http://localhost:10131/api'; 
+  config.baseURL = appConfig.baseUrl; 
   config.timeout = 10000;
   config.header = {
     ...config.header,

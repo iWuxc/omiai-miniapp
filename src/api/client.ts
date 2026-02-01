@@ -56,3 +56,7 @@ export const getClientDetail = (id: number) => {
 export const matchClient = (id: number) => {
   return http.get(`/client/match/${id}`);
 };
+
+export const getClientStats = () => {
+  return http.get('/client/stats');
+};
