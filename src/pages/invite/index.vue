@@ -24,6 +24,8 @@
                 :maxCount="1"
                 width="100"
                 height="100"
+                accept="image"
+                :capture="['album', 'camera']"
              >
                 <view class="avatar-placeholder">
                   <u-icon name="camera-fill" size="30" color="#C0C4CC"></u-icon>
@@ -188,6 +190,8 @@
             :maxCount="9"
             width="80"
             height="80"
+            accept="image"
+            :capture="['album', 'camera']"
           ></u-upload>
         </u-form>
       </view>
@@ -305,7 +309,8 @@ const afterReadPhotos = async (event: any) => {
     const index = photoList.value.length;
     photoList.value.push({ ...f, status: 'uploading', message: '上传中' });
     try {
-      const res: any = await uploadFile(f.url);
+      const filePath = f.url || f.path;
+      const res: any = await uploadFile(filePath);
       const url = res.url.startsWith('http') ? res.url : appConfig.assetsUrl + res.url;
       photoList.value[index].url = url;
       photoList.value[index].status = 'success';

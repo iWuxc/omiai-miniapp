@@ -26,6 +26,8 @@
                 width="80"
                 height="80"
                 border-radius="40"
+                accept="image"
+                :capture="['album', 'camera']"
              >
                 <view class="avatar-placeholder">
                   <u-icon name="camera-fill" size="26" color="#C0C4CC"></u-icon>
@@ -180,6 +182,8 @@
             :maxCount="9"
             width="80"
             height="80"
+            accept="image"
+            :capture="['album', 'camera']"
           ></u-upload>
         </u-form>
       </view>
@@ -247,15 +251,23 @@ const syncPhotos = () => {
 
 const validateFile = (file: any) => {
   const maxSize = 5 * 1024 * 1024;
-  const allowedExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-  const ext = file.url.substring(file.url.lastIndexOf('.')).toLowerCase();
+  const filePath = file.url || file.path;
+  
+  if (!filePath) {
+    // 无法获取路径时，暂时放行，由后端校验或后续流程处理
+    return true;
+  }
+
+  // 简单的后缀检查（如果有）
+  if (filePath.indexOf('.') > -1) {
+      const ext = filePath.substring(filePath.lastIndexOf('.')).toLowerCase();
+      // 可以根据需要添加前端后缀校验
+  }
   
   if (file.size > maxSize) {
     uni.showToast({ title: '文件超过5MB', icon: 'none' });
     return false;
   }
-  // Some platforms might not have extension in temp path, but usually they do
-  // If not, we can skip extension check on frontend or check mime type
   return true;
 };
 
@@ -265,7 +277,8 @@ const afterReadAvatar = async (event: any) => {
   
   avatarList.value.push({ ...file, status: 'uploading', message: '上传中' });
   try {
-    const res: any = await uploadFile(file.url);
+    const filePath = file.url || file.path;
+    const res: any = await uploadFile(filePath);
     // Backend returns full URL if it's OSS/COS, or relative if local
     const url = res.url.startsWith('http') ? res.url : appConfig.assetsUrl + res.url;
     avatarList.value[0].url = url;
@@ -292,7 +305,8 @@ const afterReadPhotos = async (event: any) => {
     const index = photoList.value.length;
     photoList.value.push({ ...f, status: 'uploading', message: '上传中' });
     try {
-      const res: any = await uploadFile(f.url);
+      const filePath = f.url || f.path;
+      const res: any = await uploadFile(filePath);
       const url = res.url.startsWith('http') ? res.url : appConfig.assetsUrl + res.url;
       photoList.value[index].url = url;
       photoList.value[index].status = 'success';
