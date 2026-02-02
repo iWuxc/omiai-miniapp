@@ -29,7 +29,7 @@ page {
 /* 通用卡片样式 - 更加圆润且有通透感 */
 .omiai-card {
   background: $omiai-white;
-  border-radius: $omiai-radius-card;
+  border-radius: $omiai-radius-lg; /* 修复: 使用新定义的 $omiai-radius-lg 替代不存在的 $omiai-radius-card */
   padding: 20px;
   box-shadow: $omiai-shadow-sm;
   transition: all 0.2s ease-in-out;

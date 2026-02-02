@@ -33,45 +33,53 @@
       </view>
     </view>
 
-    <!-- 3) 客户列表 -->
-    <view class="client-list fade-in">
-      <view class="client-card omiai-card" v-for="(item, index) in clientList" :key="index" @click="goDetail(item.id)">
-        <view class="card-body">
-          <view class="avatar-box">
-            <u-avatar :src="item.avatar" size="64" shape="circle"></u-avatar>
-            <view class="gender-icon" :class="item.gender === 1 ? 'male' : 'female'">
-              <u-icon :name="item.gender === 1 ? 'man' : 'woman'" size="10" color="#fff"></u-icon>
-            </view>
+    <!-- 3) 客户列表 (Grid / Masonry Style) -->
+    <view class="client-grid fade-in">
+      <view class="grid-item" v-for="(item, index) in clientList" :key="index" @click="goDetail(item.id)">
+        <view class="item-cover">
+          <!-- Prefer first photo, then avatar, then placeholder -->
+          <u-image 
+            :src="getCoverImage(item)" 
+            width="100%" 
+            height="180px" 
+            mode="aspectFill"
+            radius="16px 16px 0 0"
+          >
+             <template #loading>
+                <u-loading-icon color="#FF5E78"></u-loading-icon>
+             </template>
+          </u-image>
+          
+          <!-- Status Badge -->
+          <view class="status-badge" v-if="item.status === 2">
+            <text>匹配中</text>
           </view>
           
-          <view class="info-box">
-            <view class="name-row">
-              <text class="omiai-title-lg">{{ item.name }}</text>
-              <view class="age-tag">{{ item.age }}岁</view>
-              <view class="status-tag" v-if="item.status === 2">匹配中</view>
-            </view>
-            
-            <view class="detail-row">
-              <text class="omiai-text-sm">{{ getEducationText(item.education) }}</text>
-              <text class="separator">·</text>
-              <text class="omiai-text-sm">{{ item.height }}cm</text>
-              <text class="separator">·</text>
-              <text class="omiai-text-sm">{{ item.income }}元</text>
-            </view>
-            
-            <view class="tags-row">
-              <text class="tag-item" v-if="item.profession">{{ item.profession }}</text>
-              <text class="tag-item highlight" v-if="item.house_status === 1">有房</text>
-            </view>
-          </view>
-          
-          <view class="action-box">
-             <u-icon name="arrow-right" color="#C0C4CC" size="16"></u-icon>
+          <!-- Select Checkbox (Future use) -->
+          <view class="select-check">
+             <view class="circle"></view>
           </view>
         </view>
+        
+        <view class="item-info">
+           <view class="info-header">
+              <text class="name">{{ item.name }}</text>
+              <view class="gender-dot" :class="item.gender === 1 ? 'male' : 'female'"></view>
+           </view>
+           
+           <view class="info-tags">
+              <text class="mini-tag">{{ item.age }}岁</text>
+              <text class="mini-tag">{{ item.height }}cm</text>
+              <text class="mini-tag">{{ getEducationText(item.education) }}</text>
+           </view>
+           
+           <view class="info-footer">
+              <text class="profession">{{ item.profession || '未填写职业' }}</text>
+           </view>
+        </view>
       </view>
-      <u-loadmore :status="loadStatus" @loadmore="loadMore" color="#86909C" font-size="12" />
     </view>
+    <u-loadmore :status="loadStatus" @loadmore="loadMore" color="#C9CDD4" font-size="12" />
 
     <!-- Filter Modal -->
     <u-popup :show="showFilter" mode="right" @close="showFilter = false" :customStyle="{width: '80%'}">
@@ -288,12 +296,20 @@ const getEducationText = (level?: number) => {
   const map: any = { 1: '高中', 2: '大专', 3: '本科', 4: '硕士', 5: '博士' };
   return map[level ?? 0] || '未知';
 };
+
+const getCoverImage = (item: Client) => {
+    // Phase 2: Use uploaded photos if available
+    // For now, use avatar or mock
+    if (item.avatar) return item.avatar;
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.id}`; 
+};
 </script>
 
 <style lang="scss" scoped>
 .container {
-  padding-top: 100px;
+  padding-top: 96px; /* Adjusted for fixed header height */
   background-color: $omiai-bg-page;
+  min-height: 100vh;
 }
 
 .header-fixed {
@@ -303,111 +319,143 @@ const getEducationText = (level?: number) => {
   right: 0;
   z-index: 100;
   background-color: $omiai-white;
-  box-shadow: 0 1px 0 $omiai-border;
+  /* Removed border-bottom, use shadow */
+  box-shadow: $omiai-shadow-sm; 
+  padding-bottom: 8px;
   
   .search-section {
-    padding: 12px 16px;
+    padding: 12px 16px 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 50px; /* 增加顶部内边距，避开状态栏和胶囊按钮 */
+    
+    .filter-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        
+        .filter-label {
+            font-size: 10px;
+            color: $omiai-text-second;
+            margin-top: 2px;
+        }
+    }
   }
   
   .filter-section {
-    padding: 0 4px;
+    padding: 0 12px;
   }
 }
 
-.client-list {
-  padding: 12px 16px;
-
-  .client-card {
-    margin-bottom: 12px;
-    border: none;
-    padding: 16px;
-    background: $omiai-white;
+.client-grid {
+    padding: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
     
-    .card-body {
-      display: flex;
-      align-items: center;
-    }
-
-    .avatar-box {
-      margin-right: 16px;
-      position: relative;
-      
-      .gender-icon {
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border: 2px solid #fff;
+    .grid-item {
+        width: 48%; /* 2 columns */
+        background: $omiai-white;
+        border-radius: $omiai-radius-lg;
+        margin-bottom: 12px;
+        overflow: hidden;
+        box-shadow: $omiai-shadow-sm;
+        transition: all 0.2s ease;
         
-        &.male { background-color: $omiai-male; }
-        &.female { background-color: $omiai-female; }
-      }
-    }
-
-    .info-box {
-      flex: 1;
-      
-      .name-row {
-        display: flex;
-        align-items: center;
-        margin-bottom: 4px;
-        gap: 8px;
-        
-        .age-tag {
-          font-size: 11px;
-          color: $omiai-text-tip;
-          background: $omiai-bg-page;
-          padding: 1px 6px;
-          border-radius: 4px;
-        }
-      }
-      
-      .detail-row {
-        display: flex;
-        align-items: center;
-        margin-bottom: 10px;
-        
-        .separator {
-          margin: 0 6px;
-          color: $omiai-border;
-          font-size: 12px;
+        &:active {
+            transform: scale(0.98);
         }
         
-        text {
-          color: $omiai-text-second;
+        .item-cover {
+            position: relative;
+            background: #f5f5f5;
+            
+            .status-badge {
+                position: absolute;
+                top: 8px;
+                left: 8px;
+                background: rgba(0,0,0,0.6);
+                padding: 4px 8px;
+                border-radius: 4px;
+                text {
+                    color: #fff;
+                    font-size: 10px;
+                }
+            }
+            
+            .select-check {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                .circle {
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    background: rgba(255,255,255,0.8);
+                    border: 1px solid rgba(0,0,0,0.1);
+                }
+            }
         }
-      }
-
-      .tags-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
         
-        .tag-item {
-          font-size: 11px;
-          color: $omiai-text-second;
-          background: $omiai-bg-page;
-          padding: 2px 8px;
-          border-radius: 4px;
-          
-          &.highlight {
-            color: $omiai-primary;
-            background: $omiai-primary-light;
-          }
+        .item-info {
+            padding: 12px;
+            
+            .info-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 6px;
+                
+                .name {
+                    font-size: 15px;
+                    font-weight: 600;
+                    color: $omiai-text-main;
+                    @include text-ellipsis;
+                }
+                
+                .gender-dot {
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 50%;
+                    &.male { background: $omiai-male; }
+                    &.female { background: $omiai-female; }
+                }
+            }
+            
+            .info-tags {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+                margin-bottom: 8px;
+                
+                .mini-tag {
+                    font-size: 10px;
+                    color: $omiai-text-second;
+                    background: $omiai-bg-page;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                }
+            }
+            
+            .info-footer {
+                .profession {
+                    font-size: 11px;
+                    color: $omiai-text-tip;
+                    @include text-ellipsis;
+                }
+            }
         }
-      }
     }
-    
-    .action-box {
-      margin-left: 8px;
-    }
-  }
 }
+
+/* Mixin for ellipsis (Simple version if not in global) */
+// @mixin text-ellipsis {
+//     overflow: hidden;
+//     white-space: nowrap;
+//     text-overflow: ellipsis;
+// }
 
 .filter-container {
     display: flex;

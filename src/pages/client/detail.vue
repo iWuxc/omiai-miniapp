@@ -11,101 +11,121 @@
       <text class="nav-title">客户详情</text>
     </view>
     
-    <!-- 2) 核心资料卡片 (中式亲和力：圆润阴影卡片) -->
-    <view class="profile-card omiai-card fade-in">
-      <view class="avatar-box">
-        <u-avatar :src="client.avatar" size="90" shape="circle"></u-avatar>
-        <view class="gender-tag" :class="client.gender === 1 ? 'male' : 'female'">
-          <u-icon :name="client.gender === 1 ? 'man' : 'woman'" size="12" color="#fff"></u-icon>
+    <!-- 2) 核心资料卡片 (高端大图风格) -->
+    <view class="hero-header fade-in">
+        <view class="hero-image-box">
+            <u-image 
+                :src="client.avatar" 
+                width="100%" 
+                height="320px" 
+                mode="aspectFill"
+            ></u-image>
+            <view class="hero-overlay"></view>
+            
+            <view class="hero-content">
+                <view class="name-row">
+                    <text class="name">{{ client.name }}</text>
+                    <view class="gender-tag" :class="client.gender === 1 ? 'male' : 'female'">
+                        <u-icon :name="client.gender === 1 ? 'man' : 'woman'" size="12" color="#fff"></u-icon>
+                    </view>
+                </view>
+                <view class="tags-row">
+                    <text class="hero-tag">{{ client.age }}岁</text>
+                    <text class="hero-tag" v-if="client.zodiac">{{ client.zodiac }}</text>
+                    <text class="hero-tag">{{ getEducationText(client.education) }}</text>
+                    <text class="hero-tag" v-if="client.marital_status">{{ getMaritalStatusText(client.marital_status) }}</text>
+                </view>
+            </view>
         </view>
-      </view>
-      <view class="info-box">
-        <text class="omiai-title-xl">{{ client.name }}</text>
-        <view class="tags">
-          <text class="tag-item">{{ client.age }}岁</text>
-          <text class="tag-item" v-if="client.zodiac">{{ client.zodiac }}</text>
-          <text class="tag-item" v-if="client.education">{{ getEducationText(client.education) }}</text>
-          <text class="tag-item highlight" v-if="client.marital_status">{{ getMaritalStatusText(client.marital_status) }}</text>
-        </view>
-      </view>
     </view>
 
-    <!-- 3) 选项卡 (品牌一致性) -->
-    <view class="tab-container fade-in">
-      <u-tabs :list="tabs" :current="currentTab" @change="onTabChange" 
-        :lineColor="primaryColor" 
-        :activeColor="primaryColor" 
-        inactiveColor="#86909C"
-        :itemStyle="{ height: '50px', fontSize: '15px', fontWeight: '500' }"
-      ></u-tabs>
+    <!-- 3) 胶囊式选项卡 (Floating Segmented Control) -->
+    <view class="sticky-tabs-container">
+        <view class="segmented-control">
+            <view 
+                class="segment-item" 
+                :class="{ active: currentTab === 0 }"
+                @click="currentTab = 0"
+            >档案详情</view>
+            <view 
+                class="segment-item" 
+                :class="{ active: currentTab === 1 }"
+                @click="currentTab = 1"
+            >智能匹配</view>
+        </view>
     </view>
     
     <view class="content">
-      <!-- Tab 1: 档案详情 -->
+      <!-- Tab 1: 档案详情 (List Style) -->
       <view v-if="currentTab === 0" class="info-section fade-in">
-        <view class="section-title">
-          <view class="title-line"></view>
-          <text>详细画像</text>
-        </view>
-        <view class="grid-info">
-          <view class="grid-item">
-            <text class="label">身高</text>
-            <text class="value">{{ client.height ? client.height + 'cm' : '-' }}</text>
-          </view>
-          <view class="grid-item">
-            <text class="label">体重</text>
-            <text class="value">{{ client.weight ? client.weight + 'kg' : '-' }}</text>
-          </view>
-          <view class="grid-item">
-            <text class="label">月收入</text>
-            <text class="value">{{ client.income ? client.income + '元' : '-' }}</text>
-          </view>
-          <view class="grid-item">
-            <text class="label">具体工作</text>
-            <text class="value">{{ client.profession || '-' }}</text>
-          </view>
-          <view class="grid-item full">
-            <text class="label">房车情况</text>
-            <text class="value">{{ getAssetsText(client) }}</text>
-          </view>
-          <view class="grid-item full">
-            <text class="label">家庭住址</text>
-            <text class="value">{{ client.address || '未填写' }}</text>
-          </view>
+        
+        <!-- Basic Info Cell Group -->
+        <view class="info-card">
+            <view class="cell-item">
+                <text class="label">身高</text>
+                <view class="value-box">
+                    <text class="value">{{ client.height ? client.height + 'cm' : '-' }}</text>
+                </view>
+            </view>
+            <view class="cell-item">
+                <text class="label">体重</text>
+                <view class="value-box">
+                    <text class="value">{{ client.weight ? client.weight + 'kg' : '-' }}</text>
+                </view>
+            </view>
+            <view class="cell-item">
+                <text class="label">月收入</text>
+                <view class="value-box">
+                    <text class="value">{{ client.income ? client.income + '元' : '-' }}</text>
+                </view>
+            </view>
+            <view class="cell-item">
+                <text class="label">职业</text>
+                <view class="value-box">
+                    <text class="value">{{ client.profession || '-' }}</text>
+                </view>
+            </view>
+            <view class="cell-item">
+                <text class="label">房车</text>
+                <view class="value-box">
+                    <text class="value">{{ getAssetsText(client) }}</text>
+                </view>
+            </view>
+            <view class="cell-item no-border">
+                <text class="label">住址</text>
+                <view class="value-box">
+                    <text class="value">{{ client.address || '未填写' }}</text>
+                </view>
+            </view>
         </view>
 
-        <view class="section-title mt-30">
-          <view class="title-line"></view>
-          <text>自我介绍</text>
-        </view>
-        <view class="text-box omiai-text-md">
-          {{ client.remark || '暂无详细介绍' }}
+        <!-- Intro Card -->
+        <view class="info-card mt-16">
+            <view class="card-title">自我介绍</view>
+            <view class="card-text">
+                {{ client.remark || '暂无详细介绍' }}
+            </view>
         </view>
         
-        <view v-if="client.family_description">
-          <view class="section-title mt-30">
-            <view class="title-line"></view>
-            <text>家庭背景</text>
-          </view>
-          <view class="text-box omiai-text-md">
-            {{ client.family_description }}
-          </view>
+        <view class="info-card mt-16" v-if="client.family_description">
+            <view class="card-title">家庭背景</view>
+            <view class="card-text">
+                {{ client.family_description }}
+            </view>
         </view>
 
-        <view v-if="client.partner_requirements">
-          <view class="section-title mt-30">
-            <view class="title-line"></view>
-            <text>择偶标准</text>
-          </view>
-          <view class="text-box omiai-text-md">
-            {{ client.partner_requirements }}
-          </view>
+        <view class="info-card mt-16" v-if="client.partner_requirements">
+            <view class="card-title">择偶标准</view>
+            <view class="card-text">
+                {{ client.partner_requirements }}
+            </view>
         </view>
         
         <view class="contact-actions">
            <u-button 
-             customStyle="background: #F2F3F5; color: #1D2129; border: none; border-radius: 999rpx; height: 48px; font-weight: 500;" 
+             customStyle="background: #1D2129; color: #fff; border: none; border-radius: 999rpx; height: 50px; font-weight: 500; font-size: 16px; box-shadow: 0 8px 24px rgba(29,33,41,0.2);" 
              icon="phone-fill" 
+             iconColor="#fff"
              @click="makePhoneCall(client.phone)"
            >联系客户</u-button>
         </view>
@@ -334,135 +354,151 @@ const getAssetsText = (c: Client) => {
 
 .header-bg-fixed {
     height: 300px;
-    background: linear-gradient(180deg, $omiai-primary 0%, $omiai-bg-page 100%);
-    position: fixed; /* 改为 fixed 确保始终顶在最上方 */
+    background: #fff; /* Replaced gradient with white/image overlay */
+    position: fixed; 
     top: 0;
     left: 0;
     right: 0;
     z-index: 1;
 }
 
-.profile-card {
-    margin: 140px 16px 0; /* 增加边距，确保不被固定导航栏遮挡 */
+.hero-header {
     position: relative;
     z-index: 10;
-    border: none;
-    text-align: center;
-    background: $omiai-white;
-    box-shadow: $omiai-shadow-md;
-    overflow: visible !important; /* 确保负边距的头像不被裁切 */
+    background: #fff;
     
-    .avatar-box {
-        margin-top: -45px;
-        margin-bottom: 16px;
-        display: inline-block;
+    .hero-image-box {
         position: relative;
-        padding: 4px;
-        background: $omiai-white;
-        border-radius: 50%;
         
-        .gender-tag {
-          position: absolute;
-          bottom: 4px;
-          right: 4px;
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          border: 2px solid #fff;
-          
-          &.male { background-color: $omiai-male; }
-          &.female { background-color: $omiai-female; }
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 100%);
+            z-index: 1;
         }
-    }
-    
-    .info-box {
-        .tags {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 12px;
+        
+        .hero-content {
+            position: absolute;
+            bottom: 24px;
+            left: 20px;
+            right: 20px;
+            z-index: 2;
+            color: #fff;
             
-            .tag-item {
-                font-size: 11px;
-                color: $omiai-text-second;
-                background: $omiai-bg-page;
-                padding: 3px 10px;
-                border-radius: 4px;
+            .name-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 8px;
                 
-                &.highlight {
-                    color: $omiai-primary;
-                    background: $omiai-primary-light;
+                .name { font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+                .gender-tag {
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    background: rgba(255,255,255,0.2);
+                    backdrop-filter: blur(4px);
+                    &.male { background: $omiai-male; }
+                    &.female { background: $omiai-female; }
+                }
+            }
+            
+            .tags-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                
+                .hero-tag {
+                    font-size: 12px;
+                    padding: 4px 10px;
+                    background: rgba(255,255,255,0.2);
+                    backdrop-filter: blur(8px);
+                    border-radius: 4px;
+                    color: #fff;
                 }
             }
         }
     }
 }
 
-.tab-container {
-    margin-top: 12px;
-    padding: 0 16px;
+.sticky-tabs-container {
+    position: sticky;
+    top: 88px; /* Below nav bar */
+    z-index: 100;
+    background: $omiai-bg-page;
+    padding: 16px 20px;
+    
+    .segmented-control {
+        display: flex;
+        background: #E5E6EB;
+        padding: 4px;
+        border-radius: 999rpx;
+        
+        .segment-item {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0;
+            font-size: 14px;
+            font-weight: 500;
+            color: $omiai-text-second;
+            border-radius: 999rpx;
+            transition: all 0.3s ease;
+            
+            &.active {
+                background: #fff;
+                color: $omiai-text-main;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            }
+        }
+    }
 }
 
 .content {
-  padding: 20px 16px 100px;
+  padding: 0 20px 100px;
   
-  .section-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 16px;
-      font-size: 16px;
-      font-weight: 600;
-      color: $omiai-text-main;
+  .info-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 0 16px;
+      box-shadow: $omiai-shadow-sm;
       
-      .title-line {
-        width: 4px;
-        height: 16px;
-        background: $omiai-primary;
-        border-radius: 2px;
+      .cell-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 16px 0;
+          border-bottom: 1px solid $omiai-border-light;
+          
+          &.no-border { border-bottom: none; }
+          
+          .label { font-size: 14px; color: $omiai-text-second; }
+          .value-box {
+              .value { font-size: 14px; color: $omiai-text-main; font-weight: 500; }
+          }
+      }
+      
+      .card-title {
+          font-size: 16px;
+          font-weight: 600;
+          padding: 16px 0 8px;
+          color: $omiai-text-main;
+      }
+      
+      .card-text {
+          font-size: 14px;
+          color: $omiai-text-second;
+          line-height: 1.6;
+          padding-bottom: 16px;
       }
   }
   
-  .mt-30 { margin-top: 30px; }
-  
-  .grid-info {
-      display: flex;
-      flex-wrap: wrap;
-      background: $omiai-white;
-      padding: 8px;
-      border-radius: $omiai-radius-md;
-      
-      .grid-item {
-          width: 50%;
-          margin-bottom: 16px;
-          padding: 0 8px;
-          
-          &.full { width: 100%; }
-          
-          .label {
-              font-size: 12px;
-              color: $omiai-text-tip;
-              display: block;
-              margin-bottom: 4px;
-          }
-          .value {
-              font-size: 14px;
-              color: $omiai-text-main;
-              font-weight: 500;
-          }
-      }
-  }
-  
-  .text-box {
-      color: $omiai-text-second;
-      line-height: 1.6;
-      background: $omiai-white;
-      padding: 16px;
-      border-radius: $omiai-radius-md;
-  }
+  .mt-16 { margin-top: 16px; }
   
   .contact-actions {
       margin-top: 32px;

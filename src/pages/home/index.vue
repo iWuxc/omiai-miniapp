@@ -1,13 +1,16 @@
 <template>
   <view class="container">
-    <!-- 1) 顶部欢迎区 (中式亲和力：暖色渐变背景) -->
+    <!-- 1) 顶部欢迎区 (高端简约：纯白背景 + 大标题) -->
     <view class="header-section fade-in">
       <view class="greeting">
         <view class="welcome-row">
           <text class="omiai-title-xl">早安，红娘姐姐</text>
-          <view class="badge-role">专业顾问</view>
+          <!-- <view class="badge-role">专业顾问</view> -->
         </view>
-        <text class="omiai-text-md date">今天是 {{ currentDate }}</text>
+        <text class="omiai-text-md date">今天是 {{ currentDate }}，又是充满希望的一天</text>
+      </view>
+      <view class="avatar-area">
+          <u-avatar text="M" size="48" fontSize="20" bg-color="#FF5E78"></u-avatar>
       </view>
     </view>
 
@@ -21,12 +24,13 @@
         circular
         radius="16"
         height="160"
+        bgColor="#F7F8FA"
         @click="onBannerClick"
       ></u-swiper>
     </view>
 
-    <!-- 2) 数据概览 (中式专业感：阴影卡片 + 强调色) -->
-    <view class="stats-card omiai-card fade-in">
+    <!-- 2) 数据概览 (轻量化卡片) -->
+    <view class="stats-card fade-in">
       <view class="stat-item">
         <text class="num">{{ stats.total || 0 }}</text>
         <text class="label">客户总数</text>
@@ -41,31 +45,36 @@
       </view>
     </view>
 
-    <!-- 3) 快捷功能 (中式实用主义：彩色图标 + 圆润背景) -->
+    <!-- 3) 快捷功能 (网格卡片布局) -->
+    <view class="section-title">快捷功能</view>
     <view class="action-grid fade-in">
-      <view class="action-item" @click="navigateTo('/pages/form/index')">
-        <view class="icon-wrapper bg-pink">
-          <u-icon name="edit-pen" :size="24" color="#FF5E78"></u-icon>
+      <view class="action-card" @click="navigateTo('/pages/form/index')">
+        <view class="icon-box bg-pink">
+          <u-icon name="edit-pen" :size="28" color="#FF5E78"></u-icon>
         </view>
-        <text class="grid-text">录入档案</text>
+        <text class="card-title">录入档案</text>
+        <text class="card-desc">快速新建客户资料</text>
       </view>
-      <view class="action-item" @click="shareInvite">
-        <view class="icon-wrapper bg-orange">
-          <u-icon name="share" :size="24" color="#FF9F00"></u-icon>
+      <view class="action-card" @click="navigateTo('/pages/client/list')">
+        <view class="icon-box bg-blue">
+          <u-icon name="search" :size="28" color="#4A90E2"></u-icon>
         </view>
-        <text class="grid-text">邀请填写</text>
+        <text class="card-title">查找客户</text>
+        <text class="card-desc">精准筛选匹配对象</text>
       </view>
-      <view class="action-item" @click="navigateTo('/pages/client/list')">
-        <view class="icon-wrapper bg-blue">
-          <u-icon name="search" :size="24" color="#4A90E2"></u-icon>
+      <view class="action-card" @click="shareInvite">
+        <view class="icon-box bg-orange">
+          <u-icon name="share" :size="28" color="#FF9F00"></u-icon>
         </view>
-        <text class="grid-text">查找客户</text>
+        <text class="card-title">邀请填写</text>
+        <text class="card-desc">分享链接自助录入</text>
       </view>
-      <view class="action-item" @click="navigateTo('/pages/match/list')">
-        <view class="icon-wrapper bg-green">
-          <u-icon name="heart" :size="24" color="#4CD964"></u-icon>
+      <view class="action-card" @click="navigateTo('/pages/match/list')">
+        <view class="icon-box bg-green">
+          <u-icon name="heart" :size="28" color="#52C41A"></u-icon>
         </view>
-        <text class="grid-text">情侣管理</text>
+        <text class="card-title">情侣管理</text>
+        <text class="card-desc">跟进牵手成功进度</text>
       </view>
     </view>
 
@@ -183,104 +192,99 @@ const shareInvite = () => {
 }
 
 .header-section {
-  padding: 40px 20px 60px;
-  background: linear-gradient(135deg, $omiai-primary, $omiai-primary-light);
-  color: #fff;
-  border-radius: 0 0 30px 30px;
-  margin-bottom: 24px;
+  padding: 44px 20px 24px;
+  background: $omiai-white; /* Clean white */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
   
-  .welcome-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
-    
-    .badge-role {
-      font-size: 10px;
-      color: $omiai-primary;
-      background: rgba(255, 255, 255, 0.2);
-      padding: 2px 8px;
-      border-radius: 100px;
-      font-weight: 500;
-      border: 1px solid rgba(255, 255, 255, 0.3);
+  .greeting {
+    .welcome-row {
+      margin-bottom: 8px;
+      .omiai-title-xl { 
+          font-size: 24px; 
+          font-weight: 700; 
+          color: $omiai-text-main;
+      }
     }
-  }
-  
-  .date {
-    color: rgba(255, 255, 255, 0.8);
+    .date {
+      color: $omiai-text-tip;
+      font-size: 13px;
+    }
   }
 }
 
 .banner-section {
-  margin-bottom: 24px;
+  margin: 0 20px 24px;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: $omiai-shadow-sm;
 }
 
 .stats-card {
+  margin: 0 20px 32px;
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20px;
-  border: none;
-  background: $omiai-white;
-  box-shadow: $omiai-shadow-md;
+  background: transparent; /* Remove card bg for cleaner look or keep it? Reference 1 has clean stats */
   
   .stat-item {
     flex: 1;
     text-align: center;
-    position: relative;
-    
-    &:not(:last-child)::after {
-      content: '';
-      position: absolute;
-      right: 0;
-      top: 20%;
-      height: 60%;
-      width: 1px;
-      background: $omiai-border;
-    }
     
     .num {
-      font-size: 24px;
-      font-weight: 600;
+      font-size: 28px;
+      font-weight: 700;
       color: $omiai-text-main;
       line-height: 1.2;
+      font-family: 'DIN Alternate', sans-serif; /* Stylish font for numbers */
       
-      &.highlight {
-        color: $omiai-primary;
-      }
+      &.highlight { color: $omiai-primary; }
     }
     
     .label {
       font-size: 12px;
-      color: $omiai-text-tip;
-      margin-top: 6px;
-      display: block;
+      color: $omiai-text-second;
+      margin-top: 4px;
     }
   }
 }
 
+.section-title {
+    margin: 0 20px 16px;
+    font-size: 18px;
+    font-weight: 600;
+    color: $omiai-text-main;
+}
+
 .action-grid {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 24px;
-  padding: 0 10px;
+  flex-wrap: wrap;
+  justify-content: space-between; /* 确保两列分布 */
+  padding: 0 20px;
+  gap: 12px; /* 纵向间距 */
   
-  .action-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  .action-card {
+    width: 48%; /* 稍微小于 50% 以留出间隙 */
+    /* width: calc(50% - 6px); 或者使用 calc 更精确 */
+    background: $omiai-white;
+    padding: 20px;
+    border-radius: $omiai-radius-lg;
+    box-shadow: $omiai-shadow-sm;
+    margin-bottom: 0; /* 使用 gap 控制间距 */
+    transition: all 0.2s ease;
+    box-sizing: border-box; /* 确保 padding 不撑大宽度 */
     
-    .icon-wrapper {
-      width: 52px;
-      height: 52px;
-      border-radius: 18px;
+    &:active { transform: scale(0.98); }
+    
+    .icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
       display: flex;
       justify-content: center;
       align-items: center;
-      margin-bottom: 8px;
-      box-shadow: $omiai-shadow-sm;
+      margin-bottom: 16px;
       
       &.bg-pink { background: #FFF0F2; }
       &.bg-orange { background: #FFF7E8; }
@@ -288,10 +292,17 @@ const shareInvite = () => {
       &.bg-green { background: #E8FFEA; }
     }
     
-    .grid-text {
-      font-size: 13px;
-      font-weight: 500;
-      color: $omiai-text-main;
+    .card-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: $omiai-text-main;
+        display: block;
+        margin-bottom: 4px;
+    }
+    
+    .card-desc {
+        font-size: 11px;
+        color: $omiai-text-tip;
     }
   }
 }

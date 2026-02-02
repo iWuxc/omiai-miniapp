@@ -5,39 +5,90 @@
 /* 引入 uview-plus 主题样式 */
 @import 'uview-plus/theme.scss';
 
-/* 1) 中国式审美 UI 设计系统 - 温润与专业 */
-/* 核心品牌色：珊瑚粉/相亲红，象征温暖与缘分 */
+/* 1) 高端现代化 UI 设计系统 (Modern High-End Style) */
+/* 参考：干净、通透、卡片式、大圆角、微阴影 */
+
+/* 核心品牌色 - 保持品牌认知，但优化配色逻辑 */
 $omiai-primary: #FF5E78;    
 $omiai-primary-light: #FFF0F2;
+$omiai-primary-dark: #E04D66;
 $omiai-primary-gradient: linear-gradient(135deg, #FF8E9D 0%, #FF5E78 100%);
 
 /* 辅助色 */
 $omiai-male: #4A90E2;       /* 稳重蓝 */
 $omiai-female: #FF6B9D;     /* 柔美粉 */
-$omiai-success: #07C160;    /* 微信绿风格 */
-$omiai-warning: #FF9F00;
-$omiai-error: #FA5151;
+$omiai-success: #52C41A;    
+$omiai-warning: #FAAD14;
+$omiai-error: #FF4D4F;
 
-/* 中性色体系 - 柔和过渡 */
-$omiai-text-main: #1D2129;   /* 主要文字，接近黑但有温度 */
-$omiai-text-second: #4E5969; /* 次要文字 */
-$omiai-text-tip: #86909C;    /* 辅助/提示文字 */
-$omiai-border: #F2F3F5;      /* 边框色 */
-$omiai-bg-page: #F7F8FA;     /* 页面底色，清爽灰白 */
+/* 中性色体系 - 提升对比度与质感 */
+$omiai-text-main: #1D2129;   /* 主要文字 - 强对比 */
+$omiai-text-second: #4E5969; /* 次要文字 - 柔和 */
+$omiai-text-tip: #86909C;    /* 提示文字 - 弱化 */
+$omiai-text-placeholder: #C9CDD4;
+
+$omiai-border: #E5E6EB;      /* 边框色 - 更细腻 */
+$omiai-border-light: #F2F3F5;
+
+$omiai-bg-page: #F7F8FA;     /* 页面底色 */
 $omiai-white: #FFFFFF;
+$omiai-black: #000000;
 
-/* 2) 布局与圆角规范 - 更加圆润亲和 */
-$omiai-radius-sm: 6px;
+/* 2) 圆角规范 - 大圆角风格 */
+$omiai-radius-xs: 4px;
+$omiai-radius-sm: 8px;
 $omiai-radius-md: 12px;
-$omiai-radius-lg: 20px;
-$omiai-radius-card: 16px;
+$omiai-radius-lg: 16px;      /* 常用卡片圆角 */
+$omiai-radius-xl: 24px;      /* 弹窗/大卡片 */
+$omiai-radius-circle: 999px;
 
-/* 3) 投影规范 - 层次感与通透感 */
-$omiai-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-$omiai-shadow-md: 0 8px 24px rgba(255, 94, 120, 0.08); /* 带品牌色倾向的柔和阴影 */
+/* 3) 投影规范 - 弥散光感 */
+$omiai-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.02);
+$omiai-shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04);
+$omiai-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
+$omiai-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.08);
+$omiai-shadow-float: 0 16px 48px rgba(0, 0, 0, 0.12);
 
-/* 4) 字体排版 */
-$omiai-font-family: -apple-system, system-ui, "Microsoft YaHei", sans-serif;
+/* 4) 间距规范 */
+$omiai-space-xs: 4px;
+$omiai-space-sm: 8px;
+$omiai-space-md: 16px;
+$omiai-space-lg: 24px;
+$omiai-space-xl: 32px;
+
+/* 5) 字体排版 */
+$omiai-font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, sans-serif;
+
+/* 6) 全局类名 helper */
+.omiai-card {
+    background: $omiai-white;
+    border-radius: $omiai-radius-lg;
+    box-shadow: $omiai-shadow-sm;
+    transition: all 0.2s ease;
+    overflow: hidden;
+}
+
+.omiai-card:active {
+    transform: scale(0.995);
+    box-shadow: $omiai-shadow-xs;
+}
+
+.omiai-flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.omiai-safe-bottom {
+    padding-bottom: constant(safe-area-inset-bottom);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+@mixin text-ellipsis {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
 
 /* 兼容旧变量 */
 $uni-color-primary: $omiai-primary;
