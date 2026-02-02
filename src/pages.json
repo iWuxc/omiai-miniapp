@@ -28,6 +28,13 @@
       }
     },
     {
+      "path": "pages/import/index",
+      "style": {
+        "navigationBarTitleText": "批量导入",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/client/detail",
       "style": {
         "navigationBarTitleText": "客户详情",

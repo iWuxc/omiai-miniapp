@@ -153,7 +153,16 @@ const onBannerClick = (index: number) => {
 };
 
 const navigateTo = (url: string) => {
-  uni.navigateTo({ url });
+  const tabbarPages = [
+    '/pages/home/index',
+    '/pages/client/list',
+    '/pages/form/index'
+  ];
+  if (tabbarPages.includes(url)) {
+    uni.switchTab({ url });
+  } else {
+    uni.navigateTo({ url });
+  }
 };
 
 const shareInvite = () => {

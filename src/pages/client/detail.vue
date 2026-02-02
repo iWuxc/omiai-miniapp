@@ -113,6 +113,15 @@
       
       <!-- Tab 2: 智能匹配 -->
       <view v-if="currentTab === 1" class="match-section fade-in">
+        <!-- 搜索条件预览 -->
+        <view v-if="sourceReq && Object.keys(sourceReq).length > 0" class="filter-preview" @click="showFilterModal = true">
+           <view class="filter-row">
+             <u-icon name="setting" color="#FF5E78" size="14"></u-icon>
+             <text class="filter-text">匹配条件: {{ getReqSummary(sourceReq) }}</text>
+             <u-icon name="arrow-right" color="#C0C4CC" size="12"></u-icon>
+           </view>
+        </view>
+
         <view v-if="matchList.length === 0" class="empty-box">
           <u-empty mode="search" text="暂无匹配结果" icon-color="#F2F3F5">
             <u-button slot="bottom" @click="match" class="omiai-btn-primary" customStyle="margin-top: 24px; width: 180px;">立即智能匹配</u-button>
@@ -128,24 +137,27 @@
              </view>
            </view>
 
-           <view class="match-card omiai-card" v-for="(item, index) in matchList" :key="index" @click="goDetail(item.id)">
+           <view class="match-card omiai-card" v-for="(item, index) in matchList" :key="index" @click="goDetail(item.client.id)">
             <view class="card-body">
               <view class="avatar-box">
-                <u-avatar :src="item.avatar" size="60" shape="circle"></u-avatar>
+                <u-avatar :src="item.client.avatar" size="60" shape="circle"></u-avatar>
               </view>
               <view class="info-box">
                 <view class="name-row">
-                  <text class="omiai-title-lg">{{ item.name }}</text>
-                  <text class="age-info">{{ item.age }}岁</text>
+                  <text class="omiai-title-lg">{{ item.client.name }}</text>
+                  <text class="age-info">{{ item.client.age }}岁</text>
                 </view>
                 <view class="detail-row omiai-text-sm">
-                   <text>{{ getEducationText(item.education) }}</text>
+                   <text>{{ getEducationText(item.client.education) }}</text>
                    <text class="sep">·</text>
-                   <text>{{ item.height }}cm</text>
+                   <text>{{ item.client.height }}cm</text>
+                </view>
+                <view class="match-reasons" v-if="item.match_tags && item.match_tags.length > 0">
+                    <text v-for="(tag, tIdx) in item.match_tags" :key="tIdx" class="reason-tag">{{ tag }}</text>
                 </view>
               </view>
               <view class="score-box">
-                <view class="score-val">98<text class="unit">%</text></view>
+                <view class="score-val">{{ item.score }}<text class="unit">分</text></view>
                 <text class="score-label">匹配度</text>
               </view>
             </view>
@@ -153,6 +165,22 @@
         </view>
       </view>
     </view>
+    
+    <u-popup :show="showFilterModal" mode="bottom" @close="showFilterModal = false" round="16">
+        <view class="filter-modal">
+            <view class="modal-header">
+                <text class="title">调整匹配条件</text>
+                <u-icon name="close" @click="showFilterModal = false"></u-icon>
+            </view>
+            <view class="modal-body">
+                <!-- 简单的条件展示，暂不支持修改，后续迭代支持 -->
+                <view class="tip-text">当前匹配基于客户档案中的“择偶标准”自动计算。如需调整，请前往档案详情页修改资料。</view>
+                <view class="req-json">
+                    {{ JSON.stringify(sourceReq, null, 2) }}
+                </view>
+            </view>
+        </view>
+    </u-popup>
     
     <view class="footer-placeholder"></view>
     <view class="footer" v-if="currentTab === 0">
@@ -173,7 +201,9 @@ import { getClientDetail, matchClient, type Client } from '@/api/client';
 
 const primaryColor = '#FF5E78';
 const client = ref<Client>({} as Client);
-const matchList = ref<Client[]>([]);
+const matchList = ref<any[]>([]); // Use any[] because structure changed to { client: Client, score: number }
+const sourceReq = ref<any>({});
+const showFilterModal = ref(false);
 const currentTab = ref(0);
 const tabs = [{ name: '档案详情' }, { name: '智能匹配' }];
 const matching = ref(false);
@@ -183,24 +213,31 @@ const goBack = () => {
   uni.navigateBack();
 };
 
-onLoad(async (options: any) => {
+const getReqSummary = (req: any) => {
+    const parts = [];
+    if (req.min_age || req.max_age) parts.push(`${req.min_age}-${req.max_age}岁`);
+    if (req.min_height) parts.push(`${req.min_height}cm+`);
+    return parts.join(' / ') || '默认条件';
+};
+
+onLoad((options: any) => {
   if (options.id) {
-    clientId.value = Number(options.id);
-    await fetchDetail(clientId.value);
+    clientId.value = parseInt(options.id);
+    loadDetail(clientId.value);
   }
 });
 
-const fetchDetail = async (id: number) => {
+const loadDetail = async (id: number) => {
   try {
     const res: any = await getClientDetail(id);
     client.value = res;
   } catch (e) {
-    uni.showToast({ title: '获取详情失败', icon: 'none' });
+    uni.showToast({ title: '加载失败', icon: 'none' });
   }
 };
 
 const onTabChange = (item: any) => {
-  currentTab.value = item.index;
+    currentTab.value = item.index;
 };
 
 const match = async () => {
@@ -210,6 +247,7 @@ const match = async () => {
   try {
     const res: any = await matchClient(clientId.value);
     matchList.value = res.list || [];
+    sourceReq.value = res.source_req || {};
     currentTab.value = 1; 
     
     if (matchList.value.length > 0) {
@@ -477,6 +515,19 @@ const getAssetsText = (c: Client) => {
                 color: $omiai-text-second;
                 .sep { margin: 0 6px; color: $omiai-border; }
             }
+            .match-reasons {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+                margin-top: 6px;
+                .reason-tag {
+                    font-size: 10px;
+                    color: $omiai-warning;
+                    background: #FFF7E6;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                }
+            }
         }
         
         .score-box {
@@ -491,6 +542,55 @@ const getAssetsText = (c: Client) => {
                 font-size: 10px;
                 color: $omiai-text-tip;
             }
+        }
+    }
+}
+
+.filter-preview {
+    background: #FFF;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    
+    .filter-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        
+        .filter-text {
+            flex: 1;
+            font-size: 13px;
+            color: $omiai-text-main;
+        }
+    }
+}
+
+.filter-modal {
+    padding: 16px;
+    background: #fff;
+    min-height: 300px;
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        .title { font-size: 16px; font-weight: 600; }
+    }
+    
+    .modal-body {
+        .tip-text {
+            font-size: 13px;
+            color: $omiai-text-tip;
+            margin-bottom: 16px;
+        }
+        .req-json {
+            background: #f7f8fa;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            color: $omiai-text-second;
         }
     }
 }

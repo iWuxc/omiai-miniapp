@@ -3,7 +3,13 @@
     <view class="form-wrapper">
       <!-- 1) 标题区 (中式亲和力：大标题 + 温馨提示) -->
       <view class="header fade-in">
-        <text class="omiai-title-xl">完善客户档案</text>
+        <view class="header-row">
+            <text class="omiai-title-xl">完善客户档案</text>
+            <view class="import-btn" @click="goImport">
+                <u-icon name="download" color="#FF5E78" size="14"></u-icon>
+                <text>批量导入</text>
+            </view>
+        </view>
         <text class="omiai-text-md subtitle">信息越完善，智能匹配的成功率越高哦</text>
       </view>
 
@@ -359,6 +365,10 @@ const onCalendarConfirm = (e: any) => {
   form.birthday = `${year}-${month}`;
 };
 
+const goImport = () => {
+    uni.navigateTo({ url: '/pages/import/index' });
+};
+
 const submit = () => {
   if (!form.name || !form.phone || !form.birthday || !form.age || !form.zodiac || 
       !form.height || !form.weight || !form.income || !form.address || 
@@ -413,6 +423,24 @@ const confirmSubmit = async () => {
 .header {
   margin-bottom: 24px;
   padding-left: 4px;
+  
+  .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      
+      .import-btn {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          background: #FFF0F2;
+          padding: 6px 12px;
+          border-radius: 99px;
+          font-size: 13px;
+          color: $omiai-primary;
+          font-weight: 500;
+      }
+  }
   
   .subtitle {
     color: $omiai-text-tip;

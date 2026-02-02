@@ -39,6 +39,10 @@ export interface ClientListParams {
   max_height?: number;
   education?: number;
   income?: number;
+  // Phase 1 Params
+  scope?: string;
+  status?: number;
+  tags?: string;
 }
 
 export const getClientList = (params: ClientListParams) => {
@@ -47,6 +51,14 @@ export const getClientList = (params: ClientListParams) => {
 
 export const createClient = (data: Client) => {
   return http.post('/client/create', data);
+};
+
+export const claimClient = (data: { client_id: number }) => {
+  return http.post('/client/claim', data);
+};
+
+export const releaseClient = (data: { client_id: number }) => {
+  return http.post('/client/release', data);
 };
 
 export const getClientDetail = (id: number) => {
