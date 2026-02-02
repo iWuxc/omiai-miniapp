@@ -1,4 +1,4 @@
-import http from '@/utils/request';
+import { config as appConfig } from '@/config';
 
 export const uploadFile = (filePath: string) => {
   return new Promise((resolve, reject) => {
@@ -9,7 +9,7 @@ export const uploadFile = (filePath: string) => {
     }
 
     uni.uploadFile({
-      url: `${http.config.baseURL}/common/upload`,
+      url: `${appConfig.baseUrl}/common/upload`,
       filePath: filePath,
       name: 'file',
       header: header,

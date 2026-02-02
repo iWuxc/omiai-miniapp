@@ -54,6 +54,17 @@
             <u-input v-model="form.birthday" placeholder="请选择YYYY-MM" disabled disabledColor="#fff" border="none"></u-input>
             <u-icon slot="right" name="calendar" :color="primaryColor" size="18"></u-icon>
           </u-form-item>
+          
+          <u-datetime-picker
+            :show="showCalendar"
+            v-model="birthdayTimestamp"
+            mode="year-month"
+            @confirm="onCalendarConfirm"
+            @cancel="showCalendar = false"
+            :minDate="minDate"
+            :maxDate="maxDate"
+            :confirmColor="primaryColor"
+          ></u-datetime-picker>
 
           <u-form-item label="年龄" prop="age" required borderBottom>
             <u-input v-model="form.age" type="number" placeholder="请输入您的年龄" border="none"></u-input>
@@ -206,7 +217,6 @@
       </view>
     </view>
     
-    <u-calendar :show="showCalendar" @confirm="onCalendarConfirm" @close="showCalendar = false" :color="primaryColor"></u-calendar>
     <u-modal :show="showConfirm" title="确认提交" content="请核对您的信息是否准确，提交后红娘姐姐将开始为您牵线匹配" @confirm="confirmSubmit" @cancel="showConfirm = false" showCancelButton></u-modal>
     
     <!-- 提交成功弹窗 -->
@@ -225,6 +235,11 @@ const maleColor = '#4A90E2';
 const showCalendar = ref(false);
 const submitting = ref(false);
 const showSuccess = ref(false);
+
+const birthdayTimestamp = ref(Number(new Date()));
+// 1950年1月1日
+const minDate = ref(new Date('1950/01/01').getTime());
+const maxDate = ref(new Date().getTime());
 
 const avatarList = ref<any[]>([]);
 const photoList = ref<any[]>([]);

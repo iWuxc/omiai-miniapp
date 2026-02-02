@@ -56,6 +56,17 @@
             <u-input v-model="form.birthday" placeholder="请选择YYYY-MM" disabled disabledColor="#fff" border="none"></u-input>
             <u-icon slot="right" name="calendar" :color="primaryColor" size="18"></u-icon>
           </u-form-item>
+          
+          <u-datetime-picker
+            :show="showCalendar"
+            v-model="birthdayTimestamp"
+            mode="year-month"
+            @confirm="onCalendarConfirm"
+            @cancel="showCalendar = false"
+            :minDate="minDate"
+            :maxDate="maxDate"
+            :confirmColor="primaryColor"
+          ></u-datetime-picker>
 
           <u-form-item label="年龄" prop="age" required borderBottom>
             <u-input v-model="form.age" type="number" placeholder="请输入年龄" border="none"></u-input>
@@ -214,6 +225,10 @@ const primaryColor = '#FF5E78';
 const maleColor = '#4A90E2';
 const showCalendar = ref(false);
 const submitting = ref(false);
+const birthdayTimestamp = ref(Number(new Date()));
+// 1950年1月1日
+const minDate = ref(new Date('1950/01/01').getTime());
+const maxDate = ref(new Date().getTime());
 
 const avatarList = ref<any[]>([]);
 const photoList = ref<any[]>([]);
@@ -272,7 +287,12 @@ const validateFile = (file: any) => {
 };
 
 const afterReadAvatar = async (event: any) => {
-  const { file } = event;
+  let { file } = event;
+  // 兼容多选情况，取第一个
+  if (Array.isArray(file)) {
+    file = file[0];
+  }
+
   if (!validateFile(file)) return;
   
   avatarList.value.push({ ...file, status: 'uploading', message: '上传中' });
@@ -287,6 +307,11 @@ const afterReadAvatar = async (event: any) => {
   } catch (e) {
     avatarList.value[0].status = 'failed';
     avatarList.value[0].message = '上传失败';
+    // 移除上传失败的文件
+    setTimeout(() => {
+        avatarList.value = [];
+        form.avatar = '';
+    }, 1000);
   }
 };
 
@@ -302,18 +327,20 @@ const afterReadPhotos = async (event: any) => {
   for (const f of files) {
     if (!validateFile(f)) continue;
     
-    const index = photoList.value.length;
     photoList.value.push({ ...f, status: 'uploading', message: '上传中' });
+    const item = photoList.value[photoList.value.length - 1];
+
     try {
       const filePath = f.url || f.path;
       const res: any = await uploadFile(filePath);
+      // Backend returns full URL if it's OSS/COS, or relative if local
       const url = res.url.startsWith('http') ? res.url : appConfig.assetsUrl + res.url;
-      photoList.value[index].url = url;
-      photoList.value[index].status = 'success';
+      item.url = url;
+      item.status = 'success';
       syncPhotos();
     } catch (e) {
-      photoList.value[index].status = 'failed';
-      photoList.value[index].message = '上传失败';
+      item.status = 'failed';
+      item.message = '上传失败';
     }
   }
 };
@@ -325,7 +352,11 @@ const deletePhoto = (event: any) => {
 
 const onCalendarConfirm = (e: any) => {
   showCalendar.value = false;
-  form.birthday = e[0];
+  // e.value is timestamp
+  const date = new Date(e.value);
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  form.birthday = `${year}-${month}`;
 };
 
 const submit = () => {
