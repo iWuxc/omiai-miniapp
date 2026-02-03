@@ -2,13 +2,7 @@
 import { onLaunch, onShow, onHide } from "@dcloudio/uni-app";
 onLaunch(() => {
   console.log("App Launch");
-  const token = uni.getStorageSync('token');
-  const pages = getCurrentPages();
-  const currentPage = pages[pages.length - 1]?.route;
-  
-  if (!token && currentPage !== 'pages/auth/login') {
-    uni.reLaunch({ url: '/pages/auth/login' });
-  }
+  // 移除此处的跳转逻辑，改用 main.ts 中的路由拦截器，防止 H5 死循环
 });
 onShow(() => {
   console.log("App Show");
