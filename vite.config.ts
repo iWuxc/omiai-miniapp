@@ -7,17 +7,17 @@ export default defineConfig({
   esbuild: {
     drop: ['console', 'debugger'],
   },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            return 'vendor';
-          }
-        },
-      },
-    },
-  },
+  // build: {
+  //   rollupOptions: {
+  //     output: {
+  //       manualChunks(id) {
+  //         if (id.includes('node_modules')) {
+  //           return 'vendor';
+  //         }
+  //       },
+  //     },
+  //   },
+  // },
   css: {
     preprocessorOptions: {
       scss: {
