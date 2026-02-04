@@ -50,22 +50,46 @@
             </u-radio-group>
           </u-form-item>
 
-          <u-form-item label="出生年月" prop="birthday" required borderBottom @click="showCalendar = true">
+          <!-- 出生年月表单项 -->
+          <u-form-item label="出生年月" prop="birthday" required borderBottom @click="!isH5 && (showCalendar = true)">
             <u-input v-model="form.birthday" placeholder="请选择YYYY-MM" disabled disabledColor="#fff" border="none"></u-input>
             <u-icon slot="right" name="calendar" :color="primaryColor" size="18"></u-icon>
+            <!-- H5原生日期选择器 - 绝对定位覆盖 -->
+            <input 
+              v-if="isH5"
+              type="month"
+              v-model="form.birthday"
+              class="native-date-picker"
+              :max="currentYearMonth"
+              :min="'1950-01'"
+              @change="onNativeDateChange"
+            />
           </u-form-item>
           
-          <u-datetime-picker
+          <!-- 小程序日期选择器弹窗 -->
+          <u-popup
+            v-if="!isH5"
             :show="showCalendar"
-            v-model="birthdayTimestamp"
-            mode="year-month"
-            @confirm="onCalendarConfirm"
-            @cancel="showCalendar = false"
+            mode="bottom"
             @close="showCalendar = false"
-            :minDate="minDate"
-            :maxDate="maxDate"
-            :confirmColor="primaryColor"
-          ></u-datetime-picker>
+            :closeable="true"
+            :safeAreaInsetBottom="true"
+            :zIndex="9999"
+          >
+            <view class="picker-header">
+              <text class="picker-title">选择出生年月</text>
+            </view>
+            <u-picker
+              :show="showCalendar"
+              :columns="yearMonthColumns"
+              @confirm="onCalendarConfirm"
+              @cancel="showCalendar = false"
+              @close="showCalendar = false"
+              :closeOnClickOverlay="false"
+              :confirmColor="primaryColor"
+              keyName="label"
+            ></u-picker>
+          </u-popup>
 
           <u-form-item label="年龄" prop="age" required borderBottom>
             <u-input v-model="form.age" type="number" placeholder="请输入您的年龄" border="none"></u-input>
@@ -226,10 +250,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { createClient } from '@/api/client';
 import { uploadFile } from '@/api/common';
 import { config as appConfig } from '@/config';
+
+// 判断是否H5环境（运行时判断）
+const isH5 = computed(() => {
+  return typeof window !== 'undefined' && window.navigator && window.navigator.userAgent;
+});
+
+// 当前年月（用于原生input限制）
+const currentYearMonth = computed(() => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+});
 
 const primaryColor = '#FF5E78';
 const maleColor = '#4A90E2';
@@ -237,10 +272,21 @@ const showCalendar = ref(false);
 const submitting = ref(false);
 const showSuccess = ref(false);
 
-const birthdayTimestamp = ref(Number(new Date()));
-// 1950年1月1日
-const minDate = ref(new Date('1950/01/01').getTime());
-const maxDate = ref(new Date().getTime());
+// 生成年份-月份选择器数据（1950-当前年份）
+const currentYear = new Date().getFullYear();
+const years = [];
+for (let y = 1950; y <= currentYear; y++) {
+  years.push({ label: String(y), value: y });
+}
+const months = [
+  { label: '01', value: 1 }, { label: '02', value: 2 },
+  { label: '03', value: 3 }, { label: '04', value: 4 },
+  { label: '05', value: 5 }, { label: '06', value: 6 },
+  { label: '07', value: 7 }, { label: '08', value: 8 },
+  { label: '09', value: 9 }, { label: '10', value: 10 },
+  { label: '11', value: 11 }, { label: '12', value: 12 }
+];
+const yearMonthColumns = ref([years, months]);
 
 const avatarList = ref<any[]>([]);
 const photoList = ref<any[]>([]);
@@ -273,11 +319,18 @@ const form = reactive({
 
 const onCalendarConfirm = (e: any) => {
   showCalendar.value = false;
-  // e.value 是时间戳，格式化为 YYYY-MM
-  const date = new Date(e.value);
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  form.birthday = `${year}-${month}`;
+  // u-picker 返回选中的列数据
+  const selected = e.value;
+  if (selected && selected.length >= 2) {
+    const year = selected[0].label;
+    const month = selected[1].label;
+    form.birthday = `${year}-${month}`;
+  }
+};
+
+// H5原生日期选择器变更
+const onNativeDateChange = (e: any) => {
+  form.birthday = e.target.value;
 };
 
 const validateFile = (file: any) => {
@@ -466,5 +519,39 @@ const onSuccessConfirm = () => {
 .submit-btn {
   margin-top: 32px;
   padding-bottom: 60px;
+}
+
+/* H5原生日期选择器 - 覆盖在表单项上 */
+.native-date-picker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 100;
+}
+
+/* picker弹窗头部 */
+.picker-header {
+  padding: 16px;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+  
+  .picker-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+/* 确保picker在H5中正确显示在底部 */
+:deep(.u-popup__content) {
+  max-height: 60vh;
+}
+
+:deep(.u-picker) {
+  background: #fff;
 }
 </style>
