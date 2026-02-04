@@ -18,7 +18,7 @@
     <view class="hero-header fade-in">
       <view class="hero-image-box">
         <u-image 
-          :src="client.avatar || defaultAvatar" 
+          :src="getAvatar(client)" 
           width="100%" 
           height="320px" 
           mode="aspectFill"
@@ -326,7 +326,7 @@
            <view class="match-card omiai-card" v-for="(item, index) in matchList" :key="index" @click="goDetail(item.client.id)">
             <view class="card-body">
               <view class="avatar-box">
-                <u-avatar :src="item.client.avatar" size="60" shape="circle"></u-avatar>
+                <u-avatar :src="getAvatar(item.client)" size="60" shape="circle"></u-avatar>
               </view>
               <view class="info-box">
                 <view class="name-row">
@@ -414,6 +414,12 @@ import { uploadFile } from '@/api/common';
 
 const primaryColor = '#FF5E78';
 const defaultAvatar = 'https://cdn.uviewui.com/uview/album/1.jpg';
+
+const getAvatar = (c: any) => {
+  if (c && c.avatar) return c.avatar;
+  if (c && c.id) return `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.id}`;
+  return defaultAvatar;
+};
 
 const client = ref<Client>({} as Client);
 const matchList = ref<any[]>([]);

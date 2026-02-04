@@ -21,6 +21,11 @@ export interface Client {
   partner_requirements?: string;
   remark?: string;
   photos?: string; // JSON string
+  tags?: string;
+  status?: number;
+  house_address?: string;
+  created_at?: string;
+  updated_at?: string;
   // Display helper
   age?: number;
   avatar?: string;

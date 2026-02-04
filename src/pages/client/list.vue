@@ -297,11 +297,14 @@ const getEducationText = (level?: number) => {
   return map[level ?? 0] || '未知';
 };
 
+const defaultAvatar = 'https://cdn.uviewui.com/uview/album/1.jpg';
+
 const getCoverImage = (item: Client) => {
     // Phase 2: Use uploaded photos if available
     // For now, use avatar or mock
     if (item.avatar) return item.avatar;
-    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.id}`; 
+    if (item.id) return `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.id}`; 
+    return defaultAvatar;
 };
 </script>
 
