@@ -61,6 +61,7 @@
             mode="year-month"
             @confirm="onCalendarConfirm"
             @cancel="showCalendar = false"
+            @close="showCalendar = false"
             :minDate="minDate"
             :maxDate="maxDate"
             :confirmColor="primaryColor"
@@ -272,12 +273,11 @@ const form = reactive({
 
 const onCalendarConfirm = (e: any) => {
   showCalendar.value = false;
-  // 格式化为 YYYY-MM
-  const date = e[0];
-  if (date) {
-    const parts = date.split('-');
-    form.birthday = `${parts[0]}-${parts[1]}`;
-  }
+  // e.value 是时间戳，格式化为 YYYY-MM
+  const date = new Date(e.value);
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  form.birthday = `${year}-${month}`;
 };
 
 const validateFile = (file: any) => {

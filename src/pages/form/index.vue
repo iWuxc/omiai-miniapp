@@ -69,6 +69,7 @@
             mode="year-month"
             @confirm="onCalendarConfirm"
             @cancel="showCalendar = false"
+            @close="showCalendar = false"
             :minDate="minDate"
             :maxDate="maxDate"
             :confirmColor="primaryColor"
@@ -216,7 +217,6 @@
       </view>
     </view>
     
-    <u-calendar :show="showCalendar" @confirm="onCalendarConfirm" @close="showCalendar = false" :color="primaryColor"></u-calendar>
     <u-modal :show="showConfirm" title="确认提交" content="请核对信息是否准确，提交后红娘将开始为您匹配" @confirm="confirmSubmit" @cancel="showConfirm = false" showCancelButton></u-modal>
   </view>
 </template>
