@@ -9,7 +9,7 @@
         </view>
         <text class="omiai-text-md date">今天是 {{ currentDate }}，又是充满希望的一天</text>
       </view>
-      <view class="avatar-area">
+      <view class="avatar-area" @click="navigateTo('/pages/profile/index')">
           <u-avatar text="M" size="48" fontSize="20" bg-color="#FF5E78"></u-avatar>
       </view>
     </view>
@@ -165,7 +165,8 @@ const navigateTo = (url: string) => {
   const tabbarPages = [
     '/pages/home/index',
     '/pages/client/list',
-    '/pages/form/index'
+    '/pages/form/index',
+    '/pages/profile/index'
   ];
   if (tabbarPages.includes(url)) {
     uni.switchTab({ url });

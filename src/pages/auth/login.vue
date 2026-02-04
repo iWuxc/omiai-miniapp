@@ -65,17 +65,34 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
 import { getPlatform } from '@/utils/env';
 import { sendSms, h5Login, wxLogin } from '@/api/auth';
+import { setToken, setUserInfo } from '@/utils/auth';
 
 const platform = ref(getPlatform());
 const loading = ref(false);
 const tips = ref('获取验证码');
 const uCode = ref();
+const redirectUrl = ref('');
 
 const h5Form = reactive({
   phone: '',
   code: ''
+});
+
+// 页面加载时获取 redirect 参数
+onLoad((options: any) => {
+  if (options?.redirect) {
+    redirectUrl.value = decodeURIComponent(options.redirect);
+  } else {
+    // 尝试从存储中获取
+    const savedUrl = uni.getStorageSync('redirectUrl');
+    if (savedUrl) {
+      redirectUrl.value = savedUrl;
+      uni.removeStorageSync('redirectUrl');
+    }
+  }
 });
 
 const codeChange = (text: string) => {
@@ -104,6 +121,11 @@ const getCode = async () => {
 const handleH5Login = async () => {
   if (!h5Form.phone || !h5Form.code) {
     uni.showToast({ title: '请完善登录信息', icon: 'none' });
+    return;
+  }
+  
+  if (!/^1[3-9]\d{9}$/.test(h5Form.phone)) {
+    uni.showToast({ title: '请输入正确的手机号', icon: 'none' });
     return;
   }
   
@@ -139,13 +161,58 @@ const handleWxLogin = () => {
 };
 
 const loginSuccess = (data: any) => {
-  uni.setStorageSync('token', data.token);
-  uni.setStorageSync('userInfo', data.user);
+  // 使用封装的 auth 工具保存登录信息
+  setToken(data.token);
+  setUserInfo(data.user);
+  uni.setStorageSync('loginTime', Date.now().toString());
+  
   uni.showToast({ title: '登录成功', icon: 'success' });
   
+  // 延迟跳转，确保存储完成
   setTimeout(() => {
-    uni.switchTab({ url: '/pages/home/index' });
-  }, 1500);
+    doRedirect();
+  }, 800);
+};
+
+const doRedirect = () => {
+  // 优先使用 redirectUrl
+  if (redirectUrl.value && !redirectUrl.value.includes('/auth/login')) {
+    const url = redirectUrl.value;
+    redirectUrl.value = ''; // 清空
+    
+    // 根据目标 URL 类型选择跳转方式
+    if (url.includes('/pages/') || url.startsWith('pages/')) {
+      // 判断是否是 tabBar 页面
+      const tabBarPages = ['pages/home/index', 'pages/client/list', 'pages/form/index'];
+      const path = url.split('?')[0].replace(/^\//, '');
+      
+      if (tabBarPages.some(tab => path.includes(tab))) {
+        uni.switchTab({ 
+          url: url.startsWith('/') ? url : '/' + url,
+          fail: () => fallbackRedirect()
+        });
+      } else {
+        uni.reLaunch({ 
+          url: url.startsWith('/') ? url : '/' + url,
+          fail: () => fallbackRedirect()
+        });
+      }
+    } else {
+      fallbackRedirect();
+    }
+  } else {
+    fallbackRedirect();
+  }
+};
+
+const fallbackRedirect = () => {
+  // 默认跳转到首页
+  uni.switchTab({ 
+    url: '/pages/home/index',
+    fail: () => {
+      uni.reLaunch({ url: '/pages/home/index' });
+    }
+  });
 };
 </script>
 

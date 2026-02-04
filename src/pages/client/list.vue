@@ -11,7 +11,7 @@
           height="36" 
           :border="false"
           @search="onSearch"
-          customStyle="flex: 1;"
+          :customStyle="{ flex: 1 }"
         ></u-search>
         <!-- Filter Icon -->
         <view class="filter-btn" @click="showFilter = true">

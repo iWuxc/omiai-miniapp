@@ -2,6 +2,7 @@ import { createSSRApp } from "vue";
 import App from "./App.vue";
 import uviewPlus from 'uview-plus';
 import { createPinia } from 'pinia';
+import { isLoggedIn, isTokenExpired, clearAuth } from '@/utils/auth';
 
 export function createApp() {
   const app = createSSRApp(App);
@@ -10,46 +11,85 @@ export function createApp() {
   app.use(uviewPlus);
   app.use(pinia);
 
-  // 全局路由守卫
+  // 全局路由守卫配置
   const whiteList = [
     '/pages/auth/login',
-    '/pages/index/index', // 允许首页未登录访问(如有需要)
-    'pages/auth/login', // 兼容不同平台的路径格式
-    'pages/index/index'
+    '/pages/index/index',
+    'pages/auth/login',
+    'pages/index/index',
+    '/pages/invite/index', // 邀请页面允许未登录访问
+    'pages/invite/index'
   ];
 
-  function checkLogin(url: string) {
-    // 简单判断：如果 url 包含白名单路径，则放行
-    // 注意：url 可能包含参数，也可能以 / 开头或不以 / 开头
+  /**
+   * 检查登录状态
+   */
+  function checkLogin(url: string): boolean {
     const path = url.split('?')[0];
-    const isWhite = whiteList.some(w => path.endsWith(w) || path === w);
+    
+    // 白名单直接放行
+    const isWhite = whiteList.some(w => 
+      path === w || path.endsWith(w) || w.endsWith(path)
+    );
     
     if (isWhite) return true;
 
-    const token = uni.getStorageSync('token');
-    if (token) return true;
+    // 检查登录状态（包含过期检查）
+    if (isLoggedIn()) return true;
 
-    // 拦截并跳转登录
-    // 使用 setTimeout 避免在路由解析过程中立即跳转导致的错误
+    // 未登录或已过期，拦截并跳转
+    console.log('路由拦截：需要登录', url);
+    
+    // 使用 nextTick 避免在路由解析过程中立即跳转
     setTimeout(() => {
-        uni.reLaunch({ url: '/pages/auth/login' });
-    }, 10);
+      const redirectUrl = encodeURIComponent(url);
+      uni.reLaunch({ 
+        url: `/pages/auth/login?redirect=${redirectUrl}`
+      });
+    }, 0);
+    
     return false;
   }
 
+  // 路由拦截器
   const interceptor = {
     invoke(args: any) {
+      // 保存目标 URL 用于登录后跳转
+      if (args.url && !args.url.includes('/pages/auth/login')) {
+        uni.setStorageSync('redirectUrl', args.url);
+      }
       return checkLogin(args.url);
     }
   };
 
+  // 注册拦截器
   uni.addInterceptor('navigateTo', interceptor);
   uni.addInterceptor('redirectTo', interceptor);
   uni.addInterceptor('reLaunch', interceptor);
   uni.addInterceptor('switchTab', interceptor);
 
+  // 应用启动时检查登录状态
+  const checkAppLaunch = () => {
+    const pages = getCurrentPages();
+    if (pages.length > 0) {
+      const currentPage = pages[pages.length - 1];
+      const route = currentPage.route || '';
+      
+      // 不在白名单且未登录
+      const isWhite = whiteList.some(w => route.includes('auth/login') || route.includes('invite/index'));
+      
+      if (!isWhite && !isLoggedIn()) {
+        console.log('App启动检查：需要登录');
+        uni.reLaunch({ url: '/pages/auth/login' });
+      }
+    }
+  };
+
+  // 延迟执行启动检查
+  setTimeout(checkAppLaunch, 100);
+
   return {
     app,
-    pinia // 必须返回 pinia 实例
+    pinia
   };
 }
