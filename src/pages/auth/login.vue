@@ -170,7 +170,15 @@ const loginSuccess = (data: any) => {
   
   // 延迟跳转，确保存储完成
   setTimeout(() => {
-    doRedirect();
+    // 使用全局方法标记登录后跳转，避免被路由守卫拦截
+    const navigateAfterLogin = (uni as any).$navigateAfterLogin;
+    if (navigateAfterLogin) {
+      navigateAfterLogin(() => {
+        doRedirect();
+      });
+    } else {
+      doRedirect();
+    }
   }, 800);
 };
 
@@ -187,15 +195,9 @@ const doRedirect = () => {
       const path = url.split('?')[0].replace(/^\//, '');
       
       if (tabBarPages.some(tab => path.includes(tab))) {
-        uni.switchTab({ 
-          url: url.startsWith('/') ? url : '/' + url,
-          fail: () => fallbackRedirect()
-        });
+        uniSwitchTab(url.startsWith('/') ? url : '/' + url);
       } else {
-        uni.reLaunch({ 
-          url: url.startsWith('/') ? url : '/' + url,
-          fail: () => fallbackRedirect()
-        });
+        uniReLaunch(url.startsWith('/') ? url : '/' + url);
       }
     } else {
       fallbackRedirect();
@@ -207,10 +209,93 @@ const doRedirect = () => {
 
 const fallbackRedirect = () => {
   // 默认跳转到首页
-  uni.switchTab({ 
-    url: '/pages/home/index',
-    fail: () => {
-      uni.reLaunch({ url: '/pages/home/index' });
+  uniSwitchTab('/pages/home/index');
+};
+
+// 判断是否在微信浏览器中
+const isWeixinBrowser = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const ua = window.navigator.userAgent.toLowerCase();
+  return ua.includes('micromessenger');
+};
+
+// 将 uni 路径转换为 H5 hash 路径
+const toH5Url = (url: string): string => {
+  if (typeof window === 'undefined') return url;
+  // 移除开头的 /，添加 #/
+  const hashPath = url.replace(/^\//, '');
+  return window.location.origin + '/#' + url;
+};
+
+// 微信浏览器兼容的 switchTab
+const uniSwitchTab = (url: string) => {
+  // 微信浏览器中直接使用 location 跳转更可靠
+  if (isWeixinBrowser()) {
+    console.log('微信浏览器环境，使用 location 跳转');
+    window.location.replace(toH5Url(url));
+    return;
+  }
+  
+  // 微信浏览器中 uni.switchTab 可能失效，使用多重回退策略
+  let hasNavigated = false;
+  
+  const doSwitch = () => {
+    if (hasNavigated) return;
+    
+    uni.switchTab({ 
+      url: url,
+      success: () => {
+        hasNavigated = true;
+      },
+      fail: (err) => {
+        console.error('switchTab failed:', err);
+        // 尝试 reLaunch
+        uniReLaunch(url);
+      }
+    });
+  };
+  
+  // 延迟执行，确保微信浏览器环境准备就绪
+  setTimeout(() => {
+    doSwitch();
+    
+    // 保险机制：500ms后如果还没跳转成功，强制使用 location 跳转
+    setTimeout(() => {
+      if (!hasNavigated && typeof window !== 'undefined') {
+        console.warn('Forcing navigation with window.location');
+        window.location.replace(toH5Url(url));
+      }
+    }, 500);
+  }, 100);
+};
+
+// 微信浏览器兼容的 reLaunch
+const uniReLaunch = (url: string) => {
+  if (isWeixinBrowser()) {
+    console.log('微信浏览器环境，使用 location 跳转');
+    window.location.replace(toH5Url(url));
+    return;
+  }
+  
+  let hasNavigated = false;
+  
+  uni.reLaunch({ 
+    url: url,
+    success: () => {
+      hasNavigated = true;
+    },
+    fail: (err) => {
+      console.error('reLaunch failed:', err);
+      // 尝试 redirectTo
+      uni.redirectTo({ 
+        url: url,
+        fail: () => {
+          // 最后手段：使用原生跳转
+          if (typeof window !== 'undefined') {
+            window.location.replace(toH5Url(url));
+          }
+        }
+      });
     }
   });
 };

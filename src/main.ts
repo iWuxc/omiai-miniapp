@@ -21,6 +21,9 @@ export function createApp() {
     'pages/invite/index'
   ];
 
+  // 标记是否正在登录跳转中（避免登录后的跳转被拦截）
+  let isNavigatingAfterLogin = false;
+
   /**
    * 检查登录状态
    */
@@ -33,6 +36,13 @@ export function createApp() {
     );
     
     if (isWhite) return true;
+
+    // 登录后跳转中，直接放行
+    if (isNavigatingAfterLogin) {
+      console.log('路由放行：登录后跳转', url);
+      isNavigatingAfterLogin = false;
+      return true;
+    }
 
     // 检查登录状态（包含过期检查）
     if (isLoggedIn()) return true;
@@ -67,6 +77,16 @@ export function createApp() {
   uni.addInterceptor('redirectTo', interceptor);
   uni.addInterceptor('reLaunch', interceptor);
   uni.addInterceptor('switchTab', interceptor);
+
+  // 全局标记登录后跳转方法
+  (uni as any).$navigateAfterLogin = (callback: () => void) => {
+    isNavigatingAfterLogin = true;
+    callback();
+    // 300ms后清除标记（防止跳转失败导致永久放行）
+    setTimeout(() => {
+      isNavigatingAfterLogin = false;
+    }, 300);
+  };
 
   // 应用启动时检查登录状态
   const checkAppLaunch = () => {

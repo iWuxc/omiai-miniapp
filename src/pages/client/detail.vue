@@ -700,23 +700,30 @@ const getStatusClass = (status: number | undefined): string => {
   top: 0;
   left: 0;
   right: 0;
-  height: 88px;
-  padding-top: 44px;
-  display: flex;
-  align-items: center;
+  height: 44px;
+  padding-top: env(safe-area-inset-top);
   padding-left: 16px;
   padding-right: 16px;
   z-index: 1000;
   background: transparent;
+  display: flex;
+  align-items: center;
+  box-sizing: content-box;
   
   .back-btn, .more-btn {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.25);
     border-radius: 50%;
+    flex-shrink: 0;
+    
+    &:active {
+      background: rgba(0, 0, 0, 0.4);
+      transform: scale(0.95);
+    }
   }
   
   .nav-title {
@@ -725,6 +732,7 @@ const getStatusClass = (status: number | undefined): string => {
     font-size: 17px;
     font-weight: 600;
     color: #fff;
+    line-height: 44px;
   }
 }
 
@@ -742,6 +750,7 @@ const getStatusClass = (status: number | undefined): string => {
     position: relative;
     z-index: 10;
     background: #fff;
+    margin-top: calc(44px + env(safe-area-inset-top));
     
     .hero-image-box {
         position: relative;
