@@ -141,6 +141,10 @@
             <u-input v-model="form.address" placeholder="省市区+详细地址" border="none"></u-input>
           </u-form-item>
 
+          <u-form-item label="具体工作" prop="profession" required borderBottom>
+            <u-input v-model="form.profession" placeholder="请描述具体工作内容" border="none"></u-input>
+          </u-form-item>
+
           <u-form-item label="工作单位" prop="work_unit" required borderBottom>
             <u-input v-model="form.work_unit" placeholder="具体工作单位" border="none"></u-input>
           </u-form-item>
@@ -286,6 +290,7 @@ const form = reactive({
   education: 3,
   marital_status: 1,
   address: '',
+  profession: '',
   work_unit: '',
   position: '',
   house_status: 1,
@@ -415,7 +420,7 @@ const goImport = () => {
 
 const submit = () => {
   if (!form.name || !form.phone || !form.birthday || !form.age || !form.zodiac || 
-      !form.height || !form.weight || !form.income || !form.address || 
+      !form.height || !form.weight || !form.income || !form.address || !form.profession ||
       !form.work_unit || !form.position || !form.family_description || !form.partner_requirements) {
     uni.showToast({ title: '请填写所有必填项', icon: 'none' });
     return;
