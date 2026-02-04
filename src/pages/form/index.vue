@@ -59,45 +59,31 @@
           </u-form-item>
 
           <!-- 出生年月表单项 -->
-          <u-form-item label="出生年月" prop="birthday" required borderBottom @click="!isH5 && (showCalendar = true)">
+          <u-form-item label="出生年月" prop="birthday" required borderBottom @click="onBirthdayClick">
             <u-input v-model="form.birthday" placeholder="请选择YYYY-MM" disabled disabledColor="#fff" border="none"></u-input>
             <u-icon slot="right" name="calendar" :color="primaryColor" size="18"></u-icon>
-            <!-- H5原生日期选择器 - 绝对定位覆盖 -->
-            <input 
-              v-if="isH5"
-              type="month"
-              v-model="form.birthday"
-              class="native-date-picker"
-              :max="currentYearMonth"
-              :min="'1950-01'"
-              @change="onNativeDateChange"
-            />
           </u-form-item>
           
-          <!-- 小程序日期选择器弹窗 -->
-          <u-popup
-            v-if="!isH5"
-            :show="showCalendar"
-            mode="bottom"
-            @close="showCalendar = false"
-            :closeable="true"
-            :safeAreaInsetBottom="true"
-            :zIndex="9999"
-          >
-            <view class="picker-header">
-              <text class="picker-title">选择出生年月</text>
+          <!-- 年月选择器弹窗 -->
+          <view v-if="showCalendar" class="calendar-mask" @click="showCalendar = false">
+            <view class="calendar-popup" @click.stop>
+              <view class="picker-header-row">
+                <text class="picker-cancel" @click="showCalendar = false">取消</text>
+                <text class="picker-title-text">选择出生年月</text>
+                <text class="picker-confirm" @click="confirmYearMonth">确定</text>
+              </view>
+              <view class="picker-body">
+                <picker-view :value="[yearIndex, monthIndex]" @change="onPickerChange" class="picker-view-box">
+                  <picker-view-column>
+                    <view class="picker-item" v-for="(year, index) in yearOptions" :key="index">{{ year }}年</view>
+                  </picker-view-column>
+                  <picker-view-column>
+                    <view class="picker-item" v-for="(month, index) in monthOptions" :key="index">{{ month }}月</view>
+                  </picker-view-column>
+                </picker-view>
+              </view>
             </view>
-            <u-picker
-              :show="showCalendar"
-              :columns="yearMonthColumns"
-              @confirm="onCalendarConfirm"
-              @cancel="showCalendar = false"
-              @close="showCalendar = false"
-              :closeOnClickOverlay="false"
-              :confirmColor="primaryColor"
-              keyName="label"
-            ></u-picker>
-          </u-popup>
+          </view>
 
           <u-form-item label="年龄" prop="age" required borderBottom>
             <u-input v-model="form.age" type="number" placeholder="请输入年龄" border="none"></u-input>
@@ -267,21 +253,20 @@ const maleColor = '#4A90E2';
 const showCalendar = ref(false);
 const submitting = ref(false);
 
-// 生成年份-月份选择器数据（1950-当前年份）
+// 年月选择器数据
 const currentYear = new Date().getFullYear();
-const years = [];
-for (let y = 1950; y <= currentYear; y++) {
-  years.push({ label: String(y), value: y });
+const yearOptions: string[] = [];
+for (let y = currentYear; y >= 1950; y--) {
+  yearOptions.push(String(y));
 }
-const months = [
-  { label: '01', value: 1 }, { label: '02', value: 2 },
-  { label: '03', value: 3 }, { label: '04', value: 4 },
-  { label: '05', value: 5 }, { label: '06', value: 6 },
-  { label: '07', value: 7 }, { label: '08', value: 8 },
-  { label: '09', value: 9 }, { label: '10', value: 10 },
-  { label: '11', value: 11 }, { label: '12', value: 12 }
-];
-const yearMonthColumns = ref([years, months]);
+const monthOptions = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+
+const yearIndex = ref(25); // 默认选中25年前
+const monthIndex = ref(0);
+
+// 日历组件日期限制
+const minDateStr = ref('1950-01-01');
+const maxDateStr = ref(`${currentYear}-12-31`);
 
 const avatarList = ref<any[]>([]);
 const photoList = ref<any[]>([]);
@@ -403,20 +388,25 @@ const deletePhoto = (event: any) => {
   syncPhotos();
 };
 
-const onCalendarConfirm = (e: any) => {
-  showCalendar.value = false;
-  // u-picker 返回选中的列数据
-  const selected = e.value;
-  if (selected && selected.length >= 2) {
-    const year = selected[0].label;
-    const month = selected[1].label;
-    form.birthday = `${year}-${month}`;
-  }
+const onPickerChange = (e: any) => {
+  const values = e.detail.value;
+  yearIndex.value = values[0];
+  monthIndex.value = values[1];
 };
 
-// H5原生日期选择器变更
-const onNativeDateChange = (e: any) => {
-  form.birthday = e.target.value;
+const confirmYearMonth = () => {
+  const year = yearOptions[yearIndex.value];
+  const month = monthOptions[monthIndex.value];
+  form.birthday = `${year}-${month}`;
+  showCalendar.value = false;
+  
+  // 计算年龄
+  const currentYear = new Date().getFullYear();
+  form.age = currentYear - parseInt(year);
+};
+
+const onBirthdayClick = () => {
+  showCalendar.value = true;
 };
 
 const goImport = () => {
@@ -557,16 +547,31 @@ const confirmSubmit = async () => {
   padding-bottom: 40px;
 }
 
-/* H5原生日期选择器 - 覆盖在表单项上 */
-.native-date-picker {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-  z-index: 100;
+/* 出生年月项包装器 */
+.birthday-item-wrapper {
+  position: relative;
+
+  /* 点击遮罩层 - 用于小程序唤起picker */
+  .birthday-click-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+  }
+
+  /* H5原生日期选择器 - 覆盖在表单项上 */
+  .native-date-picker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 20;
+  }
 }
 
 /* picker弹窗头部 */
@@ -589,5 +594,60 @@ const confirmSubmit = async () => {
 
 :deep(.u-picker) {
   background: #fff;
+}
+
+/* 自定义弹窗样式 */
+.calendar-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.calendar-popup {
+  background: #fff;
+  border-radius: 12px 12px 0 0;
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.picker-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #f5f5f5;
+  
+  .picker-cancel { color: #969799; font-size: 15px; }
+  .picker-title-text { font-size: 16px; font-weight: 500; color: #323233; }
+  .picker-confirm { color: $omiai-primary; font-size: 15px; font-weight: 500; }
+}
+
+.picker-body {
+  height: 260px;
+  
+  .picker-view-box {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .picker-item {
+    line-height: 48px;
+    text-align: center;
+    font-size: 16px;
+    color: #333;
+  }
 }
 </style>
