@@ -69,6 +69,32 @@
       }
     },
     {
+      "path": "pages/match/create",
+      "style": {
+        "navigationBarTitleText": "发起匹配"
+      }
+    },
+    {
+      "path": "pages/match/candidates",
+      "style": {
+        "navigationBarTitleText": "匹配候选人",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/match/compare",
+      "style": {
+        "navigationBarTitleText": "匹配对比",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/match/stats",
+      "style": {
+        "navigationBarTitleText": "数据统计"
+      }
+    },
+    {
       "path": "pages/auth/login",
       "style": {
         "navigationBarTitleText": "登录",

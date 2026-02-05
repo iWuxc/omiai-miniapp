@@ -29,6 +29,9 @@ export interface Client {
   // Display helper
   age?: number;
   avatar?: string;
+  partner_id?: number;
+  partner_name?: string;
+  partner_avatar?: string;
 }
 
 // Client List Params
@@ -51,33 +54,33 @@ export interface ClientListParams {
 }
 
 export const getClientList = (params: ClientListParams) => {
-  return http.get('/client/list', { params });
+  return http.get('/clients/list', { params });
 };
 
 export const createClient = (data: Client) => {
-  return http.post('/client/create', data);
+  return http.post('/clients/create', data);
 };
 
 export const updateClient = (data: Client) => {
-  return http.post('/client/update', data);
+  return http.post('/clients/update', data);
 };
 
 export const claimClient = (data: { client_id: number }) => {
-  return http.post('/client/claim', data);
+  return http.post('/clients/claim', data);
 };
 
 export const releaseClient = (data: { client_id: number }) => {
-  return http.post('/client/release', data);
+  return http.post('/clients/release', data);
 };
 
 export const getClientDetail = (id: number) => {
-  return http.get(`/client/detail/${id}`);
+  return http.get(`/clients/detail/${id}`);
 };
 
 export const matchClient = (id: number) => {
-  return http.get(`/client/match/${id}`);
+  return http.get(`/clients/match/${id}`);
 };
 
 export const getClientStats = () => {
-  return http.get('/client/stats');
+  return http.get('/clients/stats');
 };

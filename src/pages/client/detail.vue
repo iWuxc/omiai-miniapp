@@ -69,6 +69,37 @@
     <view class="content">
       <!-- Tab 1: 基础档案 -->
       <view v-if="currentTab === 0" class="info-section fade-in">
+        <!-- 匹配信息卡片 (仅已匹配状态显示) -->
+        <view v-if="client.status === 3 && client.partner_id" class="info-card mb-16">
+          <view class="card-header">
+            <u-icon name="heart-fill" size="18" color="#FF5E78"></u-icon>
+            <text class="header-title">当前伴侣</text>
+          </view>
+          <view class="cell-item" @click="goDetail(client.partner_id)">
+            <text class="label">伴侣信息</text>
+            <view class="value-box" style="display: flex; align-items: center;">
+              <u-avatar 
+                v-if="client.partner_avatar"
+                :src="client.partner_avatar" 
+                size="32" 
+                shape="circle" 
+                customStyle="margin-right: 8px;"
+              ></u-avatar>
+              <text class="value highlight" style="margin-right: 4px;">{{ client.partner_name || '未知' }}</text>
+              <u-icon name="arrow-right" size="14" color="#909399"></u-icon>
+            </view>
+          </view>
+          <view class="action-row mt-10">
+            <u-button 
+              type="error" 
+              size="mini" 
+              plain 
+              shape="circle" 
+              @click="handleDissolveMatch"
+            >解除匹配</u-button>
+          </view>
+        </view>
+
         <!-- 联系方式卡片 -->
         <view class="info-card">
           <view class="card-header">
@@ -299,54 +330,25 @@
       
       <!-- Tab 3: 智能匹配 -->
       <view v-if="currentTab === 2" class="match-section fade-in">
-        <!-- 搜索条件预览 -->
-        <view v-if="sourceReq && Object.keys(sourceReq).length > 0" class="filter-preview" @click="showFilterModal = true">
-           <view class="filter-row">
-             <u-icon name="setting" color="#FF5E78" size="14"></u-icon>
-             <text class="filter-text">匹配条件: {{ getReqSummary(sourceReq) }}</text>
-             <u-icon name="arrow-right" color="#C0C4CC" size="12"></u-icon>
-           </view>
-        </view>
-
-        <view v-if="matchList.length === 0" class="empty-box">
-          <u-empty mode="search" text="暂无匹配结果" icon-color="#F2F3F5">
-            <u-button slot="bottom" @click="match" class="omiai-btn-primary" customStyle="margin-top: 24px; width: 180px;">立即智能匹配</u-button>
-          </u-empty>
-        </view>
-        
-        <view class="match-list" v-else>
-           <view class="match-header">
-             <text class="omiai-text-sm">匹配到 {{ matchList.length }} 位理想嘉宾</text>
-             <view class="refresh-btn" @click="match">
-               <u-icon name="reload" :color="primaryColor" size="14"></u-icon>
-               <text>重新匹配</text>
-             </view>
-           </view>
-
-           <view class="match-card omiai-card" v-for="(item, index) in matchList" :key="index" @click="goDetail(item.client.id)">
-            <view class="card-body">
-              <view class="avatar-box">
-                <u-avatar :src="getAvatar(item.client)" size="60" shape="circle"></u-avatar>
-              </view>
-              <view class="info-box">
-                <view class="name-row">
-                  <text class="omiai-title-lg">{{ item.client.name }}</text>
-                  <text class="age-info">{{ item.client.age }}岁</text>
-                </view>
-                <view class="detail-row omiai-text-sm">
-                   <text>{{ getEducationText(item.client.education) }}</text>
-                   <text class="sep">·</text>
-                   <text>{{ item.client.height }}cm</text>
-                </view>
-                <view class="match-reasons" v-if="item.match_tags && item.match_tags.length > 0">
-                    <text v-for="(tag, tIdx) in item.match_tags" :key="tIdx" class="reason-tag">{{ tag }}</text>
-                </view>
-              </view>
-              <view class="score-box">
-                <view class="score-val">{{ item.score }}<text class="unit">分</text></view>
-                <text class="score-label">匹配度</text>
-              </view>
-            </view>
+        <view class="match-action-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 60px;">
+          <view class="match-illustration" style="margin-bottom: 40px; text-align: center;">
+             <u-icon name="heart-fill" size="80" color="#FF5E78"></u-icon>
+             <view class="match-desc" style="margin-top: 20px; color: #606266; font-size: 16px;">基于AI算法，为您推荐最合适的伴侣</view>
+          </view>
+          
+          <view class="action-btn-box" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+             <u-button 
+               class="omiai-btn-primary" 
+               shape="circle" 
+               :disabled="isMatchDisabled"
+               @click="match"
+               :customStyle="{width: '80%', height: '50px', fontSize: '18px', background: 'linear-gradient(to right, #FF5E78, #FF929F)', border: 'none', boxShadow: '0 8px 16px rgba(255, 94, 120, 0.3)'}"
+             >
+               立即开始匹配
+             </u-button>
+             <text v-if="isMatchDisabled" class="disabled-tip" style="margin-top: 16px; color: #909399; font-size: 14px;">
+               {{ matchDisabledReason }}
+             </text>
           </view>
         </view>
       </view>
@@ -384,8 +386,9 @@
           v-if="currentTab === 0"
           :loading="matching" 
           @click="match" 
-          class="omiai-btn-primary"
-          customStyle="flex: 1; height: 46px; font-size: 15px; border: none;"
+          :class="isMatchDisabled ? '' : 'omiai-btn-primary'"
+          :type="isMatchDisabled ? 'info' : 'primary'"
+          :customStyle="{flex: 1, height: '46px', fontSize: '15px', border: 'none'}"
         >一键智能匹配</u-button>
         <u-button 
           v-if="currentTab === 1"
@@ -398,8 +401,9 @@
           v-if="currentTab === 1"
           :loading="matching" 
           @click="match" 
-          class="omiai-btn-primary"
-          customStyle="flex: 1; height: 46px; font-size: 15px; border: none;"
+          :class="isMatchDisabled ? '' : 'omiai-btn-primary'"
+          :type="isMatchDisabled ? 'info' : 'primary'"
+          :customStyle="{flex: 1, height: '46px', fontSize: '15px', border: 'none'}"
         >智能匹配</u-button>
       </view>
     </view>
@@ -410,6 +414,7 @@
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { getClientDetail, matchClient, type Client } from '@/api/client';
+import { dissolveMatch } from '@/api/match';
 import { uploadFile } from '@/api/common';
 
 const primaryColor = '#FF5E78';
@@ -500,30 +505,49 @@ const loadDetail = async (id: number) => {
   }
 };
 
-const match = async () => {
+
+const isMatchDisabled = computed(() => {
+  return client.value.status === 2 || client.value.status === 3;
+});
+
+const matchDisabledReason = computed(() => {
+  if (client.value.status === 2) return '当前状态为“已匹配”，无法进行新匹配';
+  if (client.value.status === 3) return '当前状态为“冻结”，无法进行匹配';
+  return '';
+});
+
+const match = () => {
   if (!clientId.value) return;
   
-  matching.value = true;
-  try {
-    const res: any = await matchClient(clientId.value);
-    matchList.value = res.list || [];
-    sourceReq.value = res.source_req || {};
-    currentTab.value = 2;
-    
-    if (matchList.value.length > 0) {
-        uni.showToast({ title: '匹配成功', icon: 'success' });
-    } else {
-        uni.showToast({ title: '暂无合适匹配', icon: 'none' });
-    }
-  } catch (e) {
-    uni.showToast({ title: '匹配请求失败', icon: 'none' });
-  } finally {
-    matching.value = false;
+  if (isMatchDisabled.value) {
+    uni.showToast({ title: matchDisabledReason.value, icon: 'none' });
+    return;
   }
+  
+  uni.navigateTo({ url: `/pages/match/candidates?clientId=${clientId.value}` });
 };
 
 const goDetail = (id: number | undefined) => {
   if(id) uni.navigateTo({ url: `/pages/client/detail?id=${id}` });
+};
+
+const handleDissolveMatch = () => {
+  uni.showModal({
+    title: '确认解除',
+    content: '解除匹配后，双方将恢复单身状态，确认继续吗？',
+    confirmColor: '#FF5E78',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          await dissolveMatch({ client_id: clientId.value, reason: '管理员手动解除' });
+          uni.showToast({ title: '已解除匹配', icon: 'success' });
+          loadDetail(clientId.value);
+        } catch (e) {
+          uni.showToast({ title: '操作失败', icon: 'none' });
+        }
+      }
+    }
+  });
 };
 
 const makePhoneCall = (phone: string) => {

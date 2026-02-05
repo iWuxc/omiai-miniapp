@@ -24,26 +24,60 @@ export interface FollowUpRecord {
   next_follow_up_at?: string;
 }
 
+export interface MatchStatusHistory {
+  id: number;
+  match_record_id: number;
+  old_status: number;
+  new_status: number;
+  change_time: string;
+  operator: string;
+  reason: string;
+}
+
 export const getMatchList = (params: any) => {
-  return http.get('/match/list', { params });
+  return http.get('/couples/list', { params });
 };
 
 export const createMatch = (data: MatchRecord) => {
-  return http.post('/match/create', data);
+  return http.post('/couples/create', data);
 };
 
-export const updateMatchStatus = (data: { id: number; status: number; remark?: string }) => {
-  return http.post('/match/update_status', data);
+export const updateMatchStatus = (data: { id: number; status: number; remark?: string; reason?: string; operator?: string }) => {
+  return http.post('/couples/update_status', data);
 };
 
 export const getFollowUps = (matchRecordId: number) => {
-  return http.get('/match/followup/list', { params: { match_record_id: matchRecordId } });
+  return http.get('/couples/followup/list', { params: { match_record_id: matchRecordId } });
 };
 
 export const createFollowUp = (data: FollowUpRecord) => {
-  return http.post('/match/followup/create', data);
+  return http.post('/couples/followup/create', data);
 };
 
 export const getReminders = () => {
-  return http.get('/match/reminders');
+  return http.get('/couples/reminders');
 };
+
+export const getStatusHistory = (matchRecordId: number) => {
+  return http.get('/couples/status/history', { params: { match_record_id: matchRecordId } });
+};
+
+export const getCandidates = (clientId: number) => {
+  return http.get(`/clients/${clientId}/candidates`);
+};
+
+export const getCompareResult = (clientId: number, candidateId: number) => {
+  return http.get(`/clients/${clientId}/compare/${candidateId}`);
+};
+
+export const confirmCouple = (data: { client_id: number; candidate_id: number }) => {
+  return http.post('/couples/confirm', data);
+};
+
+export const dissolveMatch = (data: { client_id: number; reason: string }) => {
+  return http.post('/couples/dissolve', data);
+};
+
+export const getMatchStats = () => {
+  return http.get('/couples/stats');
+}
