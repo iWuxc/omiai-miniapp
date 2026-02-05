@@ -56,33 +56,7 @@
             <u-icon slot="right" name="calendar" :color="primaryColor" size="18"></u-icon>
           </u-form-item>
           
-          <!-- 年月选择器弹窗 - 使用两个独立picker -->
-          <u-popup
-            :show="showCalendar"
-            mode="bottom"
-            @close="showCalendar = false"
-            :round="12"
-            :safeAreaInsetBottom="true"
-          >
-            <view class="year-month-picker">
-              <view class="picker-header-row">
-                <text class="picker-title-text">选择出生年月</text>
-                <text class="picker-confirm" @click="confirmYearMonth">确定</text>
-              </view>
-              <view class="picker-row">
-                <picker-view class="picker-view" :value="[yearIndex]" @change="onYearChange">
-                  <picker-view-column>
-                    <view class="picker-item" v-for="(year, index) in yearOptions" :key="index">{{ year }}年</view>
-                  </picker-view-column>
-                </picker-view>
-                <picker-view class="picker-view" :value="[monthIndex]" @change="onMonthChange">
-                  <picker-view-column>
-                    <view class="picker-item" v-for="(month, index) in monthOptions" :key="index">{{ month }}月</view>
-                  </picker-view-column>
-                </picker-view>
-              </view>
-            </view>
-          </u-popup>
+          <!-- popup moved -->
 
           <u-form-item label="年龄" prop="age" required borderBottom>
             <u-input v-model="form.age" type="number" placeholder="请输入您的年龄" border="none"></u-input>
@@ -138,6 +112,10 @@
 
           <u-form-item label="家庭住址" prop="address" required borderBottom>
             <u-input v-model="form.address" placeholder="省市区+详细地址" border="none"></u-input>
+          </u-form-item>
+
+          <u-form-item label="具体工作" prop="profession" required borderBottom>
+            <u-input v-model="form.profession" placeholder="请描述具体工作内容" border="none"></u-input>
           </u-form-item>
 
           <u-form-item label="工作单位" prop="work_unit" required borderBottom>
@@ -239,6 +217,34 @@
     
     <!-- 提交成功弹窗 -->
     <u-modal :show="showSuccess" title="提交成功" content="红娘姐姐已收到您的资料，会尽快为您匹配哦！" @confirm="onSuccessConfirm"></u-modal>
+
+    <!-- 年月选择器弹窗 - 使用两个独立picker -->
+    <u-popup
+      :show="showCalendar"
+      mode="bottom"
+      @close="showCalendar = false"
+      :round="12"
+      :safeAreaInsetBottom="true"
+    >
+      <view class="year-month-picker">
+        <view class="picker-header-row">
+          <text class="picker-title-text">选择出生年月</text>
+          <text class="picker-confirm" @click="confirmYearMonth">确定</text>
+        </view>
+        <view class="picker-row">
+          <picker-view class="picker-view" :value="[yearIndex]" @change="onYearChange">
+            <picker-view-column>
+              <view class="picker-item" v-for="(year, index) in yearOptions" :key="index">{{ year }}年</view>
+            </picker-view-column>
+          </picker-view>
+          <picker-view class="picker-view" :value="[monthIndex]" @change="onMonthChange">
+            <picker-view-column>
+              <view class="picker-item" v-for="(month, index) in monthOptions" :key="index">{{ month }}月</view>
+            </picker-view-column>
+          </picker-view>
+        </view>
+      </view>
+    </u-popup>
   </view>
 </template>
 
@@ -283,6 +289,7 @@ const form = reactive({
   education: 3,
   marital_status: 1,
   address: '',
+  profession: '',
   work_unit: '',
   position: '',
   house_status: 1,
@@ -378,7 +385,7 @@ const syncPhotos = () => {
 
 const submit = () => {
   if (!form.name || !form.phone || !form.birthday || !form.age || !form.zodiac || 
-      !form.height || !form.weight || !form.income || !form.address || 
+      !form.height || !form.weight || !form.income || !form.address || !form.profession ||
       !form.work_unit || !form.position || !form.family_description || !form.partner_requirements) {
     uni.showToast({ title: '请填写所有必填项', icon: 'none' });
     return;

@@ -64,26 +64,7 @@
             <u-icon slot="right" name="calendar" :color="primaryColor" size="18"></u-icon>
           </u-form-item>
           
-          <!-- 年月选择器弹窗 -->
-          <view v-if="showCalendar" class="calendar-mask" @click="showCalendar = false">
-            <view class="calendar-popup" @click.stop>
-              <view class="picker-header-row">
-                <text class="picker-cancel" @click="showCalendar = false">取消</text>
-                <text class="picker-title-text">选择出生年月</text>
-                <text class="picker-confirm" @click="confirmYearMonth">确定</text>
-              </view>
-              <view class="picker-body">
-                <picker-view :value="[yearIndex, monthIndex]" @change="onPickerChange" class="picker-view-box">
-                  <picker-view-column>
-                    <view class="picker-item" v-for="(year, index) in yearOptions" :key="index">{{ year }}年</view>
-                  </picker-view-column>
-                  <picker-view-column>
-                    <view class="picker-item" v-for="(month, index) in monthOptions" :key="index">{{ month }}月</view>
-                  </picker-view-column>
-                </picker-view>
-              </view>
-            </view>
-          </view>
+          <!-- moved to bottom -->
 
           <u-form-item label="年龄" prop="age" required borderBottom>
             <u-input v-model="form.age" type="number" placeholder="请输入年龄" border="none"></u-input>
@@ -231,6 +212,27 @@
       </view>
     </view>
     
+    <!-- 年月选择器弹窗 -->
+    <view v-if="showCalendar" class="calendar-mask" @click="showCalendar = false">
+      <view class="calendar-popup" @click.stop>
+        <view class="picker-header-row">
+          <text class="picker-cancel" @click="showCalendar = false">取消</text>
+          <text class="picker-title-text">选择出生年月</text>
+          <text class="picker-confirm" @click="confirmYearMonth">确定</text>
+        </view>
+        <view class="picker-body">
+          <picker-view :value="[yearIndex, monthIndex]" @change="onPickerChange" class="picker-view-box">
+            <picker-view-column>
+              <view class="picker-item" v-for="(year, index) in yearOptions" :key="index">{{ year }}年</view>
+            </picker-view-column>
+            <picker-view-column>
+              <view class="picker-item" v-for="(month, index) in monthOptions" :key="index">{{ month }}月</view>
+            </picker-view-column>
+          </picker-view>
+        </view>
+      </view>
+    </view>
+    
     <u-modal :show="showConfirm" title="确认提交" content="请核对信息是否准确，提交后红娘将开始为您匹配" @confirm="confirmSubmit" @cancel="showConfirm = false" showCancelButton></u-modal>
   </view>
 </template>
@@ -280,13 +282,13 @@ const form = reactive({
   name: '',
   gender: 1,
   birthday: '',
-  age: undefined,
+  age: undefined as number | undefined,
   zodiac: '',
   avatar: '',
-  height: undefined,
-  weight: undefined,
+  height: undefined as number | undefined,
+  weight: undefined as number | undefined,
   phone: '',
-  income: undefined,
+  income: undefined as number | undefined,
   education: 3,
   marital_status: 1,
   address: '',
