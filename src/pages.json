@@ -43,6 +43,13 @@
       }
     },
     {
+      "path": "pages/client/edit",
+      "style": {
+        "navigationBarTitleText": "编辑客户档案",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/invite/index",
       "style": {
         "navigationBarTitleText": "填写档案",

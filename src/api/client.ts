@@ -58,6 +58,10 @@ export const createClient = (data: Client) => {
   return http.post('/client/create', data);
 };
 
+export const updateClient = (data: Client) => {
+  return http.post('/client/update', data);
+};
+
 export const claimClient = (data: { client_id: number }) => {
   return http.post('/client/claim', data);
 };

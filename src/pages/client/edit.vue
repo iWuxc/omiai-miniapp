@@ -4,11 +4,7 @@
       <!-- 1) 标题区 (中式亲和力：大标题 + 温馨提示) -->
       <view class="header fade-in">
         <view class="header-row">
-            <text class="omiai-title-xl">完善客户档案</text>
-            <view class="import-btn" @click="goImport">
-                <u-icon name="download" color="#FF5E78" size="14"></u-icon>
-                <text>批量导入</text>
-            </view>
+            <text class="omiai-title-xl">编辑客户档案</text>
         </view>
         <text class="omiai-text-md subtitle">信息越完善，智能匹配的成功率越高哦</text>
       </view>
@@ -240,7 +236,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { createClient } from '@/api/client';
+import { updateClient, getClientDetail } from '@/api/client';
 import { uploadFile } from '@/api/common';
 import { config as appConfig } from '@/config';
 
@@ -259,6 +255,75 @@ const primaryColor = '#FF5E78';
 const maleColor = '#4A90E2';
 const showCalendar = ref(false);
 const submitting = ref(false);
+
+const clientId = ref<number>(0);
+// const isEdit = computed(() => clientId.value > 0);
+
+onLoad((options: any) => {
+  if (options.id) {
+    clientId.value = parseInt(options.id);
+    loadClientData();
+  } else {
+    uni.showToast({ title: '参数错误', icon: 'none' });
+    setTimeout(() => uni.navigateBack(), 1500);
+  }
+});
+
+const loadClientData = async () => {
+    try {
+      const res = await getClientDetail(clientId.value) as any;
+      // Assign fields to form
+      Object.keys(form).forEach(key => {
+        if (res[key] !== undefined) {
+          (form as any)[key] = res[key];
+        }
+      });
+    
+    // Handle Avatar
+    if (form.avatar) {
+      avatarList.value = [{
+        url: form.avatar,
+        status: 'success',
+        message: ''
+      }];
+    }
+    
+    // Handle Photos
+    if (form.photos) {
+      try {
+        const urls = JSON.parse(form.photos);
+        if (Array.isArray(urls)) {
+          photoList.value = urls.map(url => ({
+            url: url,
+            status: 'success',
+            message: ''
+          }));
+        }
+      } catch (e) {
+        console.error('Parse photos failed', e);
+      }
+    }
+    
+    // Handle Year/Month for picker if birthday exists
+    if (form.birthday) {
+      const parts = form.birthday.split('-');
+      if (parts.length >= 2) {
+         const y = parts[0];
+         const m = parts[1];
+         const yIdx = yearOptions.indexOf(y);
+         const mIdx = monthOptions.indexOf(m);
+         if (yIdx > -1) yearIndex.value = yIdx;
+         if (mIdx > -1) monthIndex.value = mIdx;
+      }
+    }
+
+  } catch (e) {
+    uni.showToast({ title: '加载客户数据失败', icon: 'none' });
+    setTimeout(() => {
+      uni.navigateBack();
+    }, 1500);
+  }
+};
 
 // 年月选择器数据
 const currentYear = new Date().getFullYear();
@@ -452,11 +517,11 @@ const confirmSubmit = async () => {
     if (payload.income) payload.income = Number(payload.income);
     if (payload.age) payload.age = Number(payload.age);
     
-    await createClient(payload);
-    uni.showToast({ title: '保存成功', icon: 'success' });
-    
+    payload.id = clientId.value;
+    await updateClient(payload);
+    uni.showToast({ title: '更新成功', icon: 'success' });
     setTimeout(() => {
-      uni.switchTab({ url: '/pages/home/index' });
+      uni.navigateBack();
     }, 1500);
   } catch (e) {
     // Error handled

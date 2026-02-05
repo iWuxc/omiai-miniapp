@@ -472,7 +472,9 @@ const onActionSelect = (e: any) => {
 };
 
 const editClient = () => {
-  uni.showToast({ title: '编辑功能开发中', icon: 'none' });
+  if (clientId.value) {
+    uni.navigateTo({ url: `/pages/client/edit?id=${clientId.value}` });
+  }
 };
 
 const getReqSummary = (req: any) => {
