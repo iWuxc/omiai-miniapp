@@ -56,7 +56,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
 import { getClientList } from '@/api/client';
-import { applyMatch } from '@/api/match';
+import { confirmCouple } from '@/api/match';
 
 const form = reactive({
   initiator_id: 0,
@@ -144,12 +144,12 @@ const submit = async () => {
   
   loading.value = true;
   try {
-    await applyMatch({
-      initiator_id: form.initiator_id,
-      target_id: form.target_id,
-      message: form.message
+    await confirmCouple({
+      client_id: form.initiator_id,
+      candidate_id: form.target_id,
+      remark: form.message
     });
-    uni.showToast({ title: '申请提交成功' });
+    uni.showToast({ title: '匹配确认成功' });
     setTimeout(() => {
       uni.navigateBack();
     }, 1500);

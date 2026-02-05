@@ -70,7 +70,7 @@ export const getCompareResult = (clientId: number, candidateId: number) => {
   return http.get(`/clients/${clientId}/compare/${candidateId}`);
 };
 
-export const confirmCouple = (data: { client_id: number; candidate_id: number }) => {
+export const confirmCouple = (data: { client_id: number; candidate_id: number; remark?: string }) => {
   return http.post('/couples/confirm', data);
 };
 
