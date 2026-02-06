@@ -311,7 +311,7 @@ const syncPhotos = () => {
 };
 
 const validateFile = (file: any) => {
-  const maxSize = 5 * 1024 * 1024;
+  const maxSize = 50 * 1024 * 1024;
   const filePath = file.url || file.path;
   
   if (!filePath) {
@@ -326,7 +326,7 @@ const validateFile = (file: any) => {
   }
   
   if (file.size > maxSize) {
-    uni.showToast({ title: '文件超过5MB', icon: 'none' });
+    uni.showToast({ title: '文件超过50MB', icon: 'none' });
     return false;
   }
   return true;

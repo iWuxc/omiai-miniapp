@@ -317,12 +317,12 @@ const confirmYearMonth = () => {
 };
 
 const validateFile = (file: any) => {
-  const maxSize = 5 * 1024 * 1024;
+  const maxSize = 50 * 1024 * 1024;
   const allowedExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
   const ext = file.url.substring(file.url.lastIndexOf('.')).toLowerCase();
   
   if (file.size > maxSize) {
-    uni.showToast({ title: '文件超过5MB', icon: 'none' });
+    uni.showToast({ title: '文件超过50MB', icon: 'none' });
     return false;
   }
   return true;
