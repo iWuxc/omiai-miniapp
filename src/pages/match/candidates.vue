@@ -84,8 +84,10 @@
    <AIAnalysisPopup 
      :visible="aiPopupVisible" 
      :loading="aiLoading"
+     :error="aiError"
      :result="aiResult"
      @close="aiPopupVisible = false"
+     @retry="handleRetry"
    />
  </template>
 
@@ -104,7 +106,9 @@ const sortBy = ref('score');
 // AI分析相关
 const aiPopupVisible = ref(false);
 const aiLoading = ref(false);
+const aiError = ref(false);
 const aiResult = ref<any>({});
+const currentCandidate = ref<any>(null);
 
 const educationMap: Record<number, string> = {
   1: '高中及以下',
@@ -180,15 +184,33 @@ const goCompare = (candidateId: number) => {
 const showAIAnalysis = async (item: any) => {
   aiPopupVisible.value = true;
   aiLoading.value = true;
+  aiError.value = false;
   aiResult.value = {};
+  currentCandidate.value = item;
+  
+  await doAnalyze(item);
+};
+
+// 执行AI分析
+const doAnalyze = async (item: any) => {
+  aiLoading.value = true;
+  aiError.value = false;
   
   try {
     const data = await aiAnalyzeMatch(clientId.value, item.candidate_id);
     aiResult.value = data;
   } catch (e) {
-    uni.showToast({ title: 'AI分析失败', icon: 'none' });
+    console.error('AI分析失败:', e);
+    aiError.value = true;
   } finally {
     aiLoading.value = false;
+  }
+};
+
+// 重试AI分析
+const handleRetry = () => {
+  if (currentCandidate.value) {
+    doAnalyze(currentCandidate.value);
   }
 };
 </script>

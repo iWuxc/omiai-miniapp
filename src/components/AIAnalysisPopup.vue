@@ -14,6 +14,14 @@
         <text class="loading-text">AI正在分析中，请稍候...</text>
       </view>
 
+      <!-- 错误状态 -->
+      <view v-else-if="error" class="ai-error">
+        <text class="error-icon">😔</text>
+        <text class="error-title">分析失败</text>
+        <text class="error-message">AI服务暂时不可用，请稍后重试</text>
+        <button class="btn-retry" @click="handleRetry">重新分析</button>
+      </view>
+
       <!-- 分析结果 -->
       <view v-else class="ai-result">
         <!-- 总体评分 -->
@@ -118,6 +126,10 @@ export default {
       type: Boolean,
       default: false
     },
+    error: {
+      type: Boolean,
+      default: false
+    },
     result: {
       type: Object,
       default: () => ({})
@@ -140,6 +152,9 @@ export default {
       if (score >= 80) return 'score-high'
       if (score >= 60) return 'score-medium'
       return 'score-low'
+    },
+    handleRetry() {
+      this.$emit('retry')
     }
   }
 }
@@ -204,6 +219,49 @@ export default {
   justify-content: center;
   flex: 1;
   padding: 60rpx;
+}
+
+.ai-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 80rpx 60rpx;
+}
+
+.error-icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.error-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.error-message {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 40rpx;
+  text-align: center;
+}
+
+.btn-retry {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 500;
+  border: none;
+  border-radius: 12rpx;
+  padding: 20rpx 60rpx;
+  min-width: 240rpx;
+}
+
+.btn-retry:active {
+  opacity: 0.9;
 }
 
 .loading-text {

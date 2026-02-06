@@ -4,8 +4,8 @@ export const sendSms = (phone: string) => {
   return http.post('/auth/send_sms', { phone });
 };
 
-export const h5Login = (phone: string, code: string) => {
-  return http.post('/auth/login/h5', { phone, code });
+export const h5Login = (phone: string, password: string) => {
+  return http.post('/auth/login/h5', { phone, password });
 };
 
 export const wxLogin = (code: string) => {

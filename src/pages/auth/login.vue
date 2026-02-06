@@ -18,22 +18,29 @@
             </u-input>
           </u-form-item>
           <u-form-item borderBottom>
-            <u-input v-model="h5Form.code" placeholder="请输入验证码" border="none" type="number">
+            <u-input 
+              v-model="h5Form.password" 
+              placeholder="请输入密码" 
+              border="none" 
+              :type="showPassword ? 'text' : 'password'"
+            >
               <template #prefix>
                 <u-icon name="lock" size="20" color="#C0C4CC" style="margin-right: 10px"></u-icon>
               </template>
               <template #suffix>
-                <u-code
-                  ref="uCode"
-                  @change="codeChange"
-                  seconds="60"
-                  changeText="X秒后重发"
-                ></u-code>
-                <text @tap="getCode" class="code-btn" :class="{ disabled: !!tips }">{{ tips }}</text>
+                <u-icon 
+                  :name="showPassword ? 'eye' : 'eye-off'" 
+                  size="20" 
+                  color="#C0C4CC"
+                  @click="showPassword = !showPassword"
+                ></u-icon>
               </template>
             </u-input>
           </u-form-item>
         </u-form>
+        <view class="password-tips">
+          <text class="tips-text">初始密码：123456</text>
+        </view>
         <view class="submit-btn-box">
           <u-button 
             @click="handleH5Login" 
@@ -67,18 +74,17 @@
 import { ref, reactive } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { getPlatform } from '@/utils/env';
-import { sendSms, h5Login, wxLogin } from '@/api/auth';
+import { h5Login, wxLogin } from '@/api/auth';
 import { setToken, setUserInfo } from '@/utils/auth';
 
 const platform = ref(getPlatform());
 const loading = ref(false);
-const tips = ref('获取验证码');
-const uCode = ref();
+const showPassword = ref(false);
 const redirectUrl = ref('');
 
 const h5Form = reactive({
   phone: '',
-  code: ''
+  password: ''
 });
 
 // 页面加载时获取 redirect 参数
@@ -95,43 +101,20 @@ onLoad((options: any) => {
   }
 });
 
-const codeChange = (text: string) => {
-  tips.value = text;
-};
-
-const getCode = async () => {
-  if (uCode.value.canGetCode) {
-    if (!/^1[3-9]\d{9}$/.test(h5Form.phone)) {
-      uni.showToast({ title: '请输入正确的手机号', icon: 'none' });
-      return;
-    }
-    
-    uni.showLoading({ title: '正在获取验证码' });
-    try {
-      await sendSms(h5Form.phone);
-      uni.hideLoading();
-      uni.showToast({ title: '验证码已发送' });
-      uCode.value.start();
-    } catch (e) {
-      uni.hideLoading();
-    }
-  }
-};
-
 const handleH5Login = async () => {
-  if (!h5Form.phone || !h5Form.code) {
-    uni.showToast({ title: '请完善登录信息', icon: 'none' });
+  if (!h5Form.phone || !h5Form.password) {
+    uni.showToast({ title: '请输入手机号和密码', icon: 'none' });
     return;
   }
-  
+
   if (!/^1[3-9]\d{9}$/.test(h5Form.phone)) {
     uni.showToast({ title: '请输入正确的手机号', icon: 'none' });
     return;
   }
-  
+
   loading.value = true;
   try {
-    const res: any = await h5Login(h5Form.phone, h5Form.code);
+    const res: any = await h5Login(h5Form.phone, h5Form.password);
     loginSuccess(res);
   } catch (e) {
     // handled by interceptor
@@ -334,12 +317,12 @@ const uniReLaunch = (url: string) => {
 }
 
 .form-section {
-  .code-btn {
-    font-size: 14px;
-    color: $omiai-primary;
-    padding: 4px 0;
+  .password-tips {
+    margin-top: 12px;
+    text-align: right;
     
-    &.disabled {
+    .tips-text {
+      font-size: 12px;
       color: $omiai-text-tip;
     }
   }
