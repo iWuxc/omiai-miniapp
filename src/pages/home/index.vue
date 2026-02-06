@@ -14,6 +14,9 @@
       </view>
     </view>
 
+    <!-- 1.0) 待办提醒卡片 (新增) -->
+    <TodoCard />
+
     <!-- 1.1) 轮播图区域 (Banner Section) -->
     <view class="banner-section fade-in" v-if="banners.length > 0">
       <u-swiper
@@ -117,6 +120,7 @@ import { ref, computed, onMounted } from 'vue';
 import { getClientStats } from '@/api/client';
 import { getBannerList, type Banner } from '@/api/banner';
 import { config as appConfig } from '@/config';
+import TodoCard from '@/components/TodoCard.vue';
 
 const banners = ref<Banner[]>([]);
 const stats = ref({

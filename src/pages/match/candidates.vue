@@ -44,46 +44,67 @@
       </view>
 
       <view v-else class="candidate-list">
-        <view 
-          class="candidate-card" 
-          v-for="(item, index) in list" 
-          :key="index"
-          @click="goCompare(item.candidate_id)"
-        >
-          <view class="card-left">
-             <u-avatar :src="item.avatar" size="60"></u-avatar>
-          </view>
-          <view class="card-right">
-             <view class="name-row">
-               <text class="name">{{ item.name }}</text>
-               <text class="score">{{ item.match_score }}分</text>
-             </view>
-             <view class="info-row">
-                <text>{{ item.age }}岁</text>
-                <text class="sep">|</text>
-                <text>{{ item.height }}cm</text>
-                <text class="sep">|</text>
-                <text>{{ getEducationText(item.education) }}</text>
-             </view>
-             <view class="tags-row">
-               <view class="tag" v-for="(tag, tIdx) in item.tags" :key="tIdx">{{ tag }}</view>
-             </view>
-          </view>
-        </view>
+         <view 
+           class="candidate-card" 
+           v-for="(item, index) in list" 
+           :key="index"
+         >
+           <view class="card-left" @click="goCompare(item.candidate_id)">
+              <u-avatar :src="item.avatar" size="60"></u-avatar>
+           </view>
+            <view class="card-right" @click="goCompare(item.candidate_id)">
+               <view class="name-row">
+                 <text class="name">{{ item.name }}</text>
+                 <view class="score-box" :class="getScoreLevel(item.match_score)">
+                   <text class="score">{{ item.match_score }}分</text>
+                   <text class="level-text">{{ getLevelText(item.match_score) }}</text>
+                 </view>
+               </view>
+               <view class="info-row">
+                  <text>{{ item.age }}岁</text>
+                  <text class="sep">|</text>
+                  <text>{{ item.height }}cm</text>
+                  <text class="sep">|</text>
+                  <text>{{ getEducationText(item.education) }}</text>
+               </view>
+               <view class="tags-row">
+                 <view class="tag" v-for="(tag, tIdx) in item.tags" :key="tIdx">{{ tag }}</view>
+               </view>
+            </view>
+            <view class="ai-btn" @click="showAIAnalysis(item)">
+              <text class="ai-icon">🤖</text>
+              <text class="ai-text">AI分析</text>
+            </view>
+         </view>
       </view>
-    </view>
-  </view>
-</template>
+     </view>
+   </view>
+   
+   <!-- AI分析弹窗 -->
+   <AIAnalysisPopup 
+     :visible="aiPopupVisible" 
+     :loading="aiLoading"
+     :result="aiResult"
+     @close="aiPopupVisible = false"
+   />
+ </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { getCandidates } from '@/api/match';
+import { aiAnalyzeMatch } from '@/api/ai';
+import AIAnalysisPopup from '@/components/AIAnalysisPopup.vue';
 
 const clientId = ref<number>(0);
 const list = ref<any[]>([]);
 const loading = ref(false);
 const sortBy = ref('score');
+
+// AI分析相关
+const aiPopupVisible = ref(false);
+const aiLoading = ref(false);
+const aiResult = ref<any>({});
 
 const educationMap: Record<number, string> = {
   1: '高中及以下',
@@ -94,6 +115,22 @@ const educationMap: Record<number, string> = {
 };
 
 const getEducationText = (edu: number) => educationMap[edu] || '未知';
+
+// 获取匹配等级样式
+const getScoreLevel = (score: number): string => {
+  if (score >= 85) return 'level-perfect';
+  if (score >= 70) return 'level-good';
+  if (score >= 55) return 'level-average';
+  return 'level-poor';
+};
+
+// 获取匹配等级文本
+const getLevelText = (score: number): string => {
+  if (score >= 85) return '完美匹配';
+  if (score >= 70) return '非常合适';
+  if (score >= 55) return '可以尝试';
+  return '不太合适';
+};
 
 onLoad((options: any) => {
   if (options.clientId) {
@@ -137,6 +174,22 @@ const goCompare = (candidateId: number) => {
   uni.navigateTo({
     url: `/pages/match/compare?clientId=${clientId.value}&candidateId=${candidateId}`
   });
+};
+
+// 显示AI分析
+const showAIAnalysis = async (item: any) => {
+  aiPopupVisible.value = true;
+  aiLoading.value = true;
+  aiResult.value = {};
+  
+  try {
+    const data = await aiAnalyzeMatch(clientId.value, item.candidate_id);
+    aiResult.value = data;
+  } catch (e) {
+    uni.showToast({ title: 'AI分析失败', icon: 'none' });
+  } finally {
+    aiLoading.value = false;
+  }
 };
 </script>
 
@@ -225,10 +278,38 @@ const goCompare = (candidateId: number) => {
         font-weight: 500;
         color: #333;
       }
-      .score {
-        color: #FF5E78;
-        font-size: 18px;
-        font-weight: bold;
+      .score-box {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        .score {
+          font-size: 20px;
+          font-weight: bold;
+        }
+        .level-text {
+          font-size: 10px;
+          margin-top: 2px;
+        }
+        // 完美匹配 - 绿色
+        &.level-perfect {
+          .score { color: #52c41a; }
+          .level-text { color: #52c41a; }
+        }
+        // 非常合适 - 蓝色
+        &.level-good {
+          .score { color: #1890ff; }
+          .level-text { color: #1890ff; }
+        }
+        // 可以尝试 - 橙色
+        &.level-average {
+          .score { color: #faad14; }
+          .level-text { color: #faad14; }
+        }
+        // 不太合适 - 红色
+        &.level-poor {
+          .score { color: #ff4d4f; }
+          .level-text { color: #ff4d4f; }
+        }
       }
     }
     .info-row {
@@ -252,6 +333,30 @@ const goCompare = (candidateId: number) => {
         margin-right: 6px;
         margin-bottom: 4px;
       }
+    }
+  }
+  .ai-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-left: 12px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    &:active {
+      opacity: 0.9;
+      transform: scale(0.98);
+    }
+    .ai-icon {
+      font-size: 20px;
+      margin-bottom: 2px;
+    }
+    .ai-text {
+      font-size: 10px;
+      color: #fff;
+      font-weight: 500;
     }
   }
 }

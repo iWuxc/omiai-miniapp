@@ -136,7 +136,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { getUserInfo, clearAuth } from '@/utils/auth';
+import { getUserInfo, clearAuth, getToken } from '@/utils/auth';
 import { getUserInfo as fetchUserInfo } from '@/api/auth';
 import { getClientStats } from '@/api/client';
 
@@ -226,15 +226,24 @@ const calcCacheSize = () => {
 const clearCache = () => {
   uni.showModal({
     title: '清理缓存',
-    content: '确定要清理所有缓存数据吗？',
+    content: '确定要清理缓存数据吗？清理后需要重新登录。',
     success: (res) => {
       if (res.confirm) {
+        // 保存关键登录信息
+        const token = uni.getStorageSync('token');
+        const userInfo = uni.getStorageSync('userInfo');
+        const loginTime = uni.getStorageSync('loginTime');
+
+        // 清除所有缓存
         uni.clearStorageSync();
-        // 重新保存必要的数据
+
+        // 恢复登录信息
+        if (token) uni.setStorageSync('token', token);
+        if (userInfo) uni.setStorageSync('userInfo', userInfo);
+        if (loginTime) uni.setStorageSync('loginTime', loginTime);
+
         cacheSize.value = '0KB';
         uni.showToast({ title: '清理完成', icon: 'success' });
-        // 刷新用户信息
-        loadUserInfo();
       }
     }
   });
