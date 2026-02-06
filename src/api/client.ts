@@ -84,3 +84,7 @@ export const matchClient = (id: number) => {
 export const getClientStats = () => {
   return http.get('/clients/stats');
 };
+
+export const deleteClient = (id: number) => {
+  return http.delete(`/clients/delete/${id}`);
+};

@@ -398,6 +398,13 @@
           customStyle="flex: 1; height: 46px; font-size: 15px; margin-right: 12px;"
         >编辑资料</u-button>
         <u-button 
+          v-if="currentTab === 1 && client.status === 1"
+          @click="handleDelete" 
+          type="error"
+          plain
+          customStyle="width: 80px; height: 46px; font-size: 15px; margin-right: 12px;"
+        >删除</u-button>
+        <u-button 
           v-if="currentTab === 1"
           :loading="matching" 
           @click="match" 
@@ -413,7 +420,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { getClientDetail, matchClient, type Client } from '@/api/client';
+import { getClientDetail, matchClient, deleteClient, type Client } from '@/api/client';
 import { dissolveMatch } from '@/api/match';
 import { uploadFile } from '@/api/common';
 
@@ -544,6 +551,30 @@ const handleDissolveMatch = () => {
           loadDetail(clientId.value);
         } catch (e) {
           uni.showToast({ title: '操作失败', icon: 'none' });
+        }
+      }
+    }
+  });
+};
+
+const handleDelete = () => {
+  uni.showModal({
+    title: '确认删除',
+    content: `确定要删除客户「${client.value.name}」吗？删除后无法恢复，请谨慎操作！`,
+    confirmColor: '#FF4D4F',
+    confirmText: '确认删除',
+    cancelText: '取消',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          await deleteClient(clientId.value as number);
+          uni.showToast({ title: '删除成功', icon: 'success' });
+          setTimeout(() => {
+            uni.navigateBack();
+          }, 1500);
+        } catch (e: any) {
+          const errorMsg = e?.msg || '删除失败，请重试';
+          uni.showToast({ title: errorMsg, icon: 'none' });
         }
       }
     }
