@@ -147,6 +147,12 @@
                     <u-input v-model="filterForm.min_income" type="number" placeholder="请输入金额" border="surround" fontSize="12"></u-input>
                 </view>
 
+                 <!-- Work City -->
+                 <view class="filter-group">
+                    <text class="group-title">工作城市</text>
+                    <u-input v-model="filterForm.work_city" placeholder="请输入城市名称" border="surround" fontSize="12"></u-input>
+                </view>
+
             </scroll-view>
             <view class="filter-footer">
                 <u-button plain text="重置" @click="resetFilter" customStyle="flex: 1; margin-right: 12px;"></u-button>
@@ -176,7 +182,8 @@ const filterForm = reactive({
     min_income: '',
     marital_status: 0,
     house_status: 0,
-    car_status: 0
+    car_status: 0,
+    work_city: ''
 });
 
 const resetFilter = () => {
@@ -190,6 +197,7 @@ const resetFilter = () => {
     filterForm.marital_status = 0;
     filterForm.house_status = 0;
     filterForm.car_status = 0;
+    filterForm.work_city = '';
 };
 
 const applyFilter = () => {
@@ -237,7 +245,8 @@ const fetchData = async (refresh = false) => {
       min_income: filterForm.min_income || undefined,
       marital_status: filterForm.marital_status || undefined,
       house_status: filterForm.house_status || undefined,
-      car_status: filterForm.car_status || undefined
+      car_status: filterForm.car_status || undefined,
+      work_city: filterForm.work_city || undefined
     };
     
     const res: any = await getClientList(params);

@@ -163,25 +163,15 @@
             ></u-textarea>
           </u-form-item>
 
-          <u-form-item label="自我介绍" prop="remark" labelPosition="top">
-            <u-textarea 
-              v-model="form.remark" 
-              placeholder="向大家介绍一下自己吧..." 
-              count 
-              height="100" 
-              :customStyle="{ background: '#F7F8FA', border: 'none', borderRadius: '12px', padding: '12px', marginTop: '8px' }"
-            ></u-textarea>
-          </u-form-item>
-
-          <u-form-item label="择偶要求" prop="partner_requirements" labelPosition="top">
-            <u-textarea 
-              v-model="form.partner_requirements" 
-              placeholder="您希望找一个什么样的 TA 呢？" 
-              count 
-              height="100" 
-              :customStyle="{ background: '#F7F8FA', border: 'none', borderRadius: '12px', padding: '12px', marginTop: '8px' }"
-            ></u-textarea>
-          </u-form-item>
+           <u-form-item label="自我介绍" prop="remark" labelPosition="top">
+             <u-textarea 
+               v-model="form.remark" 
+               placeholder="向大家介绍一下自己吧..." 
+               count 
+               height="100" 
+               :customStyle="{ background: '#F7F8FA', border: 'none', borderRadius: '12px', padding: '12px', marginTop: '8px' }"
+             ></u-textarea>
+           </u-form-item>
 
           <view class="section-title mt-30">
             <view class="title-line"></view>

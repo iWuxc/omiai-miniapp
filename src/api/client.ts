@@ -16,6 +16,7 @@ export interface Client {
   family_description?: string;
   income?: number;
   profession?: string;
+  work_city?: string;
   house_status?: number;
   car_status?: number;
   partner_requirements?: string;
@@ -47,6 +48,7 @@ export interface ClientListParams {
   max_height?: number;
   education?: number;
   income?: number;
+  work_city?: string;
   // Phase 1 Params
   scope?: string;
   status?: number;

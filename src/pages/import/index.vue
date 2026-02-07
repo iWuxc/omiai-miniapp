@@ -44,20 +44,112 @@
          <text class="stat error" v-if="errorCount > 0">包含 {{ errorCount }} 条错误</text>
       </view>
       
-      <scroll-view scroll-y class="record-list">
-        <view class="record-item" v-for="(item, index) in parseResult.records" :key="index">
-            <view class="item-header">
-                <text class="name">{{ item.name || '未识别姓名' }}</text>
-                <text class="status-badge error" v-if="item.parse_status === 'error'">{{ item.error_msg }}</text>
-                <text class="status-badge success" v-else>正常</text>
-            </view>
-            <view class="item-body">
-                <text class="field">电话: {{ item.phone || '-' }}</text>
-                <text class="field">性别: {{ item.gender === 1 ? '男' : (item.gender === 2 ? '女' : '-') }}</text>
-                <text class="field">年龄: {{ item.birthday || '-' }}</text>
-            </view>
-        </view>
-      </scroll-view>
+       <scroll-view scroll-y class="record-list">
+         <view class="record-item" v-for="(item, index) in parseResult.records" :key="index">
+             <!-- 头部：姓名和状态 -->
+             <view class="item-header">
+                 <text class="name">{{ item.name || '未识别姓名' }}</text>
+                 <text class="status-badge error" v-if="item.parse_status === 'error'">{{ item.error_msg || '识别异常' }}</text>
+                 <text class="status-badge success" v-else-if="item.parse_status === 'warning'">部分识别</text>
+                 <text class="status-badge success" v-else>识别成功</text>
+             </view>
+             
+             <!-- 基础信息区 -->
+             <view class="info-section">
+                 <view class="section-title">基础信息</view>
+                 <view class="info-grid">
+                     <view class="info-cell">
+                         <text class="cell-label">电话</text>
+                         <text class="cell-value" :class="{ 'empty': !item.phone }">{{ item.phone || '未识别' }}</text>
+                     </view>
+                     <view class="info-cell">
+                         <text class="cell-label">性别</text>
+                         <text class="cell-value" :class="{ 'empty': !item.gender }">{{ formatGender(item.gender) }}</text>
+                     </view>
+                     <view class="info-cell">
+                         <text class="cell-label">年龄</text>
+                         <text class="cell-value" :class="{ 'empty': !item.age }">{{ item.age ? item.age + '岁' : (item.birthday || '未识别') }}</text>
+                     </view>
+                     <view class="info-cell">
+                         <text class="cell-label">属相</text>
+                         <text class="cell-value" :class="{ 'empty': !item.zodiac }">{{ item.zodiac || '未识别' }}</text>
+                     </view>
+                     <view class="info-cell">
+                         <text class="cell-label">身高</text>
+                         <text class="cell-value" :class="{ 'empty': !item.height }">{{ item.height ? item.height + 'cm' : '未识别' }}</text>
+                     </view>
+                     <view class="info-cell">
+                         <text class="cell-label">体重</text>
+                         <text class="cell-value" :class="{ 'empty': !item.weight }">{{ item.weight ? item.weight + 'kg' : '未识别' }}</text>
+                     </view>
+                 </view>
+             </view>
+             
+             <!-- 教育婚姻区 -->
+             <view class="info-section">
+                 <view class="section-title">教育婚姻</view>
+                 <view class="info-row">
+                     <text class="field">学历: {{ formatEducation(item.education) }}</text>
+                     <text class="field">婚姻: {{ formatMarital(item.marital_status) }}</text>
+                 </view>
+             </view>
+             
+             <!-- 工作收入区 -->
+             <view class="info-section">
+                 <view class="section-title">工作收入</view>
+                 <view class="info-row">
+                     <text class="field">职业: {{ item.profession || '-' }}</text>
+                     <text class="field">收入: {{ item.income ? formatIncome(item.income) : '-' }}</text>
+                 </view>
+             </view>
+             
+             <!-- 资产情况区 -->
+             <view class="info-section">
+                 <view class="section-title">资产情况</view>
+                 <view class="info-row">
+                     <text class="field">房产: {{ formatHouseStatus(item.house_status) }}</text>
+                     <text class="field" v-if="item.house_address">地址: {{ item.house_address }}</text>
+                 </view>
+                 <view class="info-row">
+                     <text class="field">车辆: {{ item.car_status === 2 ? '有车' : (item.car_status === 1 ? '无车' : '-') }}</text>
+                 </view>
+             </view>
+             
+             <!-- 家庭信息区 -->
+             <view class="info-section" v-if="item.address || item.family_description">
+                 <view class="section-title">家庭信息</view>
+                 <view class="long-text" v-if="item.address">
+                     <text class="label">住址: </text>
+                     <text>{{ item.address }}</text>
+                 </view>
+                 <view class="long-text" v-if="item.family_description">
+                     <text class="label">家庭成员: </text>
+                     <text>{{ item.family_description }}</text>
+                 </view>
+             </view>
+             
+             <!-- 择偶要求区 -->
+             <view class="info-section" v-if="item.partner_requirements || item.parents_profession">
+                 <view class="section-title">择偶相关</view>
+                 <view class="long-text" v-if="item.partner_requirements">
+                     <text class="label">择偶要求: </text>
+                     <text>{{ item.partner_requirements }}</text>
+                 </view>
+                 <view class="long-text" v-if="item.parents_profession">
+                     <text class="label">父母工作: </text>
+                     <text>{{ item.parents_profession }}</text>
+                 </view>
+             </view>
+             
+             <!-- 备注区 -->
+             <view class="info-section" v-if="item.remark">
+                 <view class="section-title">备注</view>
+                 <view class="long-text">
+                     <text>{{ item.remark }}</text>
+                 </view>
+             </view>
+         </view>
+       </scroll-view>
 
       <view class="btn-group">
          <u-button plain text="返回修改" @click="step = 1" customStyle="flex: 1; margin-right: 10px;"></u-button>
@@ -131,6 +223,48 @@ const errorCount = computed(() => {
 const validCount = computed(() => {
     return parseResult.value.records.filter((r: any) => r.parse_status !== 'error').length;
 });
+
+// 格式化函数
+const formatGender = (gender: number) => {
+    if (gender === 1) return '男';
+    if (gender === 2) return '女';
+    return '未识别';
+};
+
+const formatEducation = (edu: number) => {
+    const map: Record<number, string> = {
+        1: '高中',
+        2: '大专',
+        3: '本科',
+        4: '硕士',
+        5: '博士'
+    };
+    return map[edu] || '-';
+};
+
+const formatMarital = (status: number) => {
+    const map: Record<number, string> = {
+        1: '未婚',
+        2: '已婚',
+        3: '离异',
+        4: '丧偶'
+    };
+    return map[status] || '-';
+};
+
+const formatIncome = (income: number) => {
+    if (income >= 10000) {
+        return (income / 10000).toFixed(1) + '万/月';
+    }
+    return income + '元/月';
+};
+
+const formatHouseStatus = (status: number) => {
+    if (status === 2) return '已购房';
+    if (status === 3) return '贷款购房';
+    if (status === 1) return '无房';
+    return '-';
+};
 
 const analyze = async () => {
     if (!rawText.value) return;
@@ -226,34 +360,110 @@ const reset = () => {
     }
     
     .record-list {
-        height: 400px;
-        background: #fff;
-        border-radius: 8px;
+        height: 60vh;
+        background: #f5f5f5;
+        border-radius: 12px;
         padding: 12px;
         margin-bottom: 20px;
     }
     
     .record-item {
-        padding: 12px;
-        border-bottom: 1px solid $omiai-border;
-        &:last-child { border-bottom: none; }
+        padding: 16px;
+        margin-bottom: 12px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         
         .item-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 6px;
-            .name { font-weight: 500; font-size: 15px; }
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            .name { font-weight: 600; font-size: 17px; color: #333; }
             .status-badge {
                 font-size: 11px;
-                padding: 2px 6px;
-                border-radius: 4px;
-                &.error { background: #FFF7E6; color: $omiai-warning; }
-                &.success { background: #E8FFEA; color: #52C41A; }
+                padding: 4px 10px;
+                border-radius: 20px;
+                font-weight: 500;
+                &.error { background: #FFF2F0; color: #FF4D4F; }
+                &.success { background: #F6FFED; color: #52C41A; }
             }
         }
         
-        .item-body {
-            .field { font-size: 12px; color: $omiai-text-second; margin-right: 12px; }
+        .info-section {
+            margin-bottom: 12px;
+            &:last-child { margin-bottom: 0; }
+            
+            .section-title {
+                font-size: 13px;
+                font-weight: 600;
+                color: #666;
+                margin-bottom: 8px;
+                padding-left: 8px;
+                border-left: 3px solid $omiai-primary;
+            }
+            
+            .info-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+                
+                .info-cell {
+                    background: #f7f8fa;
+                    padding: 8px;
+                    border-radius: 8px;
+                    text-align: center;
+                    
+                    .cell-label {
+                        display: block;
+                        font-size: 11px;
+                        color: #999;
+                        margin-bottom: 4px;
+                    }
+                    
+                    .cell-value {
+                        display: block;
+                        font-size: 13px;
+                        color: #333;
+                        font-weight: 500;
+                        
+                        &.empty {
+                            color: #ccc;
+                        }
+                    }
+                }
+            }
+            
+            .info-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                
+                .field {
+                    font-size: 13px;
+                    color: #333;
+                    background: #f7f8fa;
+                    padding: 6px 10px;
+                    border-radius: 6px;
+                }
+            }
+            
+            .long-text {
+                font-size: 13px;
+                color: #333;
+                line-height: 1.6;
+                background: #f7f8fa;
+                padding: 10px;
+                border-radius: 8px;
+                margin-bottom: 8px;
+                
+                .label {
+                    color: #666;
+                    font-weight: 500;
+                }
+            }
         }
     }
     
