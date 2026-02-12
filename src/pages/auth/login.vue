@@ -2,52 +2,112 @@
   <view class="container">
     <view class="login-wrapper fade-in">
       <view class="logo-section">
-        <image class="logo" src="/static/logo.png" mode="aspectFit"></image>
-        <text class="app-name">红娘管理系统</text>
+        <image class="logo" src="https://api.dicebear.com/7.x/fun-emoji/svg?seed=pony&backgroundColor=ffdfbf&radius=50" mode="aspectFit"></image>
+        <text class="app-name">个人管理系统</text>
         <text class="welcome-text">欢迎回来，请登录</text>
       </view>
 
       <!-- H5 登录视图 -->
       <view v-if="platform === 'H5'" class="form-section">
-        <u-form :model="h5Form" ref="uForm" labelWidth="0">
-          <u-form-item borderBottom>
-            <u-input v-model="h5Form.phone" placeholder="请输入手机号" border="none" type="number">
-              <template #prefix>
-                <u-icon name="phone" size="20" color="#C0C4CC" style="margin-right: 10px"></u-icon>
-              </template>
-            </u-input>
-          </u-form-item>
-          <u-form-item borderBottom>
-            <u-input 
+        <!-- 表单卡片头部 -->
+        <view class="form-header">
+          <view class="header-line"></view>
+          <text class="header-title">账号登录</text>
+          <view class="header-line"></view>
+        </view>
+
+        <!-- 手机号输入 -->
+        <view class="input-group">
+          <view class="input-label">
+            <u-icon name="phone" size="16" color="#FF5E78"></u-icon>
+            <text>手机号</text>
+          </view>
+          <view class="input-wrapper">
+            <input 
+              v-model="h5Form.phone" 
+              placeholder="请输入11位手机号" 
+              type="number"
+              maxlength="11"
+              class="custom-input"
+            />
+            <view class="input-clear" v-if="h5Form.phone" @click="h5Form.phone = ''">
+              <u-icon name="close-circle" size="18" color="#C0C4CC"></u-icon>
+            </view>
+          </view>
+          <view class="input-focus-line" :class="{ active: phoneFocus }"></view>
+        </view>
+
+        <!-- 密码输入 -->
+        <view class="input-group">
+          <view class="input-label">
+            <u-icon name="lock" size="16" color="#FF5E78"></u-icon>
+            <text>密码</text>
+          </view>
+          <view class="input-wrapper">
+            <input 
               v-model="h5Form.password" 
-              placeholder="请输入密码" 
-              border="none" 
+              placeholder="请输入登录密码" 
               :type="showPassword ? 'text' : 'password'"
-            >
-              <template #prefix>
-                <u-icon name="lock" size="20" color="#C0C4CC" style="margin-right: 10px"></u-icon>
-              </template>
-              <template #suffix>
+              class="custom-input"
+            />
+            <view class="input-suffix">
+              <view class="password-toggle" @click="showPassword = !showPassword">
                 <u-icon 
                   :name="showPassword ? 'eye' : 'eye-off'" 
                   size="20" 
-                  color="#C0C4CC"
-                  @click="showPassword = !showPassword"
+                  color="#909399"
                 ></u-icon>
-              </template>
-            </u-input>
-          </u-form-item>
-        </u-form>
-        <view class="password-tips">
-          <text class="tips-text">初始密码：123456</text>
+              </view>
+            </view>
+          </view>
+          <view class="input-focus-line" :class="{ active: passwordFocus }"></view>
         </view>
+
+        <!-- 提示信息 -->
+        <view class="form-tips">
+          <view class="tip-item">
+            <u-icon name="info-circle" size="14" color="#909399"></u-icon>
+            <text class="tip-text">初始密码：123456</text>
+          </view>
+          <view class="tip-item link" @click="showForgetPassword">
+            <text class="tip-text highlight">忘记密码？</text>
+          </view>
+        </view>
+
+        <!-- 登录按钮 -->
         <view class="submit-btn-box">
-          <u-button 
+          <button 
             @click="handleH5Login" 
-            class="omiai-btn-primary" 
-            :loading="loading"
-            customStyle="height: 50px; font-size: 16px; border: none; width: 100%;"
-          >立即登录</u-button>
+            class="login-btn" 
+            :class="{ loading: loading, disabled: !canLogin }"
+            :disabled="loading || !canLogin"
+          >
+            <view class="btn-content" v-if="!loading">
+              <text class="btn-text">立即登录</text>
+              <u-icon name="arrow-right" size="18" color="#fff" class="btn-icon"></u-icon>
+            </view>
+            <view class="btn-loading" v-else>
+              <view class="loading-spinner"></view>
+              <text class="loading-text">登录中...</text>
+            </view>
+          </button>
+        </view>
+
+        <!-- 其他登录方式 -->
+        <view class="other-login">
+          <view class="divider">
+            <view class="line"></view>
+            <text class="divider-text">其他方式</text>
+            <view class="line"></view>
+          </view>
+          <view class="social-login">
+            <view class="social-item" @click="handleWxLogin">
+              <view class="social-icon wechat">
+                <u-icon name="weixin-fill" size="28" color="#fff"></u-icon>
+              </view>
+              <text class="social-text">微信登录</text>
+            </view>
+          </view>
         </view>
       </view>
 
@@ -71,7 +131,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { getPlatform } from '@/utils/env';
 import { h5Login, wxLogin } from '@/api/auth';
@@ -86,6 +146,24 @@ const h5Form = reactive({
   phone: '',
   password: ''
 });
+
+// 输入框焦点状态
+const phoneFocus = ref(false);
+const passwordFocus = ref(false);
+
+// 是否可以登录
+const canLogin = computed(() => {
+  return h5Form.phone.length === 11 && h5Form.password.length > 0;
+});
+
+// 显示忘记密码提示
+const showForgetPassword = () => {
+  uni.showToast({ 
+    title: '请联系管理员重置密码', 
+    icon: 'none',
+    duration: 2000
+  });
+};
 
 // 页面加载时获取 redirect 参数
 onLoad((options: any) => {
@@ -115,9 +193,18 @@ const handleH5Login = async () => {
   loading.value = true;
   try {
     const res: any = await h5Login(h5Form.phone, h5Form.password);
-    loginSuccess(res);
-  } catch (e) {
-    // handled by interceptor
+    console.log('H5登录响应:', res);
+    if (res) {
+      loginSuccess(res);
+    } else {
+      uni.showToast({ title: '登录失败：服务器返回数据为空', icon: 'none' });
+    }
+  } catch (e: any) {
+    console.error('H5登录错误:', e);
+    // 拦截器已处理错误提示，这里可以添加额外的错误处理
+    if (e.msg || e.message) {
+      uni.showToast({ title: e.msg || e.message, icon: 'none' });
+    }
   } finally {
     loading.value = false;
   }
@@ -130,23 +217,41 @@ const handleWxLogin = () => {
       loading.value = true;
       try {
         const res: any = await wxLogin(loginRes.code);
-        loginSuccess(res);
-      } catch (e) {
-        // handled
+        console.log('微信登录响应:', res);
+        if (res) {
+          loginSuccess(res);
+        } else {
+          uni.showToast({ title: '登录失败：服务器返回数据为空', icon: 'none' });
+        }
+      } catch (e: any) {
+        console.error('微信登录错误:', e);
+        if (e.msg || e.message) {
+          uni.showToast({ title: e.msg || e.message, icon: 'none' });
+        }
       } finally {
         loading.value = false;
       }
     },
-    fail: () => {
-      uni.showToast({ title: '微信登录失败', icon: 'none' });
+    fail: (err) => {
+      console.error('微信登录调用失败:', err);
+      uni.showToast({ title: '微信登录调用失败', icon: 'none' });
     }
   });
 };
 
 const loginSuccess = (data: any) => {
   // 使用封装的 auth 工具保存登录信息
-  setToken(data.token);
-  setUserInfo(data.user);
+  // 适配新的返回格式：服务端返回 accessToken 和 user
+  const token = data.accessToken || data.token;
+  const user = data.user;
+  
+  if (!token) {
+    uni.showToast({ title: '登录失败：未获取到令牌', icon: 'none' });
+    return;
+  }
+  
+  setToken(token);
+  setUserInfo(user);
   uni.setStorageSync('loginTime', Date.now().toString());
   
   uni.showToast({ title: '登录成功', icon: 'success' });
@@ -285,62 +390,422 @@ const uniReLaunch = (url: string) => {
 </script>
 
 <style lang="scss" scoped>
+/* 动画定义 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 4px 20px rgba(255,94,120,0.2); }
+  50% { transform: scale(1.02); box-shadow: 0 6px 30px rgba(255,94,120,0.3); }
+}
+
 .container {
   min-height: 100vh;
-  background-color: #fff;
-  padding: 60px 32px;
+  background: linear-gradient(180deg, #FFFAFB 0%, $omiai-white 50%, $omiai-bg-page 100%);
+  padding: 80px 32px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-wrapper {
+  animation: fadeInUp 0.6s ease-out;
 }
 
 .logo-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 48px;
+  margin-bottom: 56px;
   
   .logo {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 16px;
+    width: 100px;
+    height: 100px;
+    margin-bottom: 24px;
+    border-radius: $omiai-radius-lg;
+    box-shadow: $omiai-shadow-md;
+    animation: float 3s ease-in-out infinite;
   }
   
   .app-name {
-    font-size: 24px;
-    font-weight: 600;
+    font-size: 28px;
+    font-weight: 700;
     color: $omiai-text-main;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
   }
   
   .welcome-text {
-    font-size: 14px;
+    font-size: 15px;
     color: $omiai-text-tip;
   }
 }
 
 .form-section {
-  .password-tips {
-    margin-top: 12px;
-    text-align: right;
+  background: $omiai-white;
+  padding: 32px 28px;
+  border-radius: $omiai-radius-xl;
+  box-shadow: 0 8px 32px rgba(255, 94, 120, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  animation: fadeInUp 0.6s ease-out 0.1s both;
+  border: 1px solid rgba(255, 94, 120, 0.06);
+  
+  .form-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 32px;
+    gap: 12px;
     
-    .tips-text {
-      font-size: 12px;
-      color: $omiai-text-tip;
+    .header-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 94, 120, 0.2), transparent);
+    }
+    
+    .header-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: $omiai-text-main;
+      letter-spacing: 2px;
+    }
+  }
+  
+  .input-group {
+    margin-bottom: 24px;
+    position: relative;
+    
+    .input-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      color: $omiai-text-second;
+    }
+    
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      background: linear-gradient(135deg, #FAFBFC 0%, #F5F7FA 100%);
+      border-radius: $omiai-radius-lg;
+      padding: 0 16px;
+      height: 52px;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+      position: relative;
+      
+      &:focus-within {
+        background: #fff;
+        border-color: rgba(255, 94, 120, 0.3);
+        box-shadow: 0 0 0 4px rgba(255, 94, 120, 0.08);
+      }
+      
+      .custom-input {
+        flex: 1;
+        height: 100%;
+        font-size: 15px;
+        color: $omiai-text-main;
+        background: transparent;
+        border: none;
+        outline: none;
+        
+        &::placeholder {
+          color: #C0C4CC;
+        }
+      }
+      
+      .input-clear {
+        padding: 8px;
+        margin-right: -8px;
+        
+        &:active {
+          transform: scale(0.9);
+        }
+      }
+      
+      .input-suffix {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        
+        .password-toggle {
+          padding: 8px;
+          margin-right: -8px;
+          
+          &:active {
+            transform: scale(0.9);
+          }
+        }
+      }
+    }
+    
+    .input-focus-line {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #FF8E9D, $omiai-primary);
+      transition: width 0.3s ease;
+      border-radius: 2px;
+      
+      &.active {
+        width: 100%;
+      }
+    }
+  }
+  
+  .form-tips {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    margin-bottom: 32px;
+    
+    .tip-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      
+      .tip-text {
+        font-size: 13px;
+        color: $omiai-text-tip;
+        
+        &.highlight {
+          color: $omiai-primary;
+          font-weight: 500;
+        }
+      }
+      
+      &.link:active {
+        opacity: 0.7;
+      }
     }
   }
 }
 
-.submit-btn-box, .mp-btn-box {
-  margin-top: 40px;
+.submit-btn-box {
+  margin-bottom: 24px;
+  
+  .login-btn {
+    width: 100%;
+    height: 52px;
+    background: linear-gradient(135deg, #FF8E9D 0%, $omiai-primary 100%);
+    border: none;
+    border-radius: $omiai-radius-lg;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(255, 94, 120, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+    
+    &:active {
+      transform: scale(0.98);
+      box-shadow: 0 4px 12px rgba(255, 94, 120, 0.2);
+    }
+    
+    &:active::before {
+      left: 100%;
+    }
+    
+    &.disabled {
+      background: linear-gradient(135deg, #E8E8E8 0%, #D9D9D9 100%);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+    
+    &.loading {
+      background: linear-gradient(135deg, #FFB8C1 0%, #FF8E9D 100%);
+    }
+    
+    .btn-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      .btn-text {
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+        letter-spacing: 1px;
+      }
+      
+      .btn-icon {
+        transition: transform 0.3s ease;
+      }
+    }
+    
+    &:hover .btn-icon {
+      transform: translateX(4px);
+    }
+    
+    .btn-loading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      .loading-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      
+      .loading-text {
+        font-size: 15px;
+        color: #fff;
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.other-login {
+  margin-top: 32px;
+  
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    
+    .line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, $omiai-border, transparent);
+    }
+    
+    .divider-text {
+      font-size: 13px;
+      color: $omiai-text-tip;
+    }
+  }
+  
+  .social-login {
+    display: flex;
+    justify-content: center;
+    
+    .social-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: $omiai-radius-lg;
+      transition: all 0.3s ease;
+      
+      &:active {
+        background: $omiai-bg-page;
+        transform: scale(0.95);
+      }
+      
+      .social-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        
+        &.wechat {
+          background: linear-gradient(135deg, #07C160 0%, #0ABF5E 100%);
+        }
+      }
+      
+      .social-text {
+        font-size: 13px;
+        color: $omiai-text-second;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+.mp-btn-box {
+  margin-top: 48px;
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+  
+  :deep(.u-button) {
+    background: linear-gradient(135deg, #07C160 0%, #0ABF5E 100%);
+    border: none;
+    border-radius: $omiai-radius-md;
+    font-weight: 600;
+    
+    &:active {
+      transform: scale(0.98);
+    }
+    
+    &::after {
+      border: none;
+    }
+  }
 }
 
 .mp-section {
   text-align: center;
+  animation: fadeInUp 0.6s ease-out 0.1s both;
+  
+  :deep(.u-button) {
+    background: linear-gradient(135deg, #07C160 0%, #0ABF5E 100%);
+    border: none;
+    border-radius: $omiai-radius-md;
+    font-weight: 600;
+    
+    &:active {
+      transform: scale(0.98);
+    }
+    
+    &::after {
+      border: none;
+    }
+  }
   
   .agreement-text {
-    margin-top: 24px;
+    margin-top: 28px;
     color: $omiai-text-tip;
+    font-size: 13px;
     
     .link {
-      color: $omiai-male;
+      color: $omiai-primary;
+      font-weight: 500;
+      
+      &:active {
+        opacity: 0.7;
+      }
     }
   }
 }

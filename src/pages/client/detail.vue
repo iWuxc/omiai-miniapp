@@ -1,133 +1,205 @@
 <template>
-  <view class="container">
-    <!-- 顶部背景 -->
-    <view class="header-bg-fixed"></view>
-
-    <!-- 自定义导航栏 -->
-    <view class="nav-bar">
-      <view class="back-btn" @click="goBack">
-        <u-icon name="arrow-left" size="20" color="#fff"></u-icon>
-      </view>
-      <text class="nav-title">客户详情</text>
-      <view class="more-btn" @click="showMoreMenu">
-        <u-icon name="more-dot-fill" size="20" color="#fff"></u-icon>
-      </view>
-    </view>
+  <view class="client-detail-container">
+    <!-- 顶部渐变背景 -->
+    <view class="header-bg"></view>
     
-    <!-- 核心资料卡片 -->
-    <view class="hero-header fade-in">
-      <view class="hero-image-box">
-        <u-image 
-          :src="getAvatar(client)" 
-          width="100%" 
-          height="320px" 
-          mode="aspectFill"
-        ></u-image>
-        <view class="hero-overlay"></view>
-        
-        <view class="hero-content">
-          <view class="name-row">
-            <text class="name">{{ client.name || '未命名' }}</text>
-            <view class="gender-tag" :class="client.gender === 1 ? 'male' : 'female'">
-              <u-icon :name="client.gender === 1 ? 'man' : 'woman'" size="12" color="#fff"></u-icon>
-            </view>
-            <view class="status-tag" :class="getStatusClass(client.status)">
-              {{ getStatusText(client.status) }}
-            </view>
-          </view>
-          <view class="tags-row">
-            <text class="hero-tag">{{ client.age || '-' }}岁</text>
-            <text class="hero-tag" v-if="client.zodiac">{{ client.zodiac }}</text>
-            <text class="hero-tag">{{ getEducationText(client.education) }}</text>
-            <text class="hero-tag" v-if="client.marital_status">{{ getMaritalStatusText(client.marital_status) }}</text>
-          </view>
+    <!-- 导航栏 -->
+    <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
+      <view class="nav-content">
+        <view class="back-btn" @click="goBack">
+          <u-icon name="arrow-left" size="22" color="#fff"></u-icon>
+        </view>
+        <text class="nav-title">客户档案</text>
+        <view class="more-btn" @click="showMoreMenu">
+          <u-icon name="more-dot-fill" size="22" color="#fff"></u-icon>
         </view>
       </view>
     </view>
 
-    <!-- 胶囊式选项卡 -->
-    <view class="sticky-tabs-container">
-      <view class="segmented-control">
-        <view 
-          class="segment-item" 
-          :class="{ active: currentTab === 0 }"
-          @click="currentTab = 0"
-        >基础档案</view>
-        <view 
-          class="segment-item" 
-          :class="{ active: currentTab === 1 }"
-          @click="currentTab = 1"
-        >详细资料</view>
-        <view 
-          class="segment-item" 
-          :class="{ active: currentTab === 2 }"
-          @click="currentTab = 2"
-        >智能匹配</view>
-      </view>
-    </view>
-    
-    <view class="content">
-      <!-- Tab 1: 基础档案 -->
-      <view v-if="currentTab === 0" class="info-section fade-in">
-        <!-- 匹配信息卡片 (仅已匹配状态显示) -->
-        <view v-if="client.status === 3 && client.partner_id" class="info-card mb-16">
-          <view class="card-header">
-            <u-icon name="heart-fill" size="18" color="#FF5E78"></u-icon>
-            <text class="header-title">当前伴侣</text>
-          </view>
-          <view class="cell-item" @click="goDetail(client.partner_id)">
-            <text class="label">伴侣信息</text>
-            <view class="value-box" style="display: flex; align-items: center;">
-              <u-avatar 
-                v-if="client.partner_avatar"
-                :src="client.partner_avatar" 
-                size="32" 
-                shape="circle" 
-                customStyle="margin-right: 8px;"
-              ></u-avatar>
-              <text class="value highlight" style="margin-right: 4px;">{{ client.partner_name || '未知' }}</text>
-              <u-icon name="arrow-right" size="14" color="#909399"></u-icon>
+    <!-- 主体内容 -->
+    <scroll-view 
+      scroll-y 
+      class="content-scroll" 
+      :style="{ paddingTop: (statusBarHeight + 44) + 'px' }"
+      @scroll="onScroll"
+    >
+      <!-- 个人资料头部 -->
+      <view class="profile-header">
+        <view class="avatar-section">
+          <view class="avatar-wrapper" @click="previewAvatar">
+            <image 
+              :src="getAvatar(client)" 
+              class="avatar-img"
+              mode="aspectFill"
+            />
+            <view class="status-ring" :class="getStatusClass(client.status)"></view>
+            <view class="zoom-icon">
+              <u-icon name="zoom-in" size="14" color="#fff"></u-icon>
             </view>
           </view>
-          <view class="action-row mt-10">
-            <u-button 
-              type="error" 
-              size="mini" 
-              plain 
-              shape="circle" 
-              @click="handleDissolveMatch"
-            >解除匹配</u-button>
+          <view class="profile-info">
+            <view class="name-row">
+              <text class="name">{{ client.name || '未命名' }}</text>
+              <view class="gender-badge" :class="client.gender === 1 ? 'male' : 'female'">
+                <u-icon :name="client.gender === 1 ? 'man' : 'woman'" size="12" color="#fff"></u-icon>
+                <text class="gender-text">{{ client.gender === 1 ? '男' : '女' }}</text>
+              </view>
+            </view>
+            <view class="id-text">ID: {{ client.id }}</view>
+            <view class="status-bar">
+              <view class="status-tag" :class="getStatusClass(client.status)">
+                {{ getStatusText(client.status) }}
+              </view>
+            </view>
           </view>
         </view>
 
+        <!-- 关键数据 -->
+        <view class="key-stats">
+          <view class="stat-item">
+            <text class="stat-value">{{ client.age || '-' }}</text>
+            <text class="stat-label">年龄</text>
+          </view>
+          <view class="stat-divider"></view>
+          <view class="stat-item">
+            <text class="stat-value">{{ client.height ? client.height + 'cm' : '-' }}</text>
+            <text class="stat-label">身高</text>
+          </view>
+          <view class="stat-divider"></view>
+          <view class="stat-item">
+            <text class="stat-value">{{ getEducationText(client.education) }}</text>
+            <text class="stat-label">学历</text>
+          </view>
+          <view class="stat-divider"></view>
+          <view class="stat-item">
+            <text class="stat-value">{{ client.zodiac || '-' }}</text>
+            <text class="stat-label">属相</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 标签导航 -->
+      <view class="tab-section" :class="{ sticky: isTabSticky }">
+        <view class="tab-list">
+          <view 
+            v-for="(tab, index) in tabs" 
+            :key="index"
+            class="tab-item"
+            :class="{ active: currentTab === index }"
+            @click="switchTab(index)"
+          >
+            <text class="tab-name">{{ tab.name }}</text>
+            <view class="tab-line" v-if="currentTab === index"></view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 基础档案 Tab -->
+      <view v-if="currentTab === 0" class="tab-content">
         <!-- 联系方式卡片 -->
         <view class="info-card">
           <view class="card-header">
-            <u-icon name="phone-fill" size="18" color="#FF5E78"></u-icon>
+            <view class="header-icon contact">
+              <u-icon name="phone-fill" size="16" color="#fff"></u-icon>
+            </view>
             <text class="header-title">联系方式</text>
           </view>
-          <view class="cell-item">
-            <text class="label">手机号码</text>
-            <view class="value-box">
-              <text class="value">{{ client.phone || '-' }}</text>
-              <u-icon v-if="client.phone" name="phone-fill" size="16" color="#FF5E78" @click="makePhoneCall(client.phone)"></u-icon>
+          <view class="card-body">
+            <view class="info-row" @click="makePhoneCall(client.phone)">
+              <view class="info-label">
+                <u-icon name="phone" size="14" color="#909399"></u-icon>
+                <text>手机号码</text>
+              </view>
+              <view class="info-value-box">
+                <text class="info-value">{{ client.phone || '未填写' }}</text>
+                <u-icon v-if="client.phone" name="arrow-right" size="14" color="#C0C4CC"></u-icon>
+              </view>
+            </view>
+            <view class="info-row">
+              <view class="info-label">
+                <u-icon name="calendar" size="14" color="#909399"></u-icon>
+                <text>出生年月</text>
+              </view>
+              <text class="info-value">{{ client.birthday || '-' }}</text>
             </view>
           </view>
-          <view class="cell-item">
-            <text class="label">出生年月</text>
-            <view class="value-box">
-              <text class="value">{{ client.birthday || '-' }}</text>
+        </view>
+
+        <!-- 工作信息卡片 -->
+        <view class="info-card">
+          <view class="card-header">
+            <view class="header-icon work">
+              <u-icon name="bag-fill" size="16" color="#fff"></u-icon>
+            </view>
+            <text class="header-title">工作信息</text>
+          </view>
+          <view class="card-body">
+            <view class="info-row">
+              <view class="info-label">
+                <u-icon name="account" size="14" color="#909399"></u-icon>
+                <text>职业</text>
+              </view>
+              <text class="info-value">{{ client.profession || '未填写' }}</text>
+            </view>
+            <view class="info-row">
+              <view class="info-label">
+                <u-icon name="map" size="14" color="#909399"></u-icon>
+                <text>工作城市</text>
+              </view>
+              <text class="info-value">{{ client.work_city || '未填写' }}</text>
+            </view>
+            <view class="info-row highlight">
+              <view class="info-label">
+                <u-icon name="red-packet" size="14" color="#909399"></u-icon>
+                <text>月收入</text>
+              </view>
+              <text class="info-value income">{{ client.income ? formatIncome(client.income) : '未填写' }}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 资产情况卡片 -->
+        <view class="info-card">
+          <view class="card-header">
+            <view class="header-icon asset">
+              <u-icon name="home-fill" size="16" color="#fff"></u-icon>
+            </view>
+            <text class="header-title">资产情况</text>
+          </view>
+          <view class="card-body">
+            <view class="info-row">
+              <view class="info-label">
+                <u-icon name="home" size="14" color="#909399"></u-icon>
+                <text>房产状况</text>
+              </view>
+              <text class="info-value">{{ getHouseStatusText(client.house_status) }}</text>
+            </view>
+            <view class="info-row" v-if="client.house_address">
+              <view class="info-label">
+                <u-icon name="map-fill" size="14" color="#909399"></u-icon>
+                <text>房产地址</text>
+              </view>
+              <text class="info-value">{{ client.house_address }}</text>
+            </view>
+            <view class="info-row">
+              <view class="info-label">
+                <u-icon name="car" size="14" color="#909399"></u-icon>
+                <text>车辆状况</text>
+              </view>
+              <text class="info-value">{{ getCarStatusText(client.car_status) }}</text>
             </view>
           </view>
         </view>
 
         <!-- 身体信息卡片 -->
-        <view class="info-card mt-16">
+        <view class="info-card">
           <view class="card-header">
-            <u-icon name="account-fill" size="18" color="#409EFF"></u-icon>
+            <view class="header-icon body">
+              <u-icon name="account-fill" size="16" color="#fff"></u-icon>
+            </view>
             <text class="header-title">身体信息</text>
           </view>
-          <view class="cell-grid">
+          <view class="card-body grid-layout">
             <view class="grid-item">
               <text class="grid-label">身高</text>
               <text class="grid-value">{{ client.height ? client.height + 'cm' : '-' }}</text>
@@ -141,220 +213,247 @@
               <text class="grid-value">{{ client.zodiac || '-' }}</text>
             </view>
             <view class="grid-item">
-              <text class="grid-label">年龄</text>
-              <text class="grid-value">{{ client.age ? client.age + '岁' : '-' }}</text>
-            </view>
-          </view>
-        </view>
-
-        <!-- 职业收入卡片 -->
-        <view class="info-card mt-16">
-          <view class="card-header">
-            <u-icon name="bag-fill" size="18" color="#67C23A"></u-icon>
-            <text class="header-title">职业收入</text>
-          </view>
-          <view class="cell-item">
-            <text class="label">职业</text>
-            <view class="value-box">
-              <text class="value">{{ client.profession || '未填写' }}</text>
-            </view>
-          </view>
-          <view class="cell-item">
-            <text class="label">月收入</text>
-            <view class="value-box">
-              <text class="value highlight">{{ client.income ? formatIncome(client.income) : '未填写' }}</text>
-            </view>
-          </view>
-        </view>
-
-        <!-- 资产情况卡片 -->
-        <view class="info-card mt-16">
-          <view class="card-header">
-            <u-icon name="home-fill" size="18" color="#E6A23C"></u-icon>
-            <text class="header-title">资产情况</text>
-          </view>
-          <view class="cell-item">
-            <text class="label">房产状况</text>
-            <view class="value-box">
-              <text class="value">{{ getHouseStatusText(client.house_status) }}</text>
-            </view>
-          </view>
-          <view class="cell-item" v-if="client.house_address">
-            <text class="label">房产地址</text>
-            <view class="value-box">
-              <text class="value">{{ client.house_address }}</text>
-            </view>
-          </view>
-          <view class="cell-item">
-            <text class="label">车辆状况</text>
-            <view class="value-box">
-              <text class="value">{{ getCarStatusText(client.car_status) }}</text>
+              <text class="grid-label">婚姻状况</text>
+              <text class="grid-value">{{ getMaritalStatusText(client.marital_status) || '-' }}</text>
             </view>
           </view>
         </view>
       </view>
-      
-      <!-- Tab 2: 详细资料 -->
-      <view v-if="currentTab === 1" class="info-section fade-in">
-        <!-- 住址信息 -->
+
+      <!-- 详细资料 Tab -->
+      <view v-if="currentTab === 1" class="tab-content">
+        <!-- 现居地址 -->
         <view class="info-card">
           <view class="card-header">
-            <u-icon name="map-fill" size="18" color="#909399"></u-icon>
-            <text class="header-title">住址信息</text>
+            <view class="header-icon location">
+              <u-icon name="map-fill" size="16" color="#fff"></u-icon>
+            </view>
+            <text class="header-title">现居地址</text>
           </view>
-          <view class="cell-item">
-            <text class="label">现居地址</text>
-            <view class="value-box">
-              <text class="value">{{ client.address || '未填写' }}</text>
+          <view class="card-body">
+            <view class="address-box">
+              <u-icon name="map" size="16" color="#FF5E78"></u-icon>
+              <text class="address-text">{{ client.address || '未填写居住地址' }}</text>
             </view>
           </view>
         </view>
 
         <!-- 家庭背景 -->
-        <view class="info-card mt-16">
+        <view class="info-card">
           <view class="card-header">
-            <u-icon name="account-fill" size="18" color="#FF85C0"></u-icon>
+            <view class="header-icon family">
+              <u-icon name="account-fill" size="16" color="#fff"></u-icon>
+            </view>
             <text class="header-title">家庭背景</text>
           </view>
-          <view class="rich-content">
-            {{ client.family_description || '暂无家庭背景介绍' }}
+          <view class="card-body">
+            <view class="content-block">
+              <view class="block-title">家庭成员</view>
+              <text class="block-content">{{ client.family_description || '暂无家庭成员信息' }}</text>
+            </view>
+            <view class="content-block" v-if="client.parents_profession">
+              <view class="block-title">父母工作</view>
+              <text class="block-content">{{ client.parents_profession }}</text>
+            </view>
           </view>
         </view>
 
         <!-- 自我介绍 -->
-        <view class="info-card mt-16">
+        <view class="info-card">
           <view class="card-header">
-            <u-icon name="edit-pen-fill" size="18" color="#409EFF"></u-icon>
+            <view class="header-icon intro">
+              <u-icon name="edit-pen-fill" size="16" color="#fff"></u-icon>
+            </view>
             <text class="header-title">自我介绍</text>
           </view>
-          <view class="rich-content">
-            {{ client.remark || '暂无自我介绍' }}
+          <view class="card-body">
+            <text class="intro-text">{{ client.remark || '暂无自我介绍' }}</text>
           </view>
         </view>
 
         <!-- 择偶标准 -->
-        <view class="info-card mt-16" v-if="client.partner_requirements">
+        <view class="info-card" v-if="client.partner_requirements">
           <view class="card-header">
-            <u-icon name="heart-fill" size="18" color="#FF5E78"></u-icon>
+            <view class="header-icon match">
+              <u-icon name="heart-fill" size="16" color="#fff"></u-icon>
+            </view>
             <text class="header-title">择偶标准</text>
           </view>
-          <view class="rich-content requirement">
-            {{ formatPartnerRequirements(client.partner_requirements) }}
+          <view class="card-body">
+            <view class="requirement-box">
+              <text class="req-text">{{ formatPartnerRequirements(client.partner_requirements) }}</text>
+            </view>
           </view>
         </view>
 
-        <!-- 标签 -->
-        <view class="info-card mt-16" v-if="client.tags">
+        <!-- 个性标签 -->
+        <view class="info-card" v-if="client.tags">
           <view class="card-header">
-            <u-icon name="tags-fill" size="18" color="#67C23A"></u-icon>
+            <view class="header-icon tags">
+              <u-icon name="tags-fill" size="16" color="#fff"></u-icon>
+            </view>
             <text class="header-title">个性标签</text>
           </view>
-          <view class="tags-list">
-            <text v-for="(tag, index) in parseTags(client.tags)" :key="index" class="tag-item">{{ tag }}</text>
+          <view class="card-body">
+            <view class="tag-cloud">
+              <text 
+                v-for="(tag, index) in parseTags(client.tags)" 
+                :key="index" 
+                class="tag-pill"
+                :style="{ animationDelay: index * 0.05 + 's' }"
+              >
+                {{ tag }}
+              </text>
+            </view>
           </view>
         </view>
 
         <!-- 照片墙 -->
-        <view class="info-card mt-16">
+        <view class="info-card">
           <view class="card-header">
-            <u-icon name="photo-fill" size="18" color="#E6A23C"></u-icon>
+            <view class="header-icon photo">
+              <u-icon name="photo-fill" size="16" color="#fff"></u-icon>
+            </view>
             <text class="header-title">照片墙</text>
-            <text class="photo-count">{{ photoList.length }}张</text>
+            <text class="photo-count">{{ photoList.length }}/9</text>
           </view>
-          
-          <!-- 照片网格 -->
-          <view class="photo-grid-wrapper">
-            <view 
-              v-for="(photo, index) in photoList" 
-              :key="index" 
-              class="photo-item"
-              :style="{ animationDelay: index * 0.05 + 's' }"
-              @click="previewImage(index)"
-            >
-              <u-image 
-                :src="photo" 
-                width="100%" 
-                height="100%" 
-                mode="aspectFill" 
-                radius="8"
-                :lazy-load="true"
-                :show-loading="true"
-              ></u-image>
-              <!-- 删除按钮 -->
-              <view class="photo-delete" @click.stop="deletePhoto(index)">
-                <u-icon name="close" size="10" color="#fff"></u-icon>
+          <view class="card-body">
+            <view class="photo-grid">
+              <view 
+                v-for="(photo, index) in photoList" 
+                :key="index"
+                class="photo-item"
+                :style="{ animationDelay: index * 0.05 + 's' }"
+                @click="previewImage(index)"
+              >
+                <image :src="photo" mode="aspectFill" class="photo-img" />
+                <view class="photo-delete" @click.stop="deletePhoto(index)">
+                  <u-icon name="close" size="10" color="#fff"></u-icon>
+                </view>
               </view>
-            </view>
-            
-            <!-- 上传按钮 -->
-            <view class="photo-item upload-btn" @click="chooseImage" v-if="photoList.length < 9">
-              <view class="upload-inner">
+              <view 
+                class="photo-item upload-btn" 
+                @click="chooseImage"
+                v-if="photoList.length < 9"
+              >
                 <u-icon name="plus" size="28" color="#C0C4CC"></u-icon>
-                <text class="upload-text">添加照片</text>
+                <text class="upload-hint">添加照片</text>
               </view>
             </view>
-          </view>
-          
-          <!-- 上传提示 -->
-          <view class="photo-tip" v-if="photoList.length === 0">
-            <u-icon name="info-circle" size="14" color="#909399"></u-icon>
-            <text>暂无照片，点击上方按钮添加</text>
-          </view>
-          <view class="photo-tip" v-else-if="photoList.length < 9">
-            <text>还可以添加 {{ 9 - photoList.length }} 张照片</text>
           </view>
         </view>
 
         <!-- 系统信息 -->
-        <view class="info-card mt-16 system-info">
-          <view class="cell-item">
-            <text class="label">客户ID</text>
-            <view class="value-box">
-              <text class="value">{{ client.id || '-' }}</text>
+        <view class="info-card system-info">
+          <view class="card-body">
+            <view class="system-row">
+              <text class="system-label">客户ID</text>
+              <text class="system-value">{{ client.id }}</text>
             </view>
-          </view>
-          <view class="cell-item">
-            <text class="label">录入时间</text>
-            <view class="value-box">
-              <text class="value">{{ formatTime(client.created_at) }}</text>
+            <view class="system-row">
+              <text class="system-label">录入时间</text>
+              <text class="system-value">{{ formatTime(client.created_at) }}</text>
             </view>
-          </view>
-          <view class="cell-item">
-            <text class="label">更新时间</text>
-            <view class="value-box">
-              <text class="value">{{ formatTime(client.updated_at) }}</text>
+            <view class="system-row">
+              <text class="system-label">更新时间</text>
+              <text class="system-value">{{ formatTime(client.updated_at) }}</text>
             </view>
           </view>
         </view>
       </view>
-      
-      <!-- Tab 3: 智能匹配 -->
-      <view v-if="currentTab === 2" class="match-section fade-in">
-        <view class="match-action-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 60px;">
-          <view class="match-illustration" style="margin-bottom: 40px; text-align: center;">
-             <u-icon name="heart-fill" size="80" color="#FF5E78"></u-icon>
-             <view class="match-desc" style="margin-top: 20px; color: #606266; font-size: 16px;">基于AI算法，为您推荐最合适的伴侣</view>
+
+      <!-- 智能匹配 Tab -->
+      <view v-if="currentTab === 2" class="tab-content">
+        <view class="match-container">
+          <view class="match-hero">
+            <view class="match-icon-box">
+              <u-icon name="heart-fill" size="60" color="#FF5E78"></u-icon>
+            </view>
+            <text class="match-title">AI 智能匹配</text>
+            <text class="match-desc">基于大数据算法，为您推荐最合适的伴侣</text>
           </view>
-          
-          <view class="action-btn-box" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-             <u-button 
-               class="omiai-btn-primary" 
-               shape="circle" 
-               :disabled="isMatchDisabled"
-               @click="match"
-               :customStyle="{width: '80%', height: '50px', fontSize: '18px', background: 'linear-gradient(to right, #FF5E78, #FF929F)', border: 'none', boxShadow: '0 8px 16px rgba(255, 94, 120, 0.3)'}"
-             >
-               立即开始匹配
-             </u-button>
-             <text v-if="isMatchDisabled" class="disabled-tip" style="margin-top: 16px; color: #909399; font-size: 14px;">
-               {{ matchDisabledReason }}
-             </text>
+
+          <view class="match-features">
+            <view class="feature-item">
+              <view class="feature-icon">
+                <u-icon name="search" size="24" color="#FF5E78"></u-icon>
+              </view>
+              <view class="feature-info">
+                <text class="feature-title">精准筛选</text>
+                <text class="feature-desc">根据择偶标准智能匹配</text>
+              </view>
+            </view>
+            <view class="feature-item">
+              <view class="feature-icon">
+                <u-icon name="chart" size="24" color="#FF5E78"></u-icon>
+              </view>
+              <view class="feature-info">
+                <text class="feature-title">匹配评分</text>
+                <text class="feature-desc">多维度计算匹配度</text>
+              </view>
+            </view>
+            <view class="feature-item">
+              <view class="feature-icon">
+                <u-icon name="eye" size="24" color="#FF5E78"></u-icon>
+              </view>
+              <view class="feature-info">
+                <text class="feature-title">实时推荐</text>
+                <text class="feature-desc">动态更新推荐列表</text>
+              </view>
+            </view>
+          </view>
+
+          <view class="match-action">
+            <button 
+              class="match-btn" 
+              :disabled="isMatchDisabled"
+              @click="match"
+            >
+              <text class="btn-text">开始智能匹配</text>
+            </button>
+            <text v-if="isMatchDisabled" class="match-tip">{{ matchDisabledReason }}</text>
           </view>
         </view>
+      </view>
+
+      <!-- 底部留白 -->
+      <view class="footer-spacer"></view>
+    </scroll-view>
+
+    <!-- 底部操作栏 -->
+    <view class="footer-bar" v-if="currentTab !== 2">
+      <view class="footer-content">
+        <button 
+          v-if="currentTab === 0" 
+          class="action-btn primary"
+          :disabled="isMatchDisabled"
+          @click="match"
+        >
+          <text>一键智能匹配</text>
+        </button>
+        <template v-if="currentTab === 1">
+          <button class="action-btn secondary" @click="editClient">
+            <text>编辑资料</text>
+          </button>
+          <button 
+            v-if="client.status === 1" 
+            class="action-btn danger"
+            @click="handleDelete"
+          >
+            <text>删除</text>
+          </button>
+          <button 
+            class="action-btn primary"
+            :disabled="isMatchDisabled"
+            @click="match"
+          >
+            <text>智能匹配</text>
+          </button>
+        </template>
       </view>
     </view>
-    
-    <!-- 更多菜单弹窗 -->
+
+    <!-- 更多操作弹窗 -->
     <u-action-sheet
       :show="showActionSheet"
       :actions="actionList"
@@ -362,58 +461,6 @@
       @close="showActionSheet = false"
       @select="onActionSelect"
     />
-    
-    <!-- 匹配条件弹窗 -->
-    <u-popup :show="showFilterModal" mode="bottom" @close="showFilterModal = false" round="16">
-        <view class="filter-modal">
-            <view class="modal-header">
-                <text class="title">调整匹配条件</text>
-                <u-icon name="close" @click="showFilterModal = false"></u-icon>
-            </view>
-            <view class="modal-body">
-                <view class="tip-text">当前匹配基于客户档案中的"择偶标准"自动计算。如需调整，请前往档案详情页修改资料。</view>
-                <view class="req-json">
-                    {{ JSON.stringify(sourceReq, null, 2) }}
-                </view>
-            </view>
-        </view>
-    </u-popup>
-    
-    <view class="footer-placeholder"></view>
-    <view class="footer" v-if="currentTab !== 2">
-      <view class="footer-actions">
-        <u-button 
-          v-if="currentTab === 0"
-          :loading="matching" 
-          @click="match" 
-          :class="isMatchDisabled ? '' : 'omiai-btn-primary'"
-          :type="isMatchDisabled ? 'info' : 'primary'"
-          :customStyle="{flex: 1, height: '46px', fontSize: '15px', border: 'none'}"
-        >一键智能匹配</u-button>
-        <u-button 
-          v-if="currentTab === 1"
-          @click="editClient" 
-          type="primary"
-          plain
-          customStyle="flex: 1; height: 46px; font-size: 15px; margin-right: 12px;"
-        >编辑资料</u-button>
-        <u-button 
-          v-if="currentTab === 1 && client.status === 1"
-          @click="handleDelete" 
-          type="error"
-          plain
-          customStyle="width: 80px; height: 46px; font-size: 15px; margin-right: 12px;"
-        >删除</u-button>
-        <u-button 
-          v-if="currentTab === 1"
-          :loading="matching" 
-          @click="match" 
-          :class="isMatchDisabled ? '' : 'omiai-btn-primary'"
-          :type="isMatchDisabled ? 'info' : 'primary'"
-          :customStyle="{flex: 1, height: '46px', fontSize: '15px', border: 'none'}"
-        >智能匹配</u-button>
-      </view>
-    </view>
   </view>
 </template>
 
@@ -424,24 +471,35 @@ import { getClientDetail, matchClient, deleteClient, type Client } from '@/api/c
 import { dissolveMatch } from '@/api/match';
 import { uploadFile } from '@/api/common';
 
-const primaryColor = '#FF5E78';
-const defaultAvatar = 'https://cdn.uviewui.com/uview/album/1.jpg';
+// 状态栏高度
+const statusBarHeight = ref(44);
 
-const getAvatar = (c: any) => {
-  if (c && c.avatar) return c.avatar;
-  if (c && c.id) return `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.id}`;
-  return defaultAvatar;
-};
+// 获取系统信息设置状态栏高度
+try {
+  const systemInfo = uni.getSystemInfoSync();
+  statusBarHeight.value = systemInfo.statusBarHeight || 44;
+} catch (e) {
+  console.error('获取系统信息失败', e);
+}
 
 const client = ref<Client>({} as Client);
-const matchList = ref<any[]>([]);
-const sourceReq = ref<any>({});
-const showFilterModal = ref(false);
 const showActionSheet = ref(false);
 const currentTab = ref(0);
-const matching = ref(false);
-const clientId = ref<number>(0);
+const isTabSticky = ref(false);
 const uploading = ref(false);
+
+const tabs = [
+  { name: '基础档案' },
+  { name: '详细资料' },
+  { name: '智能匹配' },
+];
+
+const actionList = [
+  { name: '编辑资料', color: '#303133' },
+  { name: '删除客户', color: '#FF5E78' }
+];
+
+const defaultAvatar = 'https://cdn.uviewui.com/uview/album/1.jpg';
 
 // 照片列表
 const photoList = computed(() => {
@@ -453,56 +511,71 @@ const photoList = computed(() => {
   }
 });
 
-const actionList = [
-  { name: '编辑资料', color: '#303133' },
-  { name: '删除客户', color: '#FF5E78' }
-];
+// 是否禁用匹配
+const isMatchDisabled = computed(() => {
+  return client.value.status === 2 || client.value.status === 3 || client.value.status === 4;
+});
 
+// 匹配禁用原因
+const matchDisabledReason = computed(() => {
+  if (client.value.status === 2) return '当前状态为"匹配中"，无法进行新匹配';
+  if (client.value.status === 3) return '当前状态为"已拉手"，无法进行新匹配';
+  if (client.value.status === 4) return '当前状态为"停止服务"，无法进行匹配';
+  return '';
+});
+
+// 获取头像
+const getAvatar = (c: any) => {
+  if (c && c.avatar) return c.avatar;
+  if (c && c.id) return `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.id}`;
+  return defaultAvatar;
+};
+
+// 返回上一页
 const goBack = () => {
   uni.navigateBack();
 };
 
+// 显示更多菜单
 const showMoreMenu = () => {
   showActionSheet.value = true;
 };
 
+// 选择操作
 const onActionSelect = (e: any) => {
   if (e.name === '编辑资料') {
     editClient();
   } else if (e.name === '删除客户') {
-    uni.showModal({
-      title: '确认删除',
-      content: '删除后无法恢复，是否继续？',
-      confirmColor: '#FF5E78',
-      success: (res) => {
-        if (res.confirm) {
-          uni.showToast({ title: '删除功能开发中', icon: 'none' });
-        }
-      }
-    });
+    handleDelete();
   }
 };
 
+// 切换标签
+const switchTab = (index: number) => {
+  currentTab.value = index;
+};
+
+// 滚动事件
+const onScroll = (e: any) => {
+  isTabSticky.value = e.detail.scrollTop > 200;
+};
+
+// 编辑客户
 const editClient = () => {
-  if (clientId.value) {
-    uni.navigateTo({ url: `/pages/client/edit?id=${clientId.value}` });
+  const id = client.value.id;
+  if (id) {
+    uni.navigateTo({ url: `/pages/client/edit?id=${id}` });
   }
 };
 
-const getReqSummary = (req: any) => {
-    const parts = [];
-    if (req.min_age || req.max_age) parts.push(`${req.min_age || 18}-${req.max_age || 99}岁`);
-    if (req.min_height) parts.push(`${req.min_height}cm+`);
-    return parts.join(' / ') || '默认条件';
-};
-
+// 页面加载
 onLoad((options: any) => {
   if (options.id) {
-    clientId.value = parseInt(options.id);
-    loadDetail(clientId.value);
+    loadDetail(parseInt(options.id));
   }
 });
 
+// 加载详情
 const loadDetail = async (id: number) => {
   try {
     const res: any = await getClientDetail(id);
@@ -512,81 +585,48 @@ const loadDetail = async (id: number) => {
   }
 };
 
-
-const isMatchDisabled = computed(() => {
-  return client.value.status === 2 || client.value.status === 3;
-});
-
-const matchDisabledReason = computed(() => {
-  if (client.value.status === 2) return '当前状态为“已匹配”，无法进行新匹配';
-  if (client.value.status === 3) return '当前状态为“冻结”，无法进行匹配';
-  return '';
-});
-
+// 开始匹配
 const match = () => {
-  if (!clientId.value) return;
+  if (!client.value.id) return;
   
   if (isMatchDisabled.value) {
     uni.showToast({ title: matchDisabledReason.value, icon: 'none' });
     return;
   }
   
-  uni.navigateTo({ url: `/pages/match/candidates?clientId=${clientId.value}` });
+  uni.navigateTo({ url: `/pages/match/candidates?clientId=${client.value.id}` });
 };
 
-const goDetail = (id: number | undefined) => {
-  if(id) uni.navigateTo({ url: `/pages/client/detail?id=${id}` });
-};
-
-const handleDissolveMatch = () => {
-  uni.showModal({
-    title: '确认解除',
-    content: '解除匹配后，双方将恢复单身状态，确认继续吗？',
-    confirmColor: '#FF5E78',
-    success: async (res) => {
-      if (res.confirm) {
-        try {
-          await dissolveMatch({ client_id: clientId.value, reason: '管理员手动解除' });
-          uni.showToast({ title: '已解除匹配', icon: 'success' });
-          loadDetail(clientId.value);
-        } catch (e) {
-          uni.showToast({ title: '操作失败', icon: 'none' });
-        }
-      }
-    }
-  });
-};
-
+// 删除客户
 const handleDelete = () => {
   uni.showModal({
     title: '确认删除',
-    content: `确定要删除客户「${client.value.name}」吗？删除后无法恢复，请谨慎操作！`,
+    content: `确定要删除客户「${client.value.name}」吗？删除后无法恢复！`,
     confirmColor: '#FF4D4F',
     confirmText: '确认删除',
     cancelText: '取消',
     success: async (res) => {
       if (res.confirm) {
         try {
-          await deleteClient(clientId.value as number);
+          await deleteClient(client.value.id as number);
           uni.showToast({ title: '删除成功', icon: 'success' });
-          setTimeout(() => {
-            uni.navigateBack();
-          }, 1500);
+          setTimeout(() => uni.navigateBack(), 1500);
         } catch (e: any) {
-          const errorMsg = e?.msg || '删除失败，请重试';
-          uni.showToast({ title: errorMsg, icon: 'none' });
+          uni.showToast({ title: e?.msg || '删除失败', icon: 'none' });
         }
       }
     }
   });
 };
 
+// 拨打电话
 const makePhoneCall = (phone: string) => {
-    if (phone) {
-        uni.makePhoneCall({ phoneNumber: phone });
-    }
+  if (phone) {
+    uni.makePhoneCall({ phoneNumber: phone });
+  }
 };
 
+// 预览图片
 const previewImage = (index: number) => {
   uni.previewImage({
     urls: photoList.value,
@@ -595,7 +635,17 @@ const previewImage = (index: number) => {
   });
 };
 
-// 选择并上传图片
+// 预览头像
+const previewAvatar = () => {
+  const avatarUrl = getAvatar(client.value);
+  uni.previewImage({
+    urls: [avatarUrl],
+    current: 0,
+    loop: false
+  });
+};
+
+// 选择图片
 const chooseImage = async () => {
   if (uploading.value) return;
   
@@ -612,14 +662,13 @@ const chooseImage = async () => {
       sourceType: ['album', 'camera']
     });
     
-    const tempFilePaths = res.tempFilePaths as string[];
-    await uploadImages(tempFilePaths);
+    await uploadImages(res.tempFilePaths as string[]);
   } catch (e) {
-    console.error('Choose image failed:', e);
+    console.error('选择图片失败', e);
   }
 };
 
-// 批量上传图片
+// 上传图片
 const uploadImages = async (filePaths: string[]) => {
   uploading.value = true;
   const newPhotos = [...photoList.value];
@@ -632,23 +681,16 @@ const uploadImages = async (filePaths: string[]) => {
         newPhotos.push(res.url);
         successCount++;
       }
-    } catch (e: any) {
-      console.error('Upload failed:', e);
-      uni.showToast({ 
-        title: e?.message || '上传失败', 
-        icon: 'none' 
-      });
+    } catch (e) {
+      console.error('上传失败', e);
     }
   }
   
   uploading.value = false;
   
   if (successCount > 0) {
-    await updateClientPhotos(newPhotos);
-    uni.showToast({ 
-      title: `成功上传${successCount}张照片`, 
-      icon: 'success' 
-    });
+    client.value.photos = JSON.stringify(newPhotos);
+    uni.showToast({ title: `成功上传${successCount}张照片`, icon: 'success' });
   }
 };
 
@@ -658,25 +700,15 @@ const deletePhoto = (index: number) => {
     title: '确认删除',
     content: '确定要删除这张照片吗？',
     confirmColor: '#FF5E78',
-    success: async (res) => {
+    success: (res) => {
       if (res.confirm) {
         const newPhotos = [...photoList.value];
         newPhotos.splice(index, 1);
-        await updateClientPhotos(newPhotos);
+        client.value.photos = JSON.stringify(newPhotos);
         uni.showToast({ title: '删除成功', icon: 'success' });
       }
     }
   });
-};
-
-// 更新客户照片（模拟API调用，实际应调用后端更新接口）
-const updateClientPhotos = async (photos: string[]) => {
-  // 这里应该先调用后端API更新照片
-  // 暂时先更新本地数据
-  client.value.photos = JSON.stringify(photos);
-  
-  // TODO: 调用后端更新接口
-  // await updateClient({ ...client.value, photos: JSON.stringify(photos) });
 };
 
 // 格式化函数
@@ -698,13 +730,11 @@ const formatPartnerRequirements = (req: string | undefined): string => {
   try {
     const obj = JSON.parse(req);
     const parts = [];
-    if (obj.min_age && obj.max_age) parts.push(`年龄: ${obj.min_age}-${obj.max_age}岁`);
-    if (obj.min_height) parts.push(`身高: ${obj.min_height}cm+`);
-    if (obj.education) parts.push(`学历: ${getEducationText(obj.education)}及以上`);
-    if (obj.marital_status && obj.marital_status.length) {
-      parts.push(`婚姻: ${obj.marital_status.map((s: number) => getMaritalStatusText(s)).join('/')}`);
-    }
-    return parts.length > 0 ? parts.join('，') : req;
+    if (obj.min_age && obj.max_age) parts.push(`年龄：${obj.min_age}-${obj.max_age}岁`);
+    if (obj.min_height && obj.max_height) parts.push(`身高：${obj.min_height}-${obj.max_height}cm`);
+    if (obj.education?.length) parts.push(`学历：${obj.education.map((e: number) => getEducationText(e)).join('、')}`);
+    if (obj.other_requirements) parts.push(`其他：${obj.other_requirements}`);
+    return parts.join('，');
   } catch {
     return req;
   }
@@ -725,9 +755,8 @@ const getEducationText = (level: number | undefined): string => {
 };
 
 const getMaritalStatusText = (status: number | undefined): string => {
-    if (!status) return '';
-    const map: any = { 1: '未婚', 2: '已婚', 3: '离异', 4: '丧偶' };
-    return map[status] || '';
+  const map: any = { 1: '未婚', 2: '已婚', 3: '离异', 4: '丧偶' };
+  return map[status ?? 0] || '';
 };
 
 const getHouseStatusText = (status: number | undefined): string => {
@@ -741,7 +770,7 @@ const getCarStatusText = (status: number | undefined): string => {
 };
 
 const getStatusText = (status: number | undefined): string => {
-  const map: any = { 1: '单身', 2: '匹配中', 3: '已匹配', 4: '停止服务' };
+  const map: any = { 1: '单身', 2: '匹配中', 3: '已拉手', 4: '停止服务' };
   return map[status ?? 1] || '单身';
 };
 
@@ -752,524 +781,827 @@ const getStatusClass = (status: number | undefined): string => {
 </script>
 
 <style lang="scss" scoped>
-.container {
+// 设计系统变量
+$primary: #FF5E78;
+$primary-light: #FF8A9B;
+$primary-dark: #E54D65;
+$secondary: #FFF5F7;
+$success: #52C41A;
+$warning: #FAAD14;
+$danger: #FF4D4F;
+$text-main: #303133;
+$text-second: #606266;
+$text-tip: #909399;
+$border-color: #EBEEF5;
+$bg-page: #F5F7FA;
+$bg-white: #FFFFFF;
+$shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.06);
+$shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
+$shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+
+// 页面容器
+.client-detail-container {
   min-height: 100vh;
-  background-color: $omiai-bg-page;
+  background-color: $bg-page;
   position: relative;
 }
 
+// 顶部渐变背景
+.header-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 300px;
+  background: linear-gradient(135deg, $primary 0%, $primary-light 100%);
+  z-index: 0;
+}
+
+// 导航栏
 .nav-bar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 44px;
-  padding-top: env(safe-area-inset-top);
-  padding-left: 16px;
-  padding-right: 16px;
-  z-index: 1000;
+  z-index: 100;
   background: transparent;
-  display: flex;
-  align-items: center;
-  box-sizing: content-box;
-  
+  transition: background 0.3s ease;
+
+  .nav-content {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+  }
+
   .back-btn, .more-btn {
     width: 36px;
     height: 36px;
     display: flex;
-    justify-content: center;
     align-items: center;
-    background: rgba(0, 0, 0, 0.25);
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
     border-radius: 50%;
-    flex-shrink: 0;
-    
+
     &:active {
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(255, 255, 255, 0.3);
       transform: scale(0.95);
     }
   }
-  
+
   .nav-title {
-    flex: 1;
-    text-align: center;
     font-size: 17px;
     font-weight: 600;
     color: #fff;
-    line-height: 44px;
   }
 }
 
-.header-bg-fixed {
-    height: 280px;
-    background: linear-gradient(180deg, $omiai-primary 0%, #FF8A9B 100%);
-    position: absolute; 
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 0;
-}
-
-.hero-header {
-    position: relative;
-    z-index: 10;
-    background: #fff;
-    margin-top: calc(44px + env(safe-area-inset-top));
-    
-    .hero-image-box {
-        position: relative;
-        
-        .hero-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 100%);
-            z-index: 1;
-        }
-        
-        .hero-content {
-            position: absolute;
-            bottom: 24px;
-            left: 20px;
-            right: 20px;
-            z-index: 2;
-            color: #fff;
-            
-            .name-row {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                margin-bottom: 8px;
-                flex-wrap: wrap;
-                
-                .name { 
-                  font-size: 28px; 
-                  font-weight: 700; 
-                  text-shadow: 0 2px 4px rgba(0,0,0,0.3); 
-                }
-                .gender-tag {
-                    width: 20px;
-                    height: 20px;
-                    border-radius: 50%;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    &.male { background: $omiai-male; }
-                    &.female { background: $omiai-female; }
-                }
-                .status-tag {
-                  font-size: 11px;
-                  padding: 2px 8px;
-                  border-radius: 10px;
-                  background: rgba(255,255,255,0.9);
-                  font-weight: 500;
-                  &.single { color: #67C23A; }
-                  &.matching { color: #E6A23C; }
-                  &.matched { color: #FF5E78; }
-                  &.stopped { color: #909399; }
-                }
-            }
-            
-            .tags-row {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-                
-                .hero-tag {
-                    font-size: 12px;
-                    padding: 4px 10px;
-                    background: rgba(255,255,255,0.2);
-                    backdrop-filter: blur(8px);
-                    border-radius: 4px;
-                    color: #fff;
-                }
-            }
-        }
-    }
-}
-
-.sticky-tabs-container {
-    background: $omiai-bg-page;
-    padding: 16px 20px;
-    margin-bottom: 8px;
-    
-    .segmented-control {
-        display: flex;
-        background: #E5E6EB;
-        padding: 4px;
-        border-radius: 999rpx;
-        
-        .segment-item {
-            flex: 1;
-            text-align: center;
-            padding: 8px 0;
-            font-size: 14px;
-            font-weight: 500;
-            color: $omiai-text-second;
-            border-radius: 999rpx;
-            transition: all 0.3s ease;
-            
-            &.active {
-                background: #fff;
-                color: $omiai-text-main;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            }
-        }
-    }
-}
-
-.content {
-  padding: 0 16px 120px;
+// 内容滚动区
+.content-scroll {
   position: relative;
   z-index: 1;
-  
-  .info-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 0 16px;
-      box-shadow: $omiai-shadow-sm;
-      
-      .card-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 16px 0 12px;
-        border-bottom: 1px solid $omiai-border-light;
-        
-        .header-title {
-          font-size: 15px;
-          font-weight: 600;
-          color: $omiai-text-main;
-        }
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+// 个人资料头部
+.profile-header {
+  background: $bg-white;
+  border-radius: 24px 24px 0 0;
+  margin-top: 20px;
+  padding: 24px 20px 20px;
+  box-shadow: $shadow-sm;
+
+  .avatar-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+
+    .avatar-wrapper {
+      position: relative;
+      margin-right: 16px;
+      cursor: pointer;
+
+      .avatar-img {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #fff;
+        box-shadow: $shadow-md;
+        transition: transform 0.2s ease;
       }
-      
-      .cell-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 14px 0;
-          border-bottom: 1px solid $omiai-border-light;
-          
-          &:last-child { border-bottom: none; }
-          
-          .label { font-size: 14px; color: $omiai-text-second; }
-          .value-box {
-              display: flex;
-              align-items: center;
-              gap: 8px;
-              .value { 
-                font-size: 14px; 
-                color: $omiai-text-main; 
-                font-weight: 500;
-                &.highlight { color: $omiai-primary; }
-              }
-          }
+
+      .status-ring {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 3px solid #fff;
+
+        &.single { background: $success; }
+        &.matching { background: $warning; }
+        &.matched { background: $primary; }
+        &.stopped { background: $text-tip; }
       }
-      
-      .cell-grid {
-        display: flex;
-        flex-wrap: wrap;
-        padding: 16px 0;
-        
-        .grid-item {
-          width: 50%;
-          padding: 12px 0;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          
-          .grid-label {
-            font-size: 12px;
-            color: $omiai-text-tip;
-          }
-          .grid-value {
-            font-size: 16px;
-            font-weight: 600;
-            color: $omiai-text-main;
-          }
-        }
-      }
-      
-      .rich-content {
-        padding: 16px 0;
-        font-size: 14px;
-        color: $omiai-text-second;
-        line-height: 1.8;
-        
-        &.requirement {
-          color: $omiai-primary;
-          background: #FFF5F7;
-          padding: 12px;
-          border-radius: 8px;
-          margin: 12px 0;
-        }
-      }
-      
-      .tags-list {
-        padding: 12px 0;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        
-        .tag-item {
-          font-size: 12px;
-          padding: 6px 12px;
-          background: $omiai-bg-page;
-          color: $omiai-text-second;
-          border-radius: 4px;
-        }
-      }
-      
-      .photo-grid-wrapper {
-        padding: 16px 0;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-        
-        .photo-item {
-          aspect-ratio: 1;
-          border-radius: 8px;
-          overflow: hidden;
-          position: relative;
-          animation: fadeInUp 0.4s ease forwards;
-          opacity: 0;
-          transform: translateY(10px);
-          
-          &:active {
-            transform: scale(0.95);
-          }
-          
-          .photo-delete {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            width: 22px;
-            height: 22px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            
-            &:active {
-              background: rgba(255, 94, 120, 0.9);
-            }
-          }
-        }
-        
-        .upload-btn {
-          border: 2px dashed #D9D9D9;
-          background: #FAFAFA;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          
-          &:active {
-            border-color: $omiai-primary;
-            background: #FFF5F7;
-          }
-          
-          .upload-inner {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            
-            .upload-text {
-              font-size: 11px;
-              color: #999;
-            }
-          }
-        }
-      }
-      
-      .photo-count {
-        margin-left: auto;
-        font-size: 12px;
-        color: $omiai-text-tip;
-        font-weight: normal;
-      }
-      
-      .photo-tip {
+
+      .zoom-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 36px;
+        height: 36px;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        padding: 12px 0 4px;
-        font-size: 12px;
-        color: $omiai-text-tip;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
       }
-      
-      @keyframes fadeInUp {
-        to {
-          opacity: 1;
-          transform: translateY(0);
+
+      &:active {
+        .avatar-img {
+          transform: scale(0.95);
         }
       }
-      
-      &.system-info {
-        .cell-item {
-          padding: 10px 0;
-          .label, .value {
+
+      &:hover, &:active {
+        .zoom-icon {
+          opacity: 1;
+        }
+      }
+    }
+
+    .profile-info {
+      flex: 1;
+
+      .name-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+
+        .name {
+          font-size: 24px;
+          font-weight: 700;
+          color: $text-main;
+        }
+
+        .gender-badge {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px 10px;
+          border-radius: 20px;
+
+          &.male { background: #E3F2FD; }
+          &.female { background: #FCE4EC; }
+
+          .gender-text {
             font-size: 12px;
-            color: $omiai-text-tip;
+            font-weight: 500;
+            color: $text-second;
           }
         }
       }
+
+      .id-text {
+        font-size: 12px;
+        color: $text-tip;
+        margin-bottom: 10px;
+      }
+
+      .status-bar {
+        .status-tag {
+          display: inline-block;
+          padding: 4px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 500;
+
+          &.single {
+            background: #F6FFED;
+            color: $success;
+          }
+          &.matching {
+            background: #FFF7E6;
+            color: $warning;
+          }
+          &.matched {
+            background: $secondary;
+            color: $primary;
+          }
+          &.stopped {
+            background: #F5F5F5;
+            color: $text-tip;
+          }
+        }
+      }
+    }
   }
-  
-  .mt-16 { margin-top: 16px; }
-}
 
-.match-section {
-    .empty-box {
-      padding: 40px 0;
+  // 关键数据
+  .key-stats {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-top: 20px;
+    border-top: 1px solid $border-color;
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+
+      .stat-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: $text-main;
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: $text-tip;
+      }
     }
 
-    .filter-preview {
-        background: #FFF;
-        padding: 12px 16px;
-        margin-bottom: 12px;
+    .stat-divider {
+      width: 1px;
+      height: 30px;
+      background: $border-color;
+    }
+  }
+}
+
+// 标签导航
+.tab-section {
+  background: $bg-white;
+  padding: 0 20px;
+  border-bottom: 1px solid $border-color;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  &.sticky {
+    box-shadow: $shadow-sm;
+  }
+
+  .tab-list {
+    display: flex;
+    gap: 24px;
+
+    .tab-item {
+      position: relative;
+      padding: 16px 0;
+      cursor: pointer;
+
+      .tab-name {
+        font-size: 15px;
+        color: $text-second;
+        transition: color 0.3s ease;
+      }
+
+      &.active {
+        .tab-name {
+          color: $primary;
+          font-weight: 600;
+        }
+
+        .tab-line {
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 24px;
+          height: 3px;
+          background: $primary;
+          border-radius: 2px;
+        }
+      }
+    }
+  }
+}
+
+// 标签内容
+.tab-content {
+  padding: 16px;
+}
+
+// 信息卡片
+.info-card {
+  background: $bg-white;
+  border-radius: 16px;
+  margin-bottom: 16px;
+  box-shadow: $shadow-sm;
+  overflow: hidden;
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid $border-color;
+
+    .header-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &.contact { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+      &.work { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+      &.asset { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+      &.body { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+      &.location { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+      &.family { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+      &.intro { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
+      &.match { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+      &.tags { background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); }
+      &.photo { background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%); }
+    }
+
+    .header-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: $text-main;
+    }
+
+    .photo-count {
+      margin-left: auto;
+      font-size: 12px;
+      color: $text-tip;
+    }
+  }
+
+  .card-body {
+    padding: 4px 16px 16px;
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid $border-color;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &.highlight {
+        .info-value {
+          color: $primary;
+          font-weight: 600;
+        }
+      }
+
+      .info-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: $text-second;
+      }
+
+      .info-value-box {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .info-value {
+        font-size: 14px;
+        color: $text-main;
+
+        &.income {
+          color: $primary;
+          font-weight: 600;
+          font-size: 15px;
+        }
+      }
+    }
+
+    // 网格布局
+    &.grid-layout {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      padding: 16px;
+
+      .grid-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 12px;
+        background: $bg-page;
         border-radius: 12px;
-        box-shadow: $omiai-shadow-sm;
-        
-        .filter-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            
-            .filter-text {
-                flex: 1;
-                font-size: 13px;
-                color: $omiai-text-main;
-            }
-        }
-    }
 
-    .match-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-        color: $omiai-text-tip;
-        
-        .refresh-btn {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            color: $omiai-primary;
-            font-weight: 500;
-        }
-    }
-    
-    .match-card {
-        margin-bottom: 12px;
-        border: none;
-        padding: 16px;
-        background: $omiai-white;
-        border-radius: 16px;
-        box-shadow: $omiai-shadow-sm;
-        
-        .card-body {
-          display: flex;
-          align-items: center;
+        .grid-label {
+          font-size: 12px;
+          color: $text-tip;
         }
 
-        .avatar-box { margin-right: 16px; }
-        
-        .info-box {
-            flex: 1;
-            .name-row {
-                display: flex;
-                align-items: baseline;
-                margin-bottom: 4px;
-                .age-info { margin-left: 8px; font-size: 12px; color: $omiai-text-tip; }
-            }
-            .detail-row {
-                color: $omiai-text-second;
-                .sep { margin: 0 6px; color: $omiai-border; }
-            }
-            .match-reasons {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 4px;
-                margin-top: 6px;
-                .reason-tag {
-                    font-size: 10px;
-                    color: $omiai-warning;
-                    background: #FFF7E6;
-                    padding: 2px 6px;
-                    border-radius: 4px;
-                }
-            }
+        .grid-value {
+          font-size: 16px;
+          font-weight: 600;
+          color: $text-main;
         }
-        
-        .score-box {
-            text-align: right;
-            .score-val {
-                font-size: 20px;
-                font-weight: 600;
-                color: $omiai-primary;
-                .unit { font-size: 10px; margin-left: 1px; }
-            }
-            .score-label {
-                font-size: 10px;
-                color: $omiai-text-tip;
-            }
-        }
+      }
     }
+  }
 }
 
-.filter-modal {
-    padding: 16px;
-    background: #fff;
-    min-height: 300px;
-    
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        .title { font-size: 16px; font-weight: 600; }
-    }
-    
-    .modal-body {
-        .tip-text {
-            font-size: 13px;
-            color: $omiai-text-tip;
-            margin-bottom: 16px;
-        }
-        .req-json {
-            background: #f7f8fa;
-            padding: 12px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 12px;
-            color: $omiai-text-second;
-        }
-    }
+// 地址盒子
+.address-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  background: $bg-page;
+  border-radius: 12px;
+
+  .address-text {
+    flex: 1;
+    font-size: 14px;
+    color: $text-main;
+    line-height: 1.6;
+  }
 }
 
-.footer-placeholder { height: 100px; }
+// 内容块
+.content-block {
+  margin-bottom: 16px;
 
-.footer {
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .block-title {
+    font-size: 13px;
+    color: $text-tip;
+    margin-bottom: 8px;
+  }
+
+  .block-content {
+    font-size: 14px;
+    color: $text-second;
+    line-height: 1.8;
+    padding: 12px;
+    background: $bg-page;
+    border-radius: 12px;
+  }
+}
+
+// 自我介绍
+.intro-text {
+  font-size: 14px;
+  color: $text-second;
+  line-height: 1.8;
+  padding: 12px;
+  background: $bg-page;
+  border-radius: 12px;
+}
+
+// 择偶标准
+.requirement-box {
+  padding: 16px;
+  background: linear-gradient(135deg, $secondary 0%, #fff 100%);
+  border-radius: 12px;
+  border-left: 4px solid $primary;
+
+  .req-text {
+    font-size: 14px;
+    color: $text-main;
+    line-height: 1.8;
+  }
+}
+
+// 标签云
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  .tag-pill {
+    padding: 8px 16px;
+    background: $bg-page;
+    border-radius: 20px;
+    font-size: 13px;
+    color: $text-second;
+    animation: fadeInUp 0.4s ease forwards;
+    opacity: 0;
+    transform: translateY(10px);
+
+    &:nth-child(3n+1) {
+      background: #FFF5F7;
+      color: $primary;
+    }
+
+    &:nth-child(3n+2) {
+      background: #F0F9FF;
+      color: #1890ff;
+    }
+
+    &:nth-child(3n+3) {
+      background: #F6FFED;
+      color: $success;
+    }
+  }
+}
+
+// 照片网格
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+
+  .photo-item {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    animation: fadeInUp 0.4s ease forwards;
+    opacity: 0;
+    transform: translateY(10px);
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    .photo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-delete {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:active {
+        background: rgba($primary, 0.9);
+      }
+    }
+
+    &.upload-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: $bg-page;
+      border: 2px dashed #D9D9D9;
+
+      &:active {
+        border-color: $primary;
+        background: $secondary;
+      }
+
+      .upload-hint {
+        margin-top: 6px;
+        font-size: 11px;
+        color: $text-tip;
+      }
+    }
+  }
+}
+
+// 系统信息
+.info-card.system-info {
+  .system-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid $border-color;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .system-label {
+      font-size: 12px;
+      color: $text-tip;
+    }
+
+    .system-value {
+      font-size: 12px;
+      color: $text-second;
+    }
+  }
+}
+
+// 智能匹配容器
+.match-container {
+  padding: 20px 0;
+
+  .match-hero {
+    text-align: center;
+    padding: 40px 20px;
+
+    .match-icon-box {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, $secondary 0%, #fff 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 30px rgba($primary, 0.2);
+    }
+
+    .match-title {
+      display: block;
+      font-size: 22px;
+      font-weight: 700;
+      color: $text-main;
+      margin-bottom: 10px;
+    }
+
+    .match-desc {
+      font-size: 14px;
+      color: $text-second;
+    }
+  }
+
+  .match-features {
+    padding: 20px;
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: $bg-white;
+      border-radius: 16px;
+      margin-bottom: 12px;
+      box-shadow: $shadow-sm;
+
+      .feature-icon {
+        width: 48px;
+        height: 48px;
+        background: $secondary;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .feature-info {
+        flex: 1;
+
+        .feature-title {
+          display: block;
+          font-size: 15px;
+          font-weight: 600;
+          color: $text-main;
+          margin-bottom: 4px;
+        }
+
+        .feature-desc {
+          font-size: 13px;
+          color: $text-second;
+        }
+      }
+    }
+  }
+
+  .match-action {
+    padding: 20px;
+
+    .match-btn {
+      width: 100%;
+      height: 50px;
+      background: linear-gradient(135deg, $primary 0%, $primary-light 100%);
+      border-radius: 25px;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba($primary, 0.3);
+
+      &:active {
+        transform: scale(0.98);
+        box-shadow: 0 4px 12px rgba($primary, 0.2);
+      }
+
+      &:disabled {
+        background: #D9D9D9;
+        box-shadow: none;
+      }
+
+      .btn-text {
+        color: #fff;
+        font-size: 16px;
+        font-weight: 600;
+      }
+    }
+
+    .match-tip {
+      display: block;
+      text-align: center;
+      margin-top: 12px;
+      font-size: 13px;
+      color: $text-tip;
+    }
+  }
+}
+
+// 底部留白
+.footer-spacer {
+  height: 100px;
+}
+
+// 底部操作栏
+.footer-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 12px 16px 32px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-top: 1px solid $omiai-border;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid $border-color;
   z-index: 100;
-  
-  .footer-actions {
+
+  .footer-content {
     display: flex;
     gap: 12px;
+
+    .action-btn {
+      flex: 1;
+      height: 46px;
+      border-radius: 23px;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:active {
+        transform: scale(0.98);
+      }
+
+      text {
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      &.primary {
+        background: linear-gradient(135deg, $primary 0%, $primary-light 100%);
+        box-shadow: 0 4px 15px rgba($primary, 0.3);
+
+        text {
+          color: #fff;
+        }
+
+        &:disabled {
+          background: #D9D9D9;
+          box-shadow: none;
+        }
+      }
+
+      &.secondary {
+        background: $bg-page;
+
+        text {
+          color: $text-main;
+        }
+      }
+
+      &.danger {
+        width: 80px;
+        flex: none;
+        background: #FFF2F0;
+
+        text {
+          color: $danger;
+        }
+      }
+    }
+  }
+}
+
+// 动画
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>

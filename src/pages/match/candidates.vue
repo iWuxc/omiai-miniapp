@@ -1,46 +1,107 @@
 <template>
   <view class="container">
+    <!-- 导航栏 -->
     <view class="nav-bar">
-      <view class="back-btn" @click="goBack">
-        <u-icon name="arrow-left" size="20" color="#333"></u-icon>
+      <view class="nav-content">
+        <view class="back-btn" @click="goBack">
+          <u-icon name="arrow-left" size="20" color="#1D2129"></u-icon>
+        </view>
+        <text class="nav-title">匹配候选人</text>
+        <view class="nav-right">
+          <view class="filter-trigger" @click="showFilter = true">
+            <u-icon name="list" size="20" color="#1D2129"></u-icon>
+          </view>
+        </view>
       </view>
-      <text class="nav-title">匹配候选人</text>
     </view>
 
+    <!-- 匹配分数分布卡片 -->
+    <view class="score-distribution">
+      <view class="dist-item">
+        <view class="dist-icon perfect">
+          <text class="icon-text">完美</text>
+        </view>
+        <text class="dist-label">≥85分</text>
+      </view>
+      <view class="dist-item">
+        <view class="dist-icon good">
+          <text class="icon-text">合适</text>
+        </view>
+        <text class="dist-label">70-84分</text>
+      </view>
+      <view class="dist-item">
+        <view class="dist-icon average">
+          <text class="icon-text">尝试</text>
+        </view>
+        <text class="dist-label">55-69分</text>
+      </view>
+      <view class="dist-item">
+        <view class="dist-icon poor">
+          <text class="icon-text">一般</text>
+        </view>
+        <text class="dist-label">＜55分</text>
+      </view>
+    </view>
+
+    <!-- 筛选栏 -->
     <view class="filter-bar">
-      <view 
-        class="filter-item" 
-        :class="{ active: sortBy === 'score' }"
-        @click="changeSort('score')"
-      >
-        综合匹配度
-        <u-icon name="arrow-down-fill" size="10" v-if="sortBy === 'score'"></u-icon>
-      </view>
-      <view 
-        class="filter-item" 
-        :class="{ active: sortBy === 'age' }"
-        @click="changeSort('age')"
-      >
-        年龄
-        <u-icon name="arrow-up-fill" size="10" v-if="sortBy === 'age'"></u-icon>
-      </view>
-      <view 
-        class="filter-item" 
-        :class="{ active: sortBy === 'height' }"
-        @click="changeSort('height')"
-      >
-        身高
-        <u-icon name="arrow-down-fill" size="10" v-if="sortBy === 'height'"></u-icon>
-      </view>
+      <scroll-view scroll-x class="filter-scroll" show-scrollbar="false">
+        <view class="filter-options">
+          <view 
+            class="filter-chip" 
+            :class="{ active: sortBy === 'score' }"
+            @click="changeSort('score')"
+          >
+            <u-icon name="fingerprint" size="14" :color="sortBy === 'score' ? '#fff' : '#86909C'"></u-icon>
+            <text>匹配度</text>
+            <u-icon name="arrow-down-fill" size="10" v-if="sortBy === 'score'" color="#fff"></u-icon>
+          </view>
+          <view 
+            class="filter-chip" 
+            :class="{ active: sortBy === 'age' }"
+            @click="changeSort('age')"
+          >
+            <u-icon name="calendar" size="14" :color="sortBy === 'age' ? '#fff' : '#86909C'"></u-icon>
+            <text>年龄</text>
+            <u-icon name="arrow-up-fill" size="10" v-if="sortBy === 'age'" color="#fff"></u-icon>
+          </view>
+          <view 
+            class="filter-chip" 
+            :class="{ active: sortBy === 'height' }"
+            @click="changeSort('height')"
+          >
+            <u-icon name="man-add" size="14" :color="sortBy === 'height' ? '#fff' : '#86909C'"></u-icon>
+            <text>身高</text>
+            <u-icon name="arrow-down-fill" size="10" v-if="sortBy === 'height'" color="#fff"></u-icon>
+          </view>
+        </view>
+      </scroll-view>
     </view>
 
-    <view class="list-content">
-      <view v-if="loading" class="loading-box">
-        <u-loading-icon mode="circle"></u-loading-icon>
+    <!-- 列表内容 -->
+    <scroll-view scroll-y class="list-content" @scrolltolower="loadMore">
+      <view v-if="loading && page === 1" class="loading-box">
+        <view class="skeleton-list">
+          <view v-for="i in 4" :key="i" class="skeleton-card">
+            <view class="skeleton-avatar"></view>
+            <view class="skeleton-content">
+              <view class="skeleton-line short"></view>
+              <view class="skeleton-line"></view>
+              <view class="skeleton-tags">
+                <view class="skeleton-tag"></view>
+                <view class="skeleton-tag"></view>
+              </view>
+            </view>
+          </view>
+        </view>
       </view>
       
       <view v-else-if="list.length === 0" class="empty-box">
-        <u-empty mode="list" text="暂无推荐人选"></u-empty>
+        <view class="empty-illustration">
+          <u-icon name="search" size="60" color="#C0C4CC"></u-icon>
+        </view>
+        <text class="empty-title">暂无推荐人选</text>
+        <text class="empty-desc">请尝试调整筛选条件</text>
       </view>
 
       <view v-else class="candidate-list">
@@ -48,51 +109,86 @@
            class="candidate-card" 
            v-for="(item, index) in list" 
            :key="index"
+           :style="{ animationDelay: `${index * 80}ms` }"
+           @click="goCompare(item.candidate_id)"
          >
-           <view class="card-left" @click="goCompare(item.candidate_id)">
-              <u-avatar :src="item.avatar" size="60"></u-avatar>
+           <!-- 左侧头像 -->
+           <view class="card-avatar">
+              <u-avatar :src="item.avatar" size="70" shape="circle"></u-avatar>
+              <view class="avatar-ring" :class="getScoreLevel(item.match_score)"></view>
            </view>
-            <view class="card-right" @click="goCompare(item.candidate_id)">
-               <view class="name-row">
-                 <text class="name">{{ item.name }}</text>
-                 <view class="score-box" :class="getScoreLevel(item.match_score)">
-                   <text class="score">{{ item.match_score }}分</text>
-                   <text class="level-text">{{ getLevelText(item.match_score) }}</text>
+           
+           <!-- 中间内容 -->
+           <view class="card-content">
+              <view class="content-header">
+                <view class="name-section">
+                  <text class="name">{{ item.name }}</text>
+                  <u-tag :text="item.gender === 1 ? '男' : '女'" :type="item.gender === 1 ? 'primary' : 'error'" size="mini" plain></u-tag>
+                </view>
+                <view class="score-badge" :class="getScoreLevel(item.match_score)">
+                  <text class="score-value">{{ item.match_score }}%</text>
+                  <text class="score-label">{{ getLevelText(item.match_score) }}</text>
+                </view>
+              </view>
+              
+              <view class="info-row">
+                 <view class="info-item">
+                   <u-icon name="calendar" size="12" color="#86909C"></u-icon>
+                   <text>{{ item.age }}岁</text>
                  </view>
+                 <view class="info-divider"></view>
+                 <view class="info-item">
+                   <u-icon name="man-add" size="12" color="#86909C"></u-icon>
+                   <text>{{ item.height }}cm</text>
+                 </view>
+                 <view class="info-divider"></view>
+                 <view class="info-item">
+                   <u-icon name="bookmark" size="12" color="#86909C"></u-icon>
+                   <text>{{ getEducationText(item.education) }}</text>
+                 </view>
+              </view>
+              
+              <view class="tags-row" v-if="item.tags && item.tags.length">
+                <view class="tag" v-for="(tag, tIdx) in item.tags.slice(0, 3)" :key="tIdx">{{ tag }}</view>
+              </view>
+           </view>
+           
+           <!-- 右侧AI按钮 -->
+           <view class="ai-btn-wrapper">
+             <view class="ai-btn" @click.stop="showAIAnalysis(item)">
+               <view class="ai-icon">
+                 <u-icon name="edit-pen" size="16" color="#fff"></u-icon>
                </view>
-               <view class="info-row">
-                  <text>{{ item.age }}岁</text>
-                  <text class="sep">|</text>
-                  <text>{{ item.height }}cm</text>
-                  <text class="sep">|</text>
-                  <text>{{ getEducationText(item.education) }}</text>
-               </view>
-               <view class="tags-row">
-                 <view class="tag" v-for="(tag, tIdx) in item.tags" :key="tIdx">{{ tag }}</view>
-               </view>
-            </view>
-            <view class="ai-btn" @click="showAIAnalysis(item)">
-              <text class="ai-icon">🤖</text>
-              <text class="ai-text">AI分析</text>
-            </view>
+               <text class="ai-text">AI</text>
+             </view>
+           </view>
+         </view>
+         
+         <!-- 加载更多 -->
+         <view v-if="hasMore" class="load-more">
+           <u-loading-icon size="20" mode="circle"></u-loading-icon>
+           <text>加载中...</text>
+         </view>
+         <view v-else-if="list.length > 0" class="no-more">
+           <text>没有更多候选人了</text>
          </view>
       </view>
-     </view>
+     </scroll-view>
+     
+     <!-- AI分析弹窗 -->
+     <AIAnalysisPopup 
+       :visible="aiPopupVisible" 
+       :loading="aiLoading"
+       :error="aiError"
+       :result="aiResult"
+       @close="aiPopupVisible = false"
+       @retry="handleRetry"
+     />
    </view>
-   
-   <!-- AI分析弹窗 -->
-   <AIAnalysisPopup 
-     :visible="aiPopupVisible" 
-     :loading="aiLoading"
-     :error="aiError"
-     :result="aiResult"
-     @close="aiPopupVisible = false"
-     @retry="handleRetry"
-   />
- </template>
+</template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { getCandidates } from '@/api/match';
 import { aiAnalyzeMatch } from '@/api/ai';
@@ -102,8 +198,10 @@ const clientId = ref<number>(0);
 const list = ref<any[]>([]);
 const loading = ref(false);
 const sortBy = ref('score');
+const page = ref(1);
+const hasMore = ref(true);
+const showFilter = ref(false);
 
-// AI分析相关
 const aiPopupVisible = ref(false);
 const aiLoading = ref(false);
 const aiError = ref(false);
@@ -120,7 +218,6 @@ const educationMap: Record<number, string> = {
 
 const getEducationText = (edu: number) => educationMap[edu] || '未知';
 
-// 获取匹配等级样式
 const getScoreLevel = (score: number): string => {
   if (score >= 85) return 'level-perfect';
   if (score >= 70) return 'level-good';
@@ -128,7 +225,6 @@ const getScoreLevel = (score: number): string => {
   return 'level-poor';
 };
 
-// 获取匹配等级文本
 const getLevelText = (score: number): string => {
   if (score >= 85) return '完美匹配';
   if (score >= 70) return '非常合适';
@@ -143,16 +239,33 @@ onLoad((options: any) => {
   }
 });
 
-const loadData = async () => {
+const loadData = async (reset = false) => {
+  if (reset) {
+    page.value = 1;
+    hasMore.value = true;
+    list.value = [];
+  }
+  
+  if (!hasMore.value && !reset) return;
+  
   loading.value = true;
   try {
-    const res: any = await getCandidates(clientId.value);
-    list.value = res || [];
+    const res: any = await getCandidates(clientId.value, { page: page.value, pageSize: 20 });
+    const newList = res || [];
+    list.value = [...list.value, ...newList];
+    hasMore.value = newList.length === 20;
     doSort();
   } catch (e) {
     uni.showToast({ title: '加载失败', icon: 'none' });
   } finally {
     loading.value = false;
+  }
+};
+
+const loadMore = () => {
+  if (hasMore.value && !loading.value) {
+    page.value++;
+    loadData();
   }
 };
 
@@ -180,7 +293,6 @@ const goCompare = (candidateId: number) => {
   });
 };
 
-// 显示AI分析
 const showAIAnalysis = async (item: any) => {
   aiPopupVisible.value = true;
   aiLoading.value = true;
@@ -191,7 +303,6 @@ const showAIAnalysis = async (item: any) => {
   await doAnalyze(item);
 };
 
-// 执行AI分析
 const doAnalyze = async (item: any) => {
   aiLoading.value = true;
   aiError.value = false;
@@ -207,7 +318,6 @@ const doAnalyze = async (item: any) => {
   }
 };
 
-// 重试AI分析
 const handleRetry = () => {
   if (currentCandidate.value) {
     doAnalyze(currentCandidate.value);
@@ -216,170 +326,494 @@ const handleRetry = () => {
 </script>
 
 <style lang="scss" scoped>
-.container {
-  padding-top: 44px;
-  background-color: #f5f6fa;
-  min-height: 100vh;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #F5F7FA 0%, #ffffff 30%, #F5F7FA 100%);
+  padding-bottom: 40px;
+}
+
+// Navigation Bar
 .nav-bar {
-  position: fixed;
+  background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.98) 100%);
+  padding: 48px 16px 12px;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
-  height: 44px;
-  background: #fff;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(10px);
+}
+
+.nav-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.back-btn {
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
-  border-bottom: 1px solid #eee;
-  .back-btn {
-    position: absolute;
-    left: 12px;
-    padding: 10px;
-  }
-  .nav-title {
-    font-size: 17px;
-    font-weight: 500;
+  border-radius: 10px;
+  background: #F5F7FA;
+  
+  &:active {
+    background: #E5E6EB;
+    transform: scale(0.95);
   }
 }
-.filter-bar {
+
+.nav-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1D2129;
+}
+
+.nav-right {
+  width: 36px;
   display: flex;
-  background: #fff;
-  padding: 12px 0;
-  margin-bottom: 12px;
-  .filter-item {
-    flex: 1;
-    text-align: center;
-    font-size: 14px;
-    color: #666;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    &.active {
-      color: #FF5E78;
-      font-weight: 500;
-    }
+  justify-content: flex-end;
+}
+
+.filter-trigger {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #F5F7FA;
+  
+  &:active {
+    background: #E5E6EB;
   }
 }
-.list-content {
-    padding-bottom: 40px;
-}
-.loading-box {
-    display: flex;
-    justify-content: center;
-    padding-top: 40px;
-}
-.empty-box {
-    padding-top: 60px;
-}
-.candidate-card {
+
+// Score Distribution
+.score-distribution {
+  display: flex;
+  justify-content: space-around;
+  padding: 20px 16px;
+  margin: 16px 16px 0;
   background: #fff;
-  margin: 12px;
-  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.dist-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.dist-icon {
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
   display: flex;
   align-items: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  justify-content: center;
+  
+  .icon-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+  }
+  
+  &.perfect {
+    background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+    box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+  }
+  
+  &.good {
+    background: linear-gradient(135deg, #4A90E2 0%, #6BB3FF 100%);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+  }
+  
+  &.average {
+    background: linear-gradient(135deg, #FF9F00 0%, #FFC53D 100%);
+    box-shadow: 0 4px 12px rgba(255, 159, 0, 0.3);
+  }
+  
+  &.poor {
+    background: linear-gradient(135deg, #86909C 0%, #C9CDD4 100%);
+    box-shadow: 0 4px 12px rgba(134, 144, 156, 0.3);
+  }
+}
+
+.dist-label {
+  font-size: 12px;
+  color: #86909C;
+  font-weight: 500;
+}
+
+// Filter Bar
+.filter-bar {
+  margin: 16px;
+}
+
+.filter-scroll {
+  white-space: nowrap;
+}
+
+.filter-options {
+  display: flex;
+  gap: 12px;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  
+  text {
+    font-size: 14px;
+    color: #4E5969;
+    font-weight: 500;
+  }
+  
   &:active {
-      background-color: #fafafa;
+    transform: scale(0.95);
   }
-  .card-left {
+  
+  &.active {
+    background: linear-gradient(135deg, #FF5E78 0%, #FF8A9B 100%);
+    box-shadow: 0 4px 16px rgba(255, 94, 120, 0.35);
+    
+    text {
+      color: #fff;
+      font-weight: 600;
+    }
+  }
+}
+
+// List Content
+.list-content {
+  padding: 0 16px;
+  min-height: calc(100vh - 280px);
+}
+
+// Loading Skeleton
+.loading-box {
+  padding: 8px 0;
+}
+
+.skeleton-card {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  background: #fff;
+  border-radius: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  
+  .skeleton-avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(90deg, #F2F3F5 25%, #E5E6EB 50%, #F2F3F5 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
     margin-right: 16px;
+    flex-shrink: 0;
   }
-  .card-right {
+  
+  .skeleton-content {
     flex: 1;
-    .name-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      .name {
-        font-size: 16px;
-        font-weight: 500;
-        color: #333;
-      }
-      .score-box {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        .score {
-          font-size: 20px;
-          font-weight: bold;
-        }
-        .level-text {
-          font-size: 10px;
-          margin-top: 2px;
-        }
-        // 完美匹配 - 绿色
-        &.level-perfect {
-          .score { color: #52c41a; }
-          .level-text { color: #52c41a; }
-        }
-        // 非常合适 - 蓝色
-        &.level-good {
-          .score { color: #1890ff; }
-          .level-text { color: #1890ff; }
-        }
-        // 可以尝试 - 橙色
-        &.level-average {
-          .score { color: #faad14; }
-          .level-text { color: #faad14; }
-        }
-        // 不太合适 - 红色
-        &.level-poor {
-          .score { color: #ff4d4f; }
-          .level-text { color: #ff4d4f; }
-        }
-      }
-    }
-    .info-row {
-        font-size: 12px;
-        color: #666;
-        margin-bottom: 8px;
-        .sep {
-            margin: 0 6px;
-            color: #ddd;
-        }
-    }
-    .tags-row {
-      display: flex;
-      flex-wrap: wrap;
-      .tag {
-        background: #FFF0F2;
-        color: #FF5E78;
-        font-size: 10px;
-        padding: 2px 6px;
-        border-radius: 4px;
-        margin-right: 6px;
-        margin-bottom: 4px;
-      }
+  }
+  
+  .skeleton-line {
+    height: 14px;
+    background: linear-gradient(90deg, #F2F3F5 25%, #E5E6EB 50%, #F2F3F5 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    width: 80%;
+    
+    &.short {
+      width: 50%;
     }
   }
-  .ai-btn {
+  
+  .skeleton-tags {
     display: flex;
-    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  
+  .skeleton-tag {
+    width: 50px;
+    height: 20px;
+    background: linear-gradient(90deg, #F2F3F5 25%, #E5E6EB 50%, #F2F3F5 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+  }
+}
+
+// Empty State
+.empty-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 40px;
+  
+  .empty-illustration {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #F5F7FA 0%, #E5E6EB 100%);
+    border-radius: 50%;
+    display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: 12px;
-    padding: 8px 12px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-    &:active {
-      opacity: 0.9;
-      transform: scale(0.98);
+    margin-bottom: 24px;
+  }
+  
+  .empty-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1D2129;
+    margin-bottom: 8px;
+  }
+  
+  .empty-desc {
+    font-size: 14px;
+    color: #86909C;
+  }
+}
+
+// Candidate Card
+.candidate-card {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  padding: 20px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  animation: fadeInUp 0.5s ease-out both;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:active {
+    transform: scale(0.98);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.card-avatar {
+  position: relative;
+  margin-right: 16px;
+  flex-shrink: 0;
+  
+  .avatar-ring {
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    z-index: 1;
+    
+    &.level-perfect {
+      border-color: #52C41A;
+      box-shadow: 0 0 12px rgba(82, 196, 26, 0.3);
     }
-    .ai-icon {
-      font-size: 20px;
-      margin-bottom: 2px;
+    
+    &.level-good {
+      border-color: #4A90E2;
+      box-shadow: 0 0 12px rgba(74, 144, 226, 0.3);
     }
-    .ai-text {
-      font-size: 10px;
-      color: #fff;
-      font-weight: 500;
+    
+    &.level-average {
+      border-color: #FF9F00;
+      box-shadow: 0 0 12px rgba(255, 159, 0, 0.3);
+    }
+    
+    &.level-poor {
+      border-color: #86909C;
     }
   }
+}
+
+.card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.name-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1D2129;
+}
+
+.score-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 6px 12px;
+  border-radius: 12px;
+  min-width: 70px;
+  
+  .score-value {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  
+  .score-label {
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+  
+  &.level-perfect {
+    background: linear-gradient(135deg, #F6FFED 0%, #D9F7BE 100%);
+    .score-value, .score-label { color: #52C41A; }
+  }
+  
+  &.level-good {
+    background: linear-gradient(135deg, #E8F3FF 0%, #BAE7FF 100%);
+    .score-value, .score-label { color: #4A90E2; }
+  }
+  
+  &.level-average {
+    background: linear-gradient(135deg, #FFF7E8 0%, #FFE7BA 100%);
+    .score-value, .score-label { color: #FF9F00; }
+  }
+  
+  &.level-poor {
+    background: linear-gradient(135deg, #F5F7FA 0%, #E5E6EB 100%);
+    .score-value, .score-label { color: #86909C; }
+  }
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #4E5969;
+}
+
+.info-divider {
+  width: 1px;
+  height: 12px;
+  background: #E5E6EB;
+}
+
+.tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  
+  .tag {
+    background: linear-gradient(135deg, #FFF0F2 0%, rgba(255, 94, 120, 0.08) 100%);
+    color: #FF5E78;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 500;
+  }
+}
+
+// AI Button
+.ai-btn-wrapper {
+  margin-left: 12px;
+  padding-left: 12px;
+  border-left: 1px dashed #E5E6EB;
+}
+
+.ai-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.35);
+  transition: all 0.2s ease;
+  
+  &:active {
+    transform: scale(0.92);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+  }
+  
+  .ai-icon {
+    margin-bottom: 2px;
+  }
+  
+  .ai-text {
+    font-size: 10px;
+    color: #fff;
+    font-weight: 600;
+  }
+}
+
+// Load More
+.load-more, .no-more {
+  text-align: center;
+  padding: 24px;
+  font-size: 14px;
+  color: #86909C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.no-more {
+  color: #C0C4CC;
 }
 </style>

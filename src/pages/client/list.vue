@@ -166,7 +166,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
 import { getClientList, type Client } from '@/api/client';
-import { onReachBottom, onPullDownRefresh, onShow } from '@dcloudio/uni-app';
+import { onReachBottom, onPullDownRefresh } from '@dcloudio/uni-app';
 
 const primaryColor = '#FF5E78';
 const keyword = ref('');
@@ -207,10 +207,10 @@ const applyFilter = () => {
 
 // 单人模式：移除公海池Tab，改为状态筛选
 const statusList = [
-  { name: '全部' }, 
-  { name: '单身' }, 
+  { name: '全部' },
+  { name: '单身' },
   { name: '匹配中' },
-  { name: '已成单' }
+  { name: '已拉手' }
 ];
 const currentStatusIndex = ref(0);
 
@@ -268,9 +268,19 @@ const fetchData = async (refresh = false) => {
   }
 };
 
+// #ifdef H5
+import { onMounted } from 'vue';
+onMounted(() => {
+  fetchData(true);
+});
+// #endif
+
+// #ifndef H5
+import { onShow } from '@dcloudio/uni-app';
 onShow(() => {
   fetchData(true);
 });
+// #endif
 
 const onSearch = () => {
   fetchData(true);
@@ -318,8 +328,25 @@ const getCoverImage = (item: Client) => {
 </script>
 
 <style lang="scss" scoped>
+/* 页面进入动画 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
 .container {
-  padding-top: 96px; /* Adjusted for fixed header height */
+  padding-top: 100px;
   background-color: $omiai-bg-page;
   min-height: 100vh;
 }
@@ -330,136 +357,167 @@ const getCoverImage = (item: Client) => {
   left: 0;
   right: 0;
   z-index: 100;
-  background-color: $omiai-white;
-  /* Removed border-bottom, use shadow */
-  box-shadow: $omiai-shadow-sm; 
-  padding-bottom: 8px;
+  background: linear-gradient(180deg, $omiai-white 0%, rgba(255,255,255,0.98) 100%);
+  box-shadow: $omiai-shadow-sm;
+  padding-bottom: 12px;
+  backdrop-filter: blur(10px);
   
   .search-section {
-    padding: 12px 16px 8px;
+    padding: 12px 16px 10px;
     display: flex;
     align-items: center;
     gap: 12px;
-    padding-top: 50px; /* 增加顶部内边距，避开状态栏和胶囊按钮 */
+    padding-top: 52px;
     
     .filter-btn {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        
-        .filter-label {
-            font-size: 10px;
-            color: $omiai-text-second;
-            margin-top: 2px;
-        }
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px;
+      background: $omiai-primary-light;
+      border-radius: $omiai-radius-md;
+      transition: all 0.2s ease;
+      
+      &:active {
+        transform: scale(0.95);
+        background: linear-gradient(135deg, $omiai-primary-light 0%, rgba(255,94,120,0.15) 100%);
+      }
+      
+      .filter-label {
+        font-size: 10px;
+        color: $omiai-primary;
+        margin-top: 2px;
+        font-weight: 500;
+      }
     }
   }
   
   .filter-section {
-    padding: 0 12px;
+    padding: 0 16px;
   }
 }
 
 .client-grid {
-    padding: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
+  padding: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  
+  .grid-item {
+    width: calc(50% - 6px);
+    background: $omiai-white;
+    border-radius: $omiai-radius-lg;
+    margin-bottom: 16px;
+    overflow: hidden;
+    box-shadow: $omiai-shadow-sm;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: fadeInUp 0.5s ease-out forwards;
+    animation-delay: calc(var(--index, 0) * 0.05s);
     
-    .grid-item {
-        width: 48%; /* 2 columns */
-        background: $omiai-white;
-        border-radius: $omiai-radius-lg;
-        margin-bottom: 12px;
-        overflow: hidden;
-        box-shadow: $omiai-shadow-sm;
-        transition: all 0.2s ease;
-        
-        &:active {
-            transform: scale(0.98);
-        }
-        
-        .item-cover {
-            position: relative;
-            background: #f5f5f5;
-            
-            .status-badge {
-                position: absolute;
-                top: 8px;
-                left: 8px;
-                background: rgba(0,0,0,0.6);
-                padding: 4px 8px;
-                border-radius: 4px;
-                text {
-                    color: #fff;
-                    font-size: 10px;
-                }
-            }
-            
-            .select-check {
-                position: absolute;
-                top: 8px;
-                right: 8px;
-                .circle {
-                    width: 20px;
-                    height: 20px;
-                    border-radius: 50%;
-                    background: rgba(255,255,255,0.8);
-                    border: 1px solid rgba(0,0,0,0.1);
-                }
-            }
-        }
-        
-        .item-info {
-            padding: 12px;
-            
-            .info-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-bottom: 6px;
-                
-                .name {
-                    font-size: 15px;
-                    font-weight: 600;
-                    color: $omiai-text-main;
-                    @include text-ellipsis;
-                }
-                
-                .gender-dot {
-                    width: 6px;
-                    height: 6px;
-                    border-radius: 50%;
-                    &.male { background: $omiai-male; }
-                    &.female { background: $omiai-female; }
-                }
-            }
-            
-            .info-tags {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 4px;
-                margin-bottom: 8px;
-                
-                .mini-tag {
-                    font-size: 10px;
-                    color: $omiai-text-second;
-                    background: $omiai-bg-page;
-                    padding: 2px 6px;
-                    border-radius: 4px;
-                }
-            }
-            
-            .info-footer {
-                .profession {
-                    font-size: 11px;
-                    color: $omiai-text-tip;
-                    @include text-ellipsis;
-                }
-            }
-        }
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: $omiai-shadow-md;
     }
+    
+    &:active {
+      transform: scale(0.98) translateY(0);
+      box-shadow: $omiai-shadow-xs;
+    }
+    
+    .item-cover {
+      position: relative;
+      background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+      
+      .status-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 100%);
+        padding: 4px 10px;
+        border-radius: 20px;
+        backdrop-filter: blur(4px);
+        
+        text {
+          color: #fff;
+          font-size: 10px;
+          font-weight: 500;
+        }
+      }
+      
+      .select-check {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        
+        .circle {
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.9);
+          border: 2px solid rgba(255,94,120,0.3);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          transition: all 0.2s ease;
+        }
+      }
+    }
+    
+    .item-info {
+      padding: 14px;
+      
+      .info-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        
+        .name {
+          font-size: 16px;
+          font-weight: 600;
+          color: $omiai-text-main;
+          @include text-ellipsis;
+        }
+        
+        .gender-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          box-shadow: 0 0 4px currentColor;
+          
+          &.male { 
+            background: linear-gradient(135deg, $omiai-male 0%, #6BB3FF 100%);
+          }
+          &.female { 
+            background: linear-gradient(135deg, $omiai-female 0%, #FF8FB0 100%);
+          }
+        }
+      }
+      
+      .info-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 10px;
+        
+        .mini-tag {
+          font-size: 11px;
+          color: $omiai-text-second;
+          background: linear-gradient(135deg, $omiai-bg-page 0%, #f0f1f3 100%);
+          padding: 3px 8px;
+          border-radius: 6px;
+          font-weight: 500;
+        }
+      }
+      
+      .info-footer {
+        .profession {
+          font-size: 12px;
+          color: $omiai-text-tip;
+          @include text-ellipsis;
+        }
+      }
+    }
+  }
 }
 
 /* Mixin for ellipsis (Simple version if not in global) */

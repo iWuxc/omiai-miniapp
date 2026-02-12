@@ -78,9 +78,18 @@ const handleAuthError = (message: string = '登录已过期') => {
 
 // 响应拦截器
 http.interceptors.response.use((response) => {
-  const { data } = response;
+  const { data, config } = response;
+  
+  // 检查是否是登录接口（白名单接口可能需要特殊处理）
+  const isLoginApi = config.url?.includes('/auth/login');
   
   if (data.code === 0) {
+    // 登录接口返回完整数据结构，其他接口返回 data.data
+    if (isLoginApi) {
+      console.log('登录接口响应:', data);
+      // 返回完整的 data 对象，包含 accessToken 和 user
+      return data.data || data;
+    }
     return data.data; 
   } else {
     // 处理 Token 失效（根据后端实际错误码调整）

@@ -1,214 +1,258 @@
 <template>
   <view class="container">
     <view class="form-wrapper">
-      <!-- 1) 标题区 (中式亲和力：大标题 + 温馨提示) -->
-      <view class="header fade-in">
-        <view class="header-row">
-            <text class="omiai-title-xl">完善客户档案</text>
-            <view class="import-btn" @click="goImport">
-                <u-icon name="download" color="#FF5E78" size="14"></u-icon>
-                <text>批量导入</text>
+      <!-- 标题区 -->
+      <view class="header" :style="{ animationDelay: '0ms' }">
+        <view class="header-content">
+          <view class="title-section">
+            <view class="title-badge">
+              <u-icon name="edit-pen" size="14" color="#FF5E78"></u-icon>
             </view>
+            <text class="page-title">完善客户档案</text>
+          </view>
+          <view class="import-btn" @click="goImport">
+            <u-icon name="download" color="#FF5E78" size="14"></u-icon>
+            <text>批量导入</text>
+          </view>
         </view>
-        <text class="omiai-text-md subtitle">信息越完善，智能匹配的成功率越高哦</text>
+        <text class="subtitle">
+          <u-icon name="info-circle" size="14" color="#FF5E78" style="margin-right: 6px;"></u-icon>
+          信息越完善，智能匹配的成功率越高哦
+        </text>
       </view>
 
-      <!-- 2) 表单区 (中式清晰层次：分组 + 细致标签) -->
-      <view class="form-card omiai-card fade-in">
+      <!-- 表单区 -->
+      <view class="form-card" :style="{ animationDelay: '100ms' }">
         <u-form :model="form" ref="uForm" labelPosition="left" labelWidth="80" :labelStyle="{ color: '#4E5969', fontSize: '15px' }">
-          <view class="section-title">
-            <view class="title-line"></view>
-            <text>头像照片</text>
+          <!-- 头像照片区块 -->
+          <view class="section-block">
+            <view class="section-header">
+              <view class="section-icon bg-pink">
+                <u-icon name="camera-fill" size="20" color="#FF5E78"></u-icon>
+              </view>
+              <view class="section-info">
+                <text class="section-title">头像照片</text>
+                <text class="section-desc">上传清晰的正面照</text>
+              </view>
+            </view>
+            
+            <view class="avatar-upload-box">
+               <u-upload
+                  :fileList="avatarList"
+                  @afterRead="afterReadAvatar"
+                  @delete="deleteAvatar"
+                  name="avatar"
+                  multiple
+                  :maxCount="1"
+                  width="100"
+                  height="100"
+                  border-radius="50"
+                  accept="image"
+                  :capture="['album', 'camera']"
+               >
+                  <view class="avatar-placeholder">
+                    <u-icon name="plus" size="32" color="#FF5E78"></u-icon>
+                    <text class="placeholder-text">上传头像</text>
+                  </view>
+               </u-upload>
+            </view>
           </view>
-          
-          <view class="avatar-upload-box">
-             <u-upload
-                :fileList="avatarList"
-                @afterRead="afterReadAvatar"
-                @delete="deleteAvatar"
-                name="avatar"
+
+          <!-- 基本信息区块 -->
+          <view class="section-block">
+            <view class="section-header">
+              <view class="section-icon bg-blue">
+                <u-icon name="file-text-fill" size="20" color="#4A90E2"></u-icon>
+              </view>
+              <view class="section-info">
+                <text class="section-title">基本信息</text>
+                <text class="section-desc">完善客户基础资料</text>
+              </view>
+            </view>
+            
+            <view class="form-fields">
+              <u-form-item label="真实姓名" prop="name" required borderBottom>
+                <u-input v-model="form.name" placeholder="请输入姓名" border="none"></u-input>
+              </u-form-item>
+              
+              <u-form-item label="客户性别" prop="gender" required borderBottom>
+                <u-radio-group v-model="form.gender">
+                  <u-radio label="男" :name="1" :activeColor="maleColor" style="margin-right: 24px"></u-radio>
+                  <u-radio label="女" :name="2" :activeColor="primaryColor"></u-radio>
+                </u-radio-group>
+              </u-form-item>
+
+              <u-form-item label="出生年月" prop="birthday" required borderBottom @click="onBirthdayClick">
+                <u-input v-model="form.birthday" placeholder="请选择出生年月" disabled disabledColor="#fff" border="none"></u-input>
+                <u-icon slot="right" name="arrow-right" color="#C0C4CC" size="16"></u-icon>
+              </u-form-item>
+              
+              <u-form-item label="年龄" prop="age" required borderBottom>
+                <u-input v-model="form.age" type="number" placeholder="请输入年龄" border="none"></u-input>
+                <text class="input-suffix">岁</text>
+              </u-form-item>
+
+              <u-form-item label="属相" prop="zodiac" required borderBottom>
+                <u-input v-model="form.zodiac" placeholder="例如：猴" border="none"></u-input>
+              </u-form-item>
+
+              <u-form-item label="联系电话" prop="phone" required borderBottom>
+                <u-input v-model="form.phone" type="number" placeholder="请输入11位手机号" border="none" maxlength="11"></u-input>
+              </u-form-item>
+            </view>
+          </view>
+
+          <!-- 详细画像区块 -->
+          <view class="section-block">
+            <view class="section-header">
+              <view class="section-icon bg-green">
+                <u-icon name="grid-fill" size="20" color="#52C41A"></u-icon>
+              </view>
+              <view class="section-info">
+                <text class="section-title">详细画像</text>
+                <text class="section-desc">填写客户的详细信息</text>
+              </view>
+            </view>
+
+            <view class="form-fields">
+              <view class="row-fields">
+                 <view class="col-field">
+                    <u-form-item label="身高" prop="height" required borderBottom labelWidth="50">
+                      <u-input v-model="form.height" type="number" placeholder="0" border="none"></u-input>
+                      <text class="input-suffix">cm</text>
+                    </u-form-item>
+                 </view>
+                 <view class="col-field">
+                    <u-form-item label="体重" prop="weight" required borderBottom labelWidth="50">
+                      <u-input v-model="form.weight" type="number" placeholder="0" border="none"></u-input>
+                      <text class="input-suffix">kg</text>
+                    </u-form-item>
+                 </view>
+              </view>
+
+              <u-form-item label="最高学历" prop="education" required borderBottom>
+                <u-radio-group v-model="form.education">
+                  <u-radio label="大专" :name="2" :activeColor="primaryColor" style="margin-right: 8px"></u-radio>
+                  <u-radio label="本科" :name="3" :activeColor="primaryColor" style="margin-right: 8px"></u-radio>
+                  <u-radio label="硕士" :name="4" :activeColor="primaryColor" style="margin-right: 8px"></u-radio>
+                  <u-radio label="博士" :name="5" :activeColor="primaryColor"></u-radio>
+                </u-radio-group>
+              </u-form-item>
+
+              <u-form-item label="婚姻状况" prop="marital_status" required borderBottom>
+                <u-radio-group v-model="form.marital_status">
+                  <u-radio label="未婚" :name="1" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
+                  <u-radio label="离异" :name="3" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
+                  <u-radio label="丧偶" :name="4" :activeColor="primaryColor"></u-radio>
+                </u-radio-group>
+              </u-form-item>
+
+              <u-form-item label="月收入" prop="income" required borderBottom>
+                <u-input v-model="form.income" type="number" placeholder="请输入月收入" border="none"></u-input>
+                <text class="input-suffix">元</text>
+              </u-form-item>
+
+              <u-form-item label="家庭住址" prop="address" required borderBottom>
+                <u-input v-model="form.address" placeholder="省市区+详细地址" border="none"></u-input>
+              </u-form-item>
+
+              <u-form-item label="具体工作" prop="profession" required borderBottom>
+                <u-input v-model="form.profession" placeholder="请描述具体工作内容" border="none"></u-input>
+              </u-form-item>
+
+              <u-form-item label="工作单位" prop="work_unit" required borderBottom>
+                <u-input v-model="form.work_unit" placeholder="具体工作单位" border="none"></u-input>
+              </u-form-item>
+
+              <u-form-item label="职位" prop="position" required borderBottom>
+                <u-input v-model="form.position" placeholder="具体职位" border="none"></u-input>
+              </u-form-item>
+
+              <u-form-item label="房产情况" prop="house_status" required borderBottom>
+                <u-radio-group v-model="form.house_status">
+                  <u-radio label="无房" :name="1" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
+                  <u-radio label="已购房" :name="2" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
+                  <u-radio label="贷款购房" :name="3" :activeColor="primaryColor"></u-radio>
+                </u-radio-group>
+              </u-form-item>
+
+              <u-form-item label="买房地址" prop="house_address" v-if="form.house_status === 2 || form.house_status === 3" required borderBottom>
+                <u-input v-model="form.house_address" placeholder="请输入购房详细地址" border="none"></u-input>
+              </u-form-item>
+
+              <u-form-item label="车辆情况" prop="car_status" required borderBottom>
+                <u-radio-group v-model="form.car_status">
+                  <u-radio label="无车" :name="1" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
+                  <u-radio label="有车" :name="2" :activeColor="primaryColor"></u-radio>
+                </u-radio-group>
+              </u-form-item>
+
+              <u-form-item label="家庭成员" prop="family_description" required labelPosition="top" class="textarea-item">
+                <u-textarea 
+                  v-model="form.family_description" 
+                  placeholder="请填写：关系+姓名+年龄" 
+                  height="100" 
+                  :customStyle="textareaStyle"
+                ></u-textarea>
+              </u-form-item>
+
+              <u-form-item label="对另一半要求" prop="partner_requirements" required labelPosition="top" class="textarea-item">
+                <u-textarea 
+                  v-model="form.partner_requirements" 
+                  placeholder="年龄范围、学历要求、身高要求、其他要求..." 
+                  height="120" 
+                  :customStyle="textareaStyle"
+                ></u-textarea>
+              </u-form-item>
+
+              <u-form-item label="红娘备注" prop="remark" labelPosition="top" class="textarea-item">
+                <u-textarea 
+                  v-model="form.remark" 
+                  placeholder="请描述客户的性格、爱好、家庭情况等..." 
+                  count 
+                  height="140" 
+                  :customStyle="textareaStyle"
+                ></u-textarea>
+              </u-form-item>
+            </view>
+          </view>
+
+          <!-- 生活照区块 -->
+          <view class="section-block">
+            <view class="section-header">
+              <view class="section-icon bg-orange">
+                <u-icon name="photo-fill" size="20" color="#FF9F00"></u-icon>
+              </view>
+              <view class="section-info">
+                <text class="section-title">生活相册</text>
+                <text class="section-desc">最多可上传9张照片</text>
+              </view>
+            </view>
+            
+            <view class="photos-upload">
+              <u-upload
+                :fileList="photoList"
+                @afterRead="afterReadPhotos"
+                @delete="deletePhoto"
+                name="photos"
                 multiple
-                :maxCount="1"
-                width="80"
-                height="80"
-                border-radius="40"
+                :maxCount="9"
+                width="90"
+                height="90"
                 accept="image"
                 :capture="['album', 'camera']"
-             >
-                <view class="avatar-placeholder">
-                  <u-icon name="camera-fill" size="26" color="#C0C4CC"></u-icon>
-                  <text class="omiai-text-sm">上传头像</text>
-                </view>
-             </u-upload>
+              ></u-upload>
+            </view>
           </view>
-
-          <view class="section-title mt-30">
-            <view class="title-line"></view>
-            <text>基本信息</text>
-          </view>
-          
-          <u-form-item label="真实姓名" prop="name" required borderBottom>
-            <u-input v-model="form.name" placeholder="请输入姓名" border="none"></u-input>
-          </u-form-item>
-          
-          <u-form-item label="客户性别" prop="gender" required borderBottom>
-            <u-radio-group v-model="form.gender">
-              <u-radio label="男" :name="1" :activeColor="maleColor" style="margin-right: 24px"></u-radio>
-              <u-radio label="女" :name="2" :activeColor="primaryColor"></u-radio>
-            </u-radio-group>
-          </u-form-item>
-
-          <!-- 出生年月表单项 -->
-          <u-form-item label="出生年月" prop="birthday" required borderBottom @click="onBirthdayClick">
-            <u-input v-model="form.birthday" placeholder="请选择YYYY-MM" disabled disabledColor="#fff" border="none"></u-input>
-            <u-icon slot="right" name="calendar" :color="primaryColor" size="18"></u-icon>
-          </u-form-item>
-          
-          <!-- moved to bottom -->
-
-          <u-form-item label="年龄" prop="age" required borderBottom>
-            <u-input v-model="form.age" type="number" placeholder="请输入年龄" border="none"></u-input>
-          </u-form-item>
-
-          <u-form-item label="属相" prop="zodiac" required borderBottom>
-            <u-input v-model="form.zodiac" placeholder="例如：猴" border="none"></u-input>
-          </u-form-item>
-
-          <u-form-item label="联系电话" prop="phone" required borderBottom>
-            <u-input v-model="form.phone" type="number" placeholder="请输入11位手机号" border="none" maxlength="11"></u-input>
-          </u-form-item>
-
-          <view class="section-title mt-30">
-            <view class="title-line"></view>
-            <text>详细画像</text>
-          </view>
-
-          <view class="row">
-             <view class="col">
-                <u-form-item label="身高(cm)" prop="height" required borderBottom labelWidth="60">
-                  <u-input v-model="form.height" type="number" placeholder="0" border="none"></u-input>
-                </u-form-item>
-             </view>
-             <view class="col">
-                <u-form-item label="体重(kg)" prop="weight" required borderBottom labelWidth="60">
-                  <u-input v-model="form.weight" type="number" placeholder="0" border="none"></u-input>
-                </u-form-item>
-             </view>
-          </view>
-
-          <u-form-item label="最高学历" prop="education" required borderBottom>
-            <u-radio-group v-model="form.education">
-              <u-radio label="大专" :name="2" :activeColor="primaryColor" style="margin-right: 8px"></u-radio>
-              <u-radio label="本科" :name="3" :activeColor="primaryColor" style="margin-right: 8px"></u-radio>
-              <u-radio label="硕士" :name="4" :activeColor="primaryColor" style="margin-right: 8px"></u-radio>
-              <u-radio label="博士" :name="5" :activeColor="primaryColor"></u-radio>
-            </u-radio-group>
-          </u-form-item>
-
-          <u-form-item label="婚姻状况" prop="marital_status" required borderBottom>
-            <u-radio-group v-model="form.marital_status">
-              <u-radio label="未婚" :name="1" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
-              <u-radio label="已婚" :name="2" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
-              <u-radio label="离异" :name="3" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
-              <u-radio label="丧偶" :name="4" :activeColor="primaryColor"></u-radio>
-            </u-radio-group>
-          </u-form-item>
-
-          <u-form-item label="月收入(元)" prop="income" required borderBottom>
-            <u-input v-model="form.income" type="number" placeholder="请输入月收入" border="none"></u-input>
-          </u-form-item>
-
-          <u-form-item label="家庭住址" prop="address" required borderBottom>
-            <u-input v-model="form.address" placeholder="省市区+详细地址" border="none"></u-input>
-          </u-form-item>
-
-          <u-form-item label="具体工作" prop="profession" required borderBottom>
-            <u-input v-model="form.profession" placeholder="请描述具体工作内容" border="none"></u-input>
-          </u-form-item>
-
-          <u-form-item label="工作单位" prop="work_unit" required borderBottom>
-            <u-input v-model="form.work_unit" placeholder="具体工作单位" border="none"></u-input>
-          </u-form-item>
-
-          <u-form-item label="职位" prop="position" required borderBottom>
-            <u-input v-model="form.position" placeholder="具体职位" border="none"></u-input>
-          </u-form-item>
-
-          <u-form-item label="房产情况" prop="house_status" required borderBottom>
-            <u-radio-group v-model="form.house_status">
-              <u-radio label="无房" :name="1" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
-              <u-radio label="已购房" :name="2" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
-              <u-radio label="贷款购房" :name="3" :activeColor="primaryColor"></u-radio>
-            </u-radio-group>
-          </u-form-item>
-
-          <u-form-item label="买房地址" prop="house_address" v-if="form.house_status === 2 || form.house_status === 3" required borderBottom>
-            <u-input v-model="form.house_address" placeholder="请输入购房详细地址" border="none"></u-input>
-          </u-form-item>
-
-          <u-form-item label="车辆情况" prop="car_status" required borderBottom>
-            <u-radio-group v-model="form.car_status">
-              <u-radio label="无车" :name="1" :activeColor="primaryColor" style="margin-right: 12px"></u-radio>
-              <u-radio label="有车" :name="2" :activeColor="primaryColor"></u-radio>
-            </u-radio-group>
-          </u-form-item>
-
-          <u-form-item label="家庭成员" prop="family_description" required labelPosition="top">
-            <u-textarea 
-              v-model="form.family_description" 
-              placeholder="请填写：关系+姓名+年龄" 
-              height="80" 
-              :customStyle="{ background: '#F7F8FA', border: 'none', borderRadius: '12px', padding: '12px', marginTop: '8px' }"
-            ></u-textarea>
-          </u-form-item>
-
-          <u-form-item label="对另一半要求" prop="partner_requirements" required labelPosition="top">
-            <u-textarea 
-              v-model="form.partner_requirements" 
-              placeholder="年龄范围、学历要求、身高要求、其他要求..." 
-              height="100" 
-              :customStyle="{ background: '#F7F8FA', border: 'none', borderRadius: '12px', padding: '12px', marginTop: '8px' }"
-            ></u-textarea>
-          </u-form-item>
-
-          <u-form-item label="红娘备注" prop="remark" labelPosition="top">
-            <u-textarea 
-              v-model="form.remark" 
-              placeholder="请描述客户的性格、爱好、家庭情况等..." 
-              count 
-              height="120" 
-              :customStyle="{ background: '#F7F8FA', border: 'none', borderRadius: '12px', padding: '12px', marginTop: '8px' }"
-            ></u-textarea>
-          </u-form-item>
-
-          <view class="section-title mt-30">
-            <view class="title-line"></view>
-            <text>更多生活照</text>
-          </view>
-          
-          <u-upload
-            :fileList="photoList"
-            @afterRead="afterReadPhotos"
-            @delete="deletePhoto"
-            name="photos"
-            multiple
-            :maxCount="9"
-            width="80"
-            height="80"
-            accept="image"
-            :capture="['album', 'camera']"
-          ></u-upload>
         </u-form>
       </view>
 
-      <!-- 3) 提交按钮 (中式品牌感：渐变主按钮) -->
-      <view class="submit-btn fade-in">
-        <u-button 
-          :loading="submitting" 
-          @click="submit" 
-          class="omiai-btn-primary"
-          customStyle="height: 50px; font-size: 16px; border: none;"
-        >提交并保存档案</u-button>
+      <!-- 提交按钮 -->
+      <view class="submit-section" :style="{ animationDelay: '200ms' }">
+        <view class="submit-btn" @click="submit">
+          <text class="btn-text">提交并保存档案</text>
+          <u-icon name="arrow-right" size="16" color="#fff"></u-icon>
+        </view>
       </view>
     </view>
     
@@ -244,12 +288,10 @@ import { createClient } from '@/api/client';
 import { uploadFile } from '@/api/common';
 import { config as appConfig } from '@/config';
 
-// 判断是否H5环境（运行时判断）
 const isH5 = computed(() => {
   return typeof window !== 'undefined' && window.navigator && window.navigator.userAgent;
 });
 
-// 当前年月（用于原生input限制）
 const currentYearMonth = computed(() => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -260,7 +302,6 @@ const maleColor = '#4A90E2';
 const showCalendar = ref(false);
 const submitting = ref(false);
 
-// 年月选择器数据
 const currentYear = new Date().getFullYear();
 const yearOptions: string[] = [];
 for (let y = currentYear; y >= 1950; y--) {
@@ -268,16 +309,25 @@ for (let y = currentYear; y >= 1950; y--) {
 }
 const monthOptions = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
 
-const yearIndex = ref(25); // 默认选中25年前
+const yearIndex = ref(25);
 const monthIndex = ref(0);
 
-// 日历组件日期限制
 const minDateStr = ref('1950-01-01');
 const maxDateStr = ref(`${currentYear}-12-31`);
 
 const avatarList = ref<any[]>([]);
 const photoList = ref<any[]>([]);
 const showConfirm = ref(false);
+
+const textareaStyle = {
+  background: '#F7F8FA',
+  border: 'none',
+  borderRadius: '12px',
+  padding: '16px',
+  marginTop: '8px',
+  fontSize: '15px',
+  lineHeight: '1.6'
+};
 
 const form = reactive({
   name: '',
@@ -315,14 +365,7 @@ const validateFile = (file: any) => {
   const filePath = file.url || file.path;
   
   if (!filePath) {
-    // 无法获取路径时，暂时放行，由后端校验或后续流程处理
     return true;
-  }
-
-  // 简单的后缀检查（如果有）
-  if (filePath.indexOf('.') > -1) {
-      const ext = filePath.substring(filePath.lastIndexOf('.')).toLowerCase();
-      // 可以根据需要添加前端后缀校验
   }
   
   if (file.size > maxSize) {
@@ -334,7 +377,6 @@ const validateFile = (file: any) => {
 
 const afterReadAvatar = async (event: any) => {
   let { file } = event;
-  // 兼容多选情况，取第一个
   if (Array.isArray(file)) {
     file = file[0];
   }
@@ -345,7 +387,6 @@ const afterReadAvatar = async (event: any) => {
   try {
     const filePath = file.url || file.path;
     const res: any = await uploadFile(filePath);
-    // Backend returns full URL if it's OSS/COS, or relative if local
     const url = res.url.startsWith('http') ? res.url : appConfig.assetsUrl + res.url;
     avatarList.value[0].url = url;
     avatarList.value[0].status = 'success';
@@ -353,7 +394,6 @@ const afterReadAvatar = async (event: any) => {
   } catch (e) {
     avatarList.value[0].status = 'failed';
     avatarList.value[0].message = '上传失败';
-    // 移除上传失败的文件
     setTimeout(() => {
         avatarList.value = [];
         form.avatar = '';
@@ -379,7 +419,6 @@ const afterReadPhotos = async (event: any) => {
     try {
       const filePath = f.url || f.path;
       const res: any = await uploadFile(filePath);
-      // Backend returns full URL if it's OSS/COS, or relative if local
       const url = res.url.startsWith('http') ? res.url : appConfig.assetsUrl + res.url;
       item.url = url;
       item.status = 'success';
@@ -408,7 +447,6 @@ const confirmYearMonth = () => {
   form.birthday = `${year}-${month}`;
   showCalendar.value = false;
   
-  // 计算年龄
   const currentYear = new Date().getFullYear();
   form.age = currentYear - parseInt(year);
 };
@@ -467,163 +505,15 @@ const confirmSubmit = async () => {
 </script>
 
 <style lang="scss" scoped>
-.container {
-  padding: 24px 16px;
-  background-color: $omiai-bg-page;
-}
-
-.header {
-  margin-bottom: 24px;
-  padding-left: 4px;
-  
-  .header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      
-      .import-btn {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          background: #FFF0F2;
-          padding: 6px 12px;
-          border-radius: 99px;
-          font-size: 13px;
-          color: $omiai-primary;
-          font-weight: 500;
-      }
-  }
-  
-  .subtitle {
-    color: $omiai-text-tip;
-    margin-top: 6px;
-    display: block;
-  }
-}
-
-.avatar-upload-box {
-  display: flex;
-  justify-content: center;
-  margin: 10px 0 20px;
-  
-  .avatar-placeholder {
-    width: 80px;
-    height: 80px;
-    background: #F7F8FA;
-    border-radius: 50%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    border: 1px dashed $omiai-border;
-  }
-}
-
-.form-card {
-  padding: 20px 16px;
-  border: none;
-  background: $omiai-white;
-  
-  .section-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 20px;
-    font-size: 15px;
-    font-weight: 600;
-    color: $omiai-text-main;
-    
-    .title-line {
-      width: 4px;
-      height: 14px;
-      background: $omiai-primary;
-      border-radius: 2px;
-    }
-  }
-  
-  .mt-30 { margin-top: 32px; }
-  
-  .row {
-    display: flex;
-    gap: 16px;
-    .col { flex: 1; }
-  }
-}
-
-.submit-btn {
-  margin-top: 32px;
-  padding-bottom: 40px;
-}
-
-/* 出生年月项包装器 */
-.birthday-item-wrapper {
-  position: relative;
-
-  /* 点击遮罩层 - 用于小程序唤起picker */
-  .birthday-click-mask {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 10;
-  }
-
-  /* H5原生日期选择器 - 覆盖在表单项上 */
-  .native-date-picker {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+@keyframes fadeInUp {
+  from {
     opacity: 0;
-    cursor: pointer;
-    z-index: 20;
+    transform: translateY(20px);
   }
-}
-
-/* picker弹窗头部 */
-.picker-header {
-  padding: 16px;
-  text-align: center;
-  border-bottom: 1px solid #f0f0f0;
-
-  .picker-title {
-    font-size: 16px;
-    font-weight: 500;
-    color: #333;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-}
-
-/* 确保picker在H5中正确显示在底部 */
-:deep(.u-popup__content) {
-  max-height: 60vh;
-}
-
-:deep(.u-picker) {
-  background: #fff;
-}
-
-/* 自定义弹窗样式 */
-.calendar-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 999;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-}
-
-.calendar-popup {
-  background: #fff;
-  border-radius: 12px 12px 0 0;
-  padding-bottom: constant(safe-area-inset-bottom);
-  padding-bottom: env(safe-area-inset-bottom);
-  animation: slideUp 0.3s ease-out;
 }
 
 @keyframes slideUp {
@@ -631,20 +521,329 @@ const confirmSubmit = async () => {
   to { transform: translateY(0); }
 }
 
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #F5F7FA 0%, #ffffff 20%, #F5F7FA 100%);
+  padding: 20px 16px 60px;
+}
+
+.form-wrapper {
+  max-width: 100%;
+}
+
+// Header
+.header {
+  margin-bottom: 24px;
+  animation: fadeInUp 0.5s ease-out both;
+  
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  
+  .title-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .title-badge {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #FFF0F2 0%, rgba(255, 94, 120, 0.15) 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1D2129;
+  }
+  
+  .import-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #FFF0F2 0%, rgba(255, 94, 120, 0.08) 100%);
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+    
+    text {
+      font-size: 13px;
+      color: #FF5E78;
+      font-weight: 500;
+    }
+    
+    &:active {
+      transform: scale(0.95);
+      background: linear-gradient(135deg, rgba(255, 94, 120, 0.15) 0%, #FFF0F2 100%);
+    }
+  }
+  
+  .subtitle {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #86909C;
+    padding-left: 4px;
+  }
+}
+
+// Form Card
+.form-card {
+  background: #FFFFFF;
+  border-radius: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  padding: 24px 20px;
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+// Section Block
+.section-block {
+  margin-bottom: 32px;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed #E5E6EB;
+}
+
+.section-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  
+  &.bg-pink {
+    background: linear-gradient(135deg, #FFF0F2 0%, rgba(255, 94, 120, 0.12) 100%);
+  }
+  
+  &.bg-blue {
+    background: linear-gradient(135deg, #E8F3FF 0%, rgba(74, 144, 226, 0.12) 100%);
+  }
+  
+  &.bg-green {
+    background: linear-gradient(135deg, #E8FFEA 0%, rgba(82, 196, 26, 0.12) 100%);
+  }
+  
+  &.bg-orange {
+    background: linear-gradient(135deg, #FFF7E8 0%, rgba(255, 159, 0, 0.12) 100%);
+  }
+}
+
+.section-info {
+  flex: 1;
+}
+
+.section-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1D2129;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.section-desc {
+  font-size: 13px;
+  color: #86909C;
+}
+
+// Avatar Upload
+.avatar-upload-box {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+  
+  :deep(.u-upload) {
+    .u-upload__wrap {
+      justify-content: center;
+    }
+  }
+  
+  .avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #FFF0F2 0%, #FFFAFB 100%);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 2px dashed rgba(255, 94, 120, 0.3);
+    transition: all 0.3s ease;
+    
+    &:active {
+      transform: scale(0.95);
+      background: linear-gradient(135deg, rgba(255, 94, 120, 0.08) 0%, #FFF0F2 100%);
+      border-color: #FF5E78;
+    }
+    
+    .placeholder-text {
+      font-size: 13px;
+      color: #FF5E78;
+      margin-top: 8px;
+      font-weight: 500;
+    }
+  }
+}
+
+// Form Fields
+.form-fields {
+  :deep(.u-form-item) {
+    margin-bottom: 4px;
+    
+    .u-form-item__body {
+      padding: 14px 0;
+    }
+    
+    .u-input {
+      font-size: 15px;
+      
+      &__content__field-wrapper__field {
+        color: #1D2129;
+      }
+    }
+  }
+}
+
+.input-suffix {
+  font-size: 14px;
+  color: #86909C;
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+.row-fields {
+  display: flex;
+  gap: 16px;
+  
+  .col-field {
+    flex: 1;
+  }
+}
+
+.textarea-item {
+  margin-top: 8px;
+}
+
+// Photos Upload
+.photos-upload {
+  padding: 8px 0;
+  
+  :deep(.u-upload) {
+    .u-upload__wrap {
+      gap: 12px;
+    }
+    
+    .u-upload__button {
+      width: 90px !important;
+      height: 90px !important;
+      border-radius: 12px;
+      border: 2px dashed rgba(255, 94, 120, 0.2);
+      background: linear-gradient(135deg, #FFF0F2 0%, #FFFAFB 100%);
+    }
+  }
+}
+
+// Submit Section
+.submit-section {
+  margin-top: 40px;
+  padding: 0 4px;
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #FF5E78 0%, #FF8A9B 100%);
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(255, 94, 120, 0.35);
+  transition: all 0.3s ease;
+  
+  &:active {
+    transform: translateY(2px) scale(0.98);
+    box-shadow: 0 4px 12px rgba(255, 94, 120, 0.25);
+  }
+  
+  .btn-text {
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+  }
+}
+
+// Calendar Modal
+.calendar-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  backdrop-filter: blur(4px);
+}
+
+.calendar-popup {
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+  animation: slideUp 0.3s ease-out;
+}
+
 .picker-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #f5f5f5;
+  padding: 20px 24px;
+  border-bottom: 1px solid #F2F3F5;
   
-  .picker-cancel { color: #969799; font-size: 15px; }
-  .picker-title-text { font-size: 16px; font-weight: 500; color: #323233; }
-  .picker-confirm { color: $omiai-primary; font-size: 15px; font-weight: 500; }
+  .picker-cancel { 
+    color: #86909C; 
+    font-size: 16px;
+    padding: 8px;
+  }
+  
+  .picker-title-text { 
+    font-size: 17px; 
+    font-weight: 600; 
+    color: #1D2129; 
+  }
+  
+  .picker-confirm { 
+    color: #FF5E78; 
+    font-size: 16px; 
+    font-weight: 600;
+    padding: 8px;
+  }
 }
 
 .picker-body {
-  height: 260px;
+  height: 280px;
   
   .picker-view-box {
     width: 100%;
@@ -652,10 +851,10 @@ const confirmSubmit = async () => {
   }
   
   .picker-item {
-    line-height: 48px;
+    line-height: 52px;
     text-align: center;
-    font-size: 16px;
-    color: #333;
+    font-size: 17px;
+    color: #1D2129;
   }
 }
 </style>

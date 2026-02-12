@@ -1,75 +1,128 @@
 <template>
   <view class="container">
-    <!-- 顶部用户信息卡片 -->
-    <view class="user-card fade-in">
-      <view class="user-header">
-        <view class="avatar-wrapper">
-          <u-avatar 
-            :src="userInfo?.avatar || defaultAvatar" 
-            size="80" 
-            shape="circle"
-            bgColor="#FFE4E8"
-          />
-          <view class="role-badge" v-if="userInfo?.role">
-            {{ userInfo.role === 'admin' ? '管理员' : '红娘' }}
+    <!-- 用户信息卡片 -->
+    <view class="profile-card" :style="{ animationDelay: '0ms' }">
+      <view class="card-bg">
+        <view class="bg-circle circle-1"></view>
+        <view class="bg-circle circle-2"></view>
+        <view class="bg-circle circle-3"></view>
+      </view>
+      
+      <view class="profile-header">
+        <view class="avatar-section">
+          <view class="avatar-wrapper">
+            <u-avatar 
+              :src="userInfo?.avatar || defaultAvatar" 
+              size="90" 
+              shape="circle"
+              bgColor="#fff"
+            />
+            <view class="avatar-ring"></view>
+            <view class="edit-avatar" @click="editProfile">
+              <u-icon name="camera" size="14" color="#fff"></u-icon>
+            </view>
+          </view>
+          <view class="user-status" v-if="userInfo?.role">
+            <text>{{ userInfo.role === 'admin' ? '管理员' : '专业红娘' }}</text>
           </view>
         </view>
+        
         <view class="user-info">
           <text class="nickname">{{ userInfo?.nickname || '未设置昵称' }}</text>
-          <text class="phone" v-if="userInfo?.phone">{{ maskPhone(userInfo.phone) }}</text>
+          <text class="phone" v-if="userInfo?.phone">
+            <u-icon name="phone" size="12" color="rgba(255,255,255,0.8)"></u-icon>
+            {{ maskPhone(userInfo.phone) }}
+          </text>
+          <view class="user-tags">
+            <view class="tag" v-if="stats.clientCount > 0">
+              <u-icon name="account" size="10" color="#FF5E78"></u-icon>
+              <text>{{ stats.clientCount }}客户</text>
+            </view>
+            <view class="tag" v-if="stats.matchCount > 0">
+              <u-icon name="heart" size="10" color="#FF5E78"></u-icon>
+              <text>{{ stats.matchCount }}成功</text>
+            </view>
+          </view>
         </view>
       </view>
       
       <!-- 统计信息 -->
-      <view class="stats-row">
+      <view class="stats-bar">
         <view class="stat-item" @click="navigateTo('/pages/client/list')">
+          <view class="stat-icon bg-blue">
+            <u-icon name="account" size="20" color="#4A90E2"></u-icon>
+          </view>
           <text class="stat-num">{{ stats.clientCount || 0 }}</text>
           <text class="stat-label">我的客户</text>
         </view>
         <view class="stat-divider"></view>
         <view class="stat-item" @click="navigateTo('/pages/match/list')">
+          <view class="stat-icon bg-green">
+            <u-icon name="heart-fill" size="20" color="#52C41A"></u-icon>
+          </view>
           <text class="stat-num">{{ stats.matchCount || 0 }}</text>
           <text class="stat-label">成功匹配</text>
         </view>
         <view class="stat-divider"></view>
         <view class="stat-item">
+          <view class="stat-icon bg-orange">
+            <u-icon name="plus" size="20" color="#FF9F00"></u-icon>
+          </view>
           <text class="stat-num">{{ stats.todayCount || 0 }}</text>
           <text class="stat-label">今日新增</text>
         </view>
       </view>
     </view>
 
-    <!-- 功能菜单 -->
-    <view class="menu-section fade-in">
-      <view class="menu-title">账号管理</view>
+    <!-- 账号管理 -->
+    <view class="menu-section" :style="{ animationDelay: '100ms' }">
+      <view class="section-header">
+        <view class="header-icon bg-blue">
+          <u-icon name="setting" size="18" color="#4A90E2"></u-icon>
+        </view>
+        <text class="section-title">账号管理</text>
+      </view>
       
       <view class="menu-list">
-        <view class="menu-item" @click="editProfile">
+        <view class="menu-item" @click="editProfile" :style="{ animationDelay: '0ms' }">
           <view class="item-left">
-            <view class="icon-wrapper" style="background: #E8F5FF;">
-              <u-icon name="edit-pen" size="22" color="#409EFF"></u-icon>
+            <view class="icon-box bg-blue-soft">
+              <u-icon name="edit-pen" size="20" color="#4A90E2"></u-icon>
             </view>
-            <text class="item-text">编辑资料</text>
+            <view class="item-info">
+              <text class="item-title">编辑资料</text>
+              <text class="item-desc">修改个人信息</text>
+            </view>
           </view>
-          <u-icon name="arrow-right" size="16" color="#C0C4CC"></u-icon>
+          <view class="item-right">
+            <u-icon name="arrow-right" size="16" color="#C0C4CC"></u-icon>
+          </view>
         </view>
         
-        <view class="menu-item" @click="changePassword">
+        <view class="menu-item" @click="changePassword" :style="{ animationDelay: '50ms' }">
           <view class="item-left">
-            <view class="icon-wrapper" style="background: #FFF4E8;">
-              <u-icon name="lock" size="22" color="#FF9500"></u-icon>
+            <view class="icon-box bg-orange-soft">
+              <u-icon name="lock" size="20" color="#FF9F00"></u-icon>
             </view>
-            <text class="item-text">修改密码</text>
+            <view class="item-info">
+              <text class="item-title">修改密码</text>
+              <text class="item-desc">定期更换更安全</text>
+            </view>
           </view>
-          <u-icon name="arrow-right" size="16" color="#C0C4CC"></u-icon>
+          <view class="item-right">
+            <u-icon name="arrow-right" size="16" color="#C0C4CC"></u-icon>
+          </view>
         </view>
         
-        <view class="menu-item" @click="clearCache">
+        <view class="menu-item" @click="clearCache" :style="{ animationDelay: '100ms' }">
           <view class="item-left">
-            <view class="icon-wrapper" style="background: #F0F9E8;">
-              <u-icon name="trash" size="22" color="#67C23A"></u-icon>
+            <view class="icon-box bg-green-soft">
+              <u-icon name="trash" size="20" color="#52C41A"></u-icon>
             </view>
-            <text class="item-text">清理缓存</text>
+            <view class="item-info">
+              <text class="item-title">清理缓存</text>
+              <text class="item-desc">释放存储空间</text>
+            </view>
           </view>
           <view class="item-right">
             <text class="cache-size">{{ cacheSize }}</text>
@@ -79,45 +132,54 @@
       </view>
     </view>
 
-    <!-- 系统信息 -->
-    <view class="menu-section fade-in">
-      <view class="menu-title">关于</view>
+    <!-- 关于 -->
+    <view class="menu-section" :style="{ animationDelay: '200ms' }">
+      <view class="section-header">
+        <view class="header-icon bg-gray">
+          <u-icon name="info-circle" size="18" color="#86909C"></u-icon>
+        </view>
+        <text class="section-title">关于</text>
+      </view>
       
       <view class="menu-list">
-        <view class="menu-item">
+        <view class="menu-item" :style="{ animationDelay: '0ms' }">
           <view class="item-left">
-            <view class="icon-wrapper" style="background: #F2F3F5;">
-              <u-icon name="info-circle" size="22" color="#909399"></u-icon>
+            <view class="icon-box bg-gray-soft">
+              <u-icon name="info-circle" size="20" color="#86909C"></u-icon>
             </view>
-            <text class="item-text">版本信息</text>
+            <view class="item-info">
+              <text class="item-title">版本信息</text>
+            </view>
           </view>
           <view class="item-right">
             <text class="version-text">v{{ version }}</text>
           </view>
         </view>
         
-        <view class="menu-item" @click="contactSupport">
+        <view class="menu-item" @click="contactSupport" :style="{ animationDelay: '50ms' }">
           <view class="item-left">
-            <view class="icon-wrapper" style="background: #E8F5FF;">
-              <u-icon name="server-man" size="22" color="#409EFF"></u-icon>
+            <view class="icon-box bg-blue-soft">
+              <u-icon name="server-man" size="20" color="#4A90E2"></u-icon>
             </view>
-            <text class="item-text">联系客服</text>
+            <view class="item-info">
+              <text class="item-title">联系客服</text>
+              <text class="item-desc">遇到问题请联系我们</text>
+            </view>
           </view>
-          <u-icon name="arrow-right" size="16" color="#C0C4CC"></u-icon>
+          <view class="item-right">
+            <u-icon name="arrow-right" size="16" color="#C0C4CC"></u-icon>
+          </view>
         </view>
       </view>
     </view>
 
-    <!-- 退出登录按钮 -->
-    <view class="logout-section fade-in">
-      <u-button 
-        @click="showLogoutConfirm" 
-        class="logout-btn"
-        :loading="logoutLoading"
-        customStyle="height: 48px; font-size: 16px; border-radius: 12px;"
-      >
-        退出登录
-      </u-button>
+    <!-- 退出登录 -->
+    <view class="logout-section" :style="{ animationDelay: '300ms' }">
+      <view class="logout-btn" @click="showLogoutConfirm">
+        <u-icon name="close-circle" size="18" color="#FF5E78"></u-icon>
+        <text>退出登录</text>
+      </view>
+      <text class="logout-tip">退出后需要重新登录</text>
     </view>
 
     <!-- 退出确认弹窗 -->
@@ -135,8 +197,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { onShow } from '@dcloudio/uni-app';
-import { getUserInfo, clearAuth, getToken } from '@/utils/auth';
+import { getUserInfo, clearAuth } from '@/utils/auth';
 import { getUserInfo as fetchUserInfo } from '@/api/auth';
 import { getClientStats } from '@/api/client';
 
@@ -152,22 +213,32 @@ const logoutLoading = ref(false);
 const logoutModalVisible = ref(false);
 const defaultAvatar = 'https://cdn.uviewui.com/uview/album/1.jpg';
 
-// 页面显示时刷新数据
+// #ifdef H5
+import { onMounted } from 'vue';
+onMounted(() => {
+  loadUserInfo();
+  loadStats();
+  calcCacheSize();
+  getAppVersion();
+});
+// #endif
+
+// #ifndef H5
+import { onShow } from '@dcloudio/uni-app';
 onShow(() => {
   loadUserInfo();
   loadStats();
   calcCacheSize();
   getAppVersion();
 });
+// #endif
 
 const loadUserInfo = async () => {
-  // 先读取本地缓存
   const localUser = getUserInfo();
   if (localUser) {
     userInfo.value = localUser;
   }
   
-  // 然后请求最新数据
   try {
     const res: any = await fetchUserInfo();
     if (res) {
@@ -218,7 +289,6 @@ const changePassword = () => {
 };
 
 const calcCacheSize = () => {
-  // 模拟计算缓存大小
   const size = Math.floor(Math.random() * 50) + 1;
   cacheSize.value = size + 'MB';
 };
@@ -229,15 +299,12 @@ const clearCache = () => {
     content: '确定要清理缓存数据吗？清理后需要重新登录。',
     success: (res) => {
       if (res.confirm) {
-        // 保存关键登录信息
         const token = uni.getStorageSync('token');
         const userInfo = uni.getStorageSync('userInfo');
         const loginTime = uni.getStorageSync('loginTime');
 
-        // 清除所有缓存
         uni.clearStorageSync();
 
-        // 恢复登录信息
         if (token) uni.setStorageSync('token', token);
         if (userInfo) uni.setStorageSync('userInfo', userInfo);
         if (loginTime) uni.setStorageSync('loginTime', loginTime);
@@ -273,7 +340,6 @@ const handleLogout = async () => {
   logoutLoading.value = true;
   
   try {
-    // 清除登录状态
     clearAuth();
     
     uni.showToast({ 
@@ -292,65 +358,186 @@ const handleLogout = async () => {
 </script>
 
 <style lang="scss" scoped>
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
 .container {
   min-height: 100vh;
-  background-color: $omiai-bg-page;
-  padding-bottom: 40px;
+  background: linear-gradient(180deg, #F5F7FA 0%, #ffffff 30%, #F5F7FA 100%);
+  padding: 20px 16px 60px;
 }
 
-// 用户卡片
-.user-card {
-  background: linear-gradient(135deg, $omiai-primary 0%, #FF8A9B 100%);
-  padding: 40px 24px 30px;
-  border-radius: 0 0 24px 24px;
-  margin-bottom: 16px;
+// Profile Card
+.profile-card {
+  position: relative;
+  background: linear-gradient(135deg, #FF5E78 0%, #FF8A9B 50%, #FFB5C0 100%);
+  border-radius: 24px;
+  padding: 28px 20px 24px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  animation: fadeInUp 0.5s ease-out both;
+  box-shadow: 0 8px 32px rgba(255, 94, 120, 0.25);
 }
 
-.user-header {
+.card-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  
+  .bg-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    
+    &.circle-1 {
+      top: -40%;
+      right: -10%;
+      width: 200px;
+      height: 200px;
+    }
+    
+    &.circle-2 {
+      bottom: -20%;
+      left: -10%;
+      width: 150px;
+      height: 150px;
+    }
+    
+    &.circle-3 {
+      top: 30%;
+      right: 20%;
+      width: 80px;
+      height: 80px;
+      opacity: 0.5;
+    }
+  }
+}
+
+.profile-header {
+  position: relative;
   display: flex;
   align-items: center;
-  margin-bottom: 30px;
+  gap: 20px;
+  margin-bottom: 24px;
+  z-index: 1;
+}
+
+.avatar-section {
+  position: relative;
 }
 
 .avatar-wrapper {
   position: relative;
-  margin-right: 16px;
+}
+
+.avatar-ring {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.edit-avatar {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.user-status {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 4px 12px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   
-  .role-badge {
-    position: absolute;
-    bottom: -4px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.95);
-    color: $omiai-primary;
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-weight: 500;
-    white-space: nowrap;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text {
+    font-size: 11px;
+    font-weight: 600;
+    color: #FF5E78;
   }
 }
 
 .user-info {
   flex: 1;
+}
+
+.nickname {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.phone {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 12px;
+}
+
+.user-tags {
+  display: flex;
+  gap: 8px;
   
-  .nickname {
-    display: block;
-    font-size: 22px;
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 6px;
-  }
-  
-  .phone {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.85);
+  .tag {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 10px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    
+    text {
+      font-size: 11px;
+      color: #fff;
+      font-weight: 500;
+    }
   }
 }
 
-// 统计行
-.stats-row {
+// Stats Bar
+.stats-bar {
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -358,63 +545,109 @@ const handleLogout = async () => {
   border-radius: 16px;
   padding: 16px 0;
   backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 1;
 }
 
 .stat-item {
   flex: 1;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
   
-  .stat-num {
-    display: block;
-    font-size: 24px;
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 4px;
+  &:active {
+    transform: scale(0.95);
+    opacity: 0.9;
   }
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
   
-  .stat-label {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.85);
-  }
+  &.bg-blue { background: linear-gradient(135deg, #E8F3FF 0%, rgba(74, 144, 226, 0.3) 100%); }
+  &.bg-green { background: linear-gradient(135deg, #E8FFEA 0%, rgba(82, 196, 26, 0.3) 100%); }
+  &.bg-orange { background: linear-gradient(135deg, #FFF7E8 0%, rgba(255, 159, 0, 0.3) 100%); }
+}
+
+.stat-num {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .stat-divider {
   width: 1px;
-  height: 30px;
-  background: rgba(255, 255, 255, 0.3);
+  height: 40px;
+  background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
 }
 
-// 菜单区域
+// Menu Section
 .menu-section {
-  margin: 0 16px 16px;
   background: #fff;
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: $omiai-shadow-sm;
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  animation: fadeInUp 0.5s ease-out both;
 }
 
-.menu-title {
-  font-size: 15px;
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.header-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &.bg-blue { background: linear-gradient(135deg, #E8F3FF 0%, rgba(74, 144, 226, 0.12) 100%); }
+  &.bg-gray { background: linear-gradient(135deg, #F5F7FA 0%, rgba(134, 144, 156, 0.12) 100%); }
+}
+
+.section-title {
+  font-size: 17px;
   font-weight: 600;
-  color: $omiai-text-main;
-  margin-bottom: 12px;
-  padding-left: 4px;
+  color: #1D2129;
 }
 
+// Menu List
 .menu-list {
   .menu-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 4px;
-    border-bottom: 1px solid $omiai-border-light;
+    padding: 14px 0;
+    border-bottom: 1px solid #F2F3F5;
+    animation: fadeInUp 0.4s ease-out both;
+    transition: all 0.2s ease;
     
     &:last-child {
       border-bottom: none;
     }
     
     &:active {
-      opacity: 0.7;
+      background: linear-gradient(90deg, transparent 0%, rgba(255, 94, 120, 0.03) 50%, transparent 100%);
     }
   }
 }
@@ -422,47 +655,92 @@ const handleLogout = async () => {
 .item-left {
   display: flex;
   align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   
-  .icon-wrapper {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 12px;
-  }
-  
-  .item-text {
-    font-size: 15px;
-    color: $omiai-text-main;
-  }
+  &.bg-blue-soft { background: linear-gradient(135deg, #E8F3FF 0%, rgba(74, 144, 226, 0.15) 100%); }
+  &.bg-orange-soft { background: linear-gradient(135deg, #FFF7E8 0%, rgba(255, 159, 0, 0.15) 100%); }
+  &.bg-green-soft { background: linear-gradient(135deg, #E8FFEA 0%, rgba(82, 196, 26, 0.15) 100%); }
+  &.bg-gray-soft { background: linear-gradient(135deg, #F5F7FA 0%, rgba(134, 144, 156, 0.15) 100%); }
+}
+
+.item-info {
+  flex: 1;
+}
+
+.item-title {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1D2129;
+  margin-bottom: 4px;
+}
+
+.item-desc {
+  font-size: 12px;
+  color: #86909C;
 }
 
 .item-right {
   display: flex;
   align-items: center;
-  
-  .cache-size,
-  .version-text {
-    font-size: 13px;
-    color: $omiai-text-tip;
-    margin-right: 4px;
-  }
+  gap: 8px;
 }
 
-// 退出按钮
+.cache-size {
+  font-size: 13px;
+  color: #86909C;
+}
+
+.version-text {
+  font-size: 14px;
+  color: #86909C;
+  font-weight: 500;
+}
+
+// Logout Section
 .logout-section {
-  margin: 24px 16px;
+  margin-top: 8px;
+  animation: fadeInUp 0.5s ease-out both;
 }
 
 .logout-btn {
-  background: #fff;
-  color: $omiai-primary;
-  border: 1px solid $omiai-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 52px;
+  background: linear-gradient(135deg, #FFF0F2 0%, #FFFAFB 100%);
+  border: 2px solid rgba(255, 94, 120, 0.3);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  
+  text {
+    font-size: 16px;
+    font-weight: 600;
+    color: #FF5E78;
+  }
   
   &:active {
-    background: rgba(255, 94, 120, 0.05);
+    background: linear-gradient(135deg, rgba(255, 94, 120, 0.1) 0%, #FFF0F2 100%);
+    transform: scale(0.98);
   }
+}
+
+.logout-tip {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  color: #86909C;
+  margin-top: 12px;
 }
 </style>
