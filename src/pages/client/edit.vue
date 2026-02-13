@@ -190,6 +190,15 @@
                 ></u-textarea>
               </u-form-item>
 
+              <u-form-item label="父母工作" prop="parents_profession" labelPosition="top" class="textarea-item">
+                <u-textarea 
+                  v-model="form.parents_profession" 
+                  placeholder="如：父亲退休，母亲家庭主妇" 
+                  height="80" 
+                  :customStyle="textareaStyle"
+                ></u-textarea>
+              </u-form-item>
+
               <u-form-item label="对另一半要求" prop="partner_requirements" required labelPosition="top" class="textarea-item">
                 <u-textarea 
                   v-model="form.partner_requirements" 
@@ -408,6 +417,7 @@ const form = reactive({
   house_address: '',
   car_status: 1,
   family_description: '',
+  parents_profession: '',
   partner_requirements: '',
   remark: '',
   photos: ''
