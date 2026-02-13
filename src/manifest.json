@@ -68,5 +68,11 @@
     "uniStatistics": {  
         "enable": false
     },
+    /* H5特有相关 */
+    "h5" : {
+        "router" : {
+            "base" : "/h5/"
+        }
+    },
     "vueVersion" : "3"
 }
