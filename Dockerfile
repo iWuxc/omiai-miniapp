@@ -29,9 +29,9 @@ RUN npm run build:h5
 # Serve Stage
 FROM nginx:alpine
 
-# Copy build artifacts
-# UniApp H5 output is usually in dist/build/h5
-COPY --from=builder /app/dist/build/h5 /usr/share/nginx/html
+# Create h5 directory and copy build artifacts
+RUN mkdir -p /usr/share/nginx/html/h5
+COPY --from=builder /app/dist/build/h5 /usr/share/nginx/html/h5
 
 # Copy Nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
