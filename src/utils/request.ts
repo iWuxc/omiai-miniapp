@@ -109,7 +109,7 @@ http.interceptors.response.use((response) => {
 }, (response) => {
   // HTTP 状态码处理
   if (response.statusCode === 401) {
-    handleAuthError('登录已过期，请重新登录');
+    handleAuthError('登录异常，请重新登录');
   } else if (response.statusCode === 403) {
     uni.showToast({ title: '没有权限访问', icon: 'none' });
   } else if (response.statusCode == 500) {
@@ -118,7 +118,7 @@ http.interceptors.response.use((response) => {
     uni.showToast({ title: '请求超时，请检查网络', icon: 'none' });
   } else {
     uni.showToast({
-      title: '网络请求错误',
+      title: '服务异常，请稍后重试',
       icon: 'none'
     });
   }
