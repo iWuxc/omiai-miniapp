@@ -26,9 +26,6 @@
     <!-- 数据概览卡片 -->
     <view class="stats-section" :style="{ animationDelay: '100ms' }">
       <view class="stats-header">
-        <view class="section-icon">
-          <u-icon name="bar-chart" size="18" color="#FF5E78"></u-icon>
-        </view>
         <text class="section-title">数据概览</text>
       </view>
       

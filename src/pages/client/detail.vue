@@ -141,6 +141,20 @@
               </view>
               <text class="info-value">{{ client.profession || '未填写' }}</text>
             </view>
+            <view class="info-row" v-if="client.work_unit">
+              <view class="info-label">
+                <u-icon name="building" size="14" color="#909399"></u-icon>
+                <text>工作单位</text>
+              </view>
+              <text class="info-value">{{ client.work_unit }}</text>
+            </view>
+            <view class="info-row" v-if="client.position">
+              <view class="info-label">
+                <u-icon name="tags" size="14" color="#909399"></u-icon>
+                <text>职位</text>
+              </view>
+              <text class="info-value">{{ client.position }}</text>
+            </view>
             <view class="info-row">
               <view class="info-label">
                 <u-icon name="map" size="14" color="#909399"></u-icon>

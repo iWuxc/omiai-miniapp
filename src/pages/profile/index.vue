@@ -22,9 +22,6 @@
               <u-icon name="camera" size="14" color="#fff"></u-icon>
             </view>
           </view>
-          <view class="user-status" v-if="userInfo?.role">
-            <text>{{ userInfo.role === 'admin' ? '管理员' : '专业红娘' }}</text>
-          </view>
         </view>
         
         <view class="user-info">
