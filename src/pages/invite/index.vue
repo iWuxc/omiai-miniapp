@@ -158,8 +158,9 @@
                 <u-input v-model="form.work_unit" placeholder="具体工作单位" border="none"></u-input>
               </u-form-item>
 
-              <u-form-item label="工作城市" prop="work_city" required borderBottom>
-                <u-input v-model="form.work_city" placeholder="工作所在城市" border="none"></u-input>
+              <u-form-item label="工作城市" prop="work_city" required borderBottom @click="openRegionPicker('work')">
+                <u-input v-model="form.work_city" placeholder="请选择工作城市" disabled disabledColor="#fff" border="none"></u-input>
+                <u-icon slot="right" name="arrow-right" color="#C0C4CC" size="16"></u-icon>
               </u-form-item>
 
               <u-form-item label="职位" prop="position" required borderBottom>
@@ -174,8 +175,9 @@
                 </u-radio-group>
               </u-form-item>
 
-              <u-form-item label="买房地址" prop="house_address" v-if="form.house_status === 2 || form.house_status === 3" required borderBottom>
-                <u-input v-model="form.house_address" placeholder="请输入购房详细地址" border="none"></u-input>
+              <u-form-item label="买房地址" prop="house_address" v-if="form.house_status === 2 || form.house_status === 3" required borderBottom @click="openRegionPicker('house')">
+                <u-input v-model="form.house_address" placeholder="请选择购房地址" disabled disabledColor="#fff" border="none"></u-input>
+                <u-icon slot="right" name="arrow-right" color="#C0C4CC" size="16"></u-icon>
               </u-form-item>
 
               <u-form-item label="车辆情况" prop="car_status" required borderBottom>
@@ -268,6 +270,18 @@
     <!-- 提交成功弹窗 -->
     <u-modal :show="showSuccess" title="提交成功" content="红娘姐姐已收到您的资料，会尽快为您匹配哦！" @confirm="onSuccessConfirm"></u-modal>
 
+    <!-- 地区选择器 -->
+    <u-picker 
+      :show="showRegionPicker" 
+      :columns="regionColumns" 
+      keyName="name" 
+      :defaultIndex="regionDefaultIndex"
+      @confirm="onRegionConfirm" 
+      @cancel="showRegionPicker = false" 
+      @change="onRegionChange" 
+      :loading="regionLoading"
+    ></u-picker>
+
     <!-- 年月选择器弹窗 -->
     <view v-if="showCalendar" class="calendar-mask" @click="showCalendar = false">
       <view class="calendar-popup" @click.stop>
@@ -295,12 +309,24 @@
 import { ref, reactive, computed } from 'vue';
 import { createClient } from '@/api/client';
 import { uploadFile } from '@/api/common';
+import { getProvinces, getCities, getDistricts } from '@/api/china_region';
 import { config as appConfig } from '@/config';
 
 const primaryColor = '#FF5E78';
 const maleColor = '#4A90E2';
 const showCalendar = ref(false);
 const submitting = ref(false);
+
+// Region Picker State
+const showRegionPicker = ref(false);
+const regionLoading = ref(false);
+const regionType = ref<'work' | 'house'>('work');
+const regionColumns = ref<any[][]>([[], [], []]); // 省、市、区
+const regionDefaultIndex = ref<number[]>([0, 0, 0]); // 默认选中索引
+const provinceList = ref<any[]>([]);
+const cityList = ref<any[]>([]);
+const districtList = ref<any[]>([]);
+
 const showSuccess = ref(false);
 
 const currentYear = new Date().getFullYear();
@@ -344,9 +370,15 @@ const form = reactive({
   profession: '',
   work_unit: '',
   work_city: '',
+  work_province_code: '',
+  work_city_code: '',
+  work_district_code: '',
   position: '',
   house_status: 1,
   house_address: '',
+  house_province_code: '',
+  house_city_code: '',
+  house_district_code: '',
   car_status: 1,
   family_description: '',
   parents_profession: '',
@@ -494,6 +526,109 @@ const confirmSubmit = async () => {
   } finally {
     submitting.value = false;
   }
+};
+
+// 地区选择器逻辑
+const openRegionPicker = async (type: 'work' | 'house') => {
+  regionType.value = type;
+  // 强制重置选中项索引，解决回显异常
+  regionDefaultIndex.value = [0, 0, 0];
+  showRegionPicker.value = true;
+  
+  if (provinceList.value.length === 0) {
+    regionLoading.value = true;
+    try {
+      const res: any = await getProvinces();
+      provinceList.value = res || [];
+      regionColumns.value[0] = provinceList.value;
+      
+      // 默认加载第一个省的城市
+      if (provinceList.value.length > 0) {
+        const cities: any = await getCities(provinceList.value[0].code);
+        cityList.value = cities || [];
+        regionColumns.value[1] = cityList.value;
+        
+        // 默认加载第一个城市的区县
+        if (cityList.value.length > 0) {
+           const districts: any = await getDistricts(cityList.value[0].code);
+           districtList.value = districts || [];
+           regionColumns.value[2] = districtList.value;
+        } else {
+           regionColumns.value[2] = [];
+        }
+      }
+    } catch (e) {
+      uni.showToast({ title: '加载地区数据失败', icon: 'none' });
+    } finally {
+      regionLoading.value = false;
+    }
+  }
+};
+
+const onRegionChange = async (e: any) => {
+  const { columnIndex, index, indexs } = e;
+  
+  // 省份变动 -> 加载城市
+  if (columnIndex === 0) {
+    regionLoading.value = true;
+    try {
+      const provinceCode = provinceList.value[index].code;
+      const cities: any = await getCities(provinceCode);
+      cityList.value = cities || [];
+      regionColumns.value[1] = cityList.value;
+      
+      // 重置区县
+      if (cityList.value.length > 0) {
+        const districts: any = await getDistricts(cityList.value[0].code);
+        districtList.value = districts || [];
+        regionColumns.value[2] = districtList.value;
+      } else {
+        regionColumns.value[2] = [];
+      }
+    } finally {
+      regionLoading.value = false;
+    }
+  }
+  
+  // 城市变动 -> 加载区县
+  if (columnIndex === 1) {
+    regionLoading.value = true;
+    try {
+      // 注意：这里需要根据当前选中的省份索引来获取城市列表
+      // 但由于 uView 的 picker 实现，change 事件触发时 columns[1] 已经是新的城市列表了
+      // 这里的 index 是城市在 columns[1] 中的索引
+      const cityCode = cityList.value[index].code;
+      const districts: any = await getDistricts(cityCode);
+      districtList.value = districts || [];
+      regionColumns.value[2] = districtList.value;
+    } finally {
+      regionLoading.value = false;
+    }
+  }
+};
+
+const onRegionConfirm = (e: any) => {
+  const { value } = e;
+  // value 是一个数组，包含选中的对象 [省, 市, 区]
+  const province = value[0];
+  const city = value[1];
+  const district = value[2];
+  
+  const fullName = `${province?.name || ''}${city?.name || ''}${district?.name || ''}`;
+  
+  if (regionType.value === 'work') {
+    form.work_city = fullName;
+    form.work_province_code = province?.code || '';
+    form.work_city_code = city?.code || '';
+    form.work_district_code = district?.code || '';
+  } else {
+    form.house_address = fullName;
+    form.house_province_code = province?.code || '';
+    form.house_city_code = city?.code || '';
+    form.house_district_code = district?.code || '';
+  }
+  
+  showRegionPicker.value = false;
 };
 
 const onSuccessConfirm = () => {

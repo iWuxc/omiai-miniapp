@@ -23,7 +23,11 @@ const whiteListApis = [
   '/auth/send_sms',
   '/auth/login/h5',
   '/auth/login/wx',
-  '/auth/register'
+  '/auth/register',
+  '/china_region/provinces',
+  '/china_region/cities',
+  '/china_region/districts',
+  '/china_region/search'
 ];
 
 // 检查是否是白名单接口

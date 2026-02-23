@@ -66,8 +66,8 @@
         <!-- 提示信息 -->
         <view class="form-tips">
           <view class="tip-item">
-            <u-icon name="info-circle" size="14" color="#909399"></u-icon>
-            <text class="tip-text">初始密码：123456</text>
+            <!-- <u-icon name="info-circle" size="14" color="#909399"></u-icon> -->
+            <!-- <text class="tip-text">初始密码：123456</text> -->
           </view>
           <view class="tip-item link" @click="showForgetPassword">
             <text class="tip-text highlight">忘记密码？</text>
