@@ -150,6 +150,21 @@
         "navigationBarTitleText": "消息与互动",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/c_event/index",
+      "style": {
+        "navigationBarTitleText": "同城活动",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/c_event/detail",
+      "style": {
+        "navigationBarTitleText": "活动详情",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {
@@ -185,6 +200,12 @@
       {
         "pagePath": "pages/c_recommend/index",
         "text": "缘分",
+        "iconPath": "static/tabbar/add.png",
+        "selectedIconPath": "static/tabbar/add-active.png"
+      },
+      {
+        "pagePath": "pages/c_event/index",
+        "text": "活动",
         "iconPath": "static/tabbar/add.png",
         "selectedIconPath": "static/tabbar/add-active.png"
       },

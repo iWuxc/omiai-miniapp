@@ -25,7 +25,7 @@
 
       <!-- 谁喜欢我列表 -->
       <view v-if="currentTab === 1">
-        <view class="list-item blur-item" v-for="item in likedList" :key="item.interaction_id" @click="unlockProfile">
+        <view class="list-item blur-item" v-for="item in likedList" :key="item.interaction_id" @click="unlockProfile(item.user_id)">
           <!-- 前端实现高斯模糊，吸引用户付费或联系红娘解锁 -->
           <view class="avatar-wrap">
             <image class="avatar blur" :src="item.avatar || '/static/default-avatar.png'"></image>
@@ -45,14 +45,24 @@
     </scroll-view>
 
     <!-- 解锁提示弹窗 -->
-    <u-modal :show="showUnlockModal" title="解锁查看特权" content="联系您的专属红娘，或开通VIP即可查看谁喜欢了你。" :showCancelButton="true" confirmText="联系红娘" confirmColor="#FF4D6A" @confirm="contactManager" @cancel="showUnlockModal = false"></u-modal>
+    <u-modal 
+      :show="showUnlockModal" 
+      title="解锁查看特权" 
+      content="使用20红豆解锁查看谁喜欢了你，或开通VIP免费查看。" 
+      :showCancelButton="true" 
+      cancelText="联系红娘"
+      confirmText="立即解锁" 
+      confirmColor="#FF4D6A" 
+      @confirm="doUnlock" 
+      @cancel="contactManager"
+    ></u-modal>
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { cInteract } from '@/api/c_api'
+import { cInteract, cPay } from '@/api/c_api'
 
 const tabList = ref([{ name: '互相心动' }, { name: '谁喜欢我' }])
 const currentTab = ref(0)
@@ -60,6 +70,7 @@ const currentTab = ref(0)
 const mutualList = ref<any[]>([])
 const likedList = ref<any[]>([])
 const showUnlockModal = ref(false)
+const currentUnlockTarget = ref<number>(0)
 
 onShow(() => {
   fetchData()
@@ -80,13 +91,44 @@ const fetchData = async () => {
   }
 }
 
-const unlockProfile = () => {
+const unlockProfile = (userId: number) => {
+  currentUnlockTarget.value = userId
   showUnlockModal.value = true
+}
+
+const doUnlock = async () => {
+  showUnlockModal.value = false
+  try {
+    const res: any = await cPay.unlockProfile(currentUnlockTarget.value)
+    if (res.code === 200) {
+      uni.showToast({ title: '解锁成功！', icon: 'success' })
+      // 刷新列表，将被解锁的用户显示真实信息
+      fetchData()
+      
+      // 可以跳转到详情页展示真实信息
+      setTimeout(() => {
+        uni.navigateTo({ url: `/pages/c_recommend/detail?id=${currentUnlockTarget.value}` })
+      }, 1000)
+    } else {
+      uni.showModal({
+        title: '余额不足',
+        content: res.msg || '您的红豆不足，是否前往充值？',
+        confirmText: '去充值',
+        success: (e) => {
+          if (e.confirm) {
+            // TODO: 跳转到充值页面
+            uni.showToast({ title: '充值功能开发中', icon: 'none' })
+          }
+        }
+      })
+    }
+  } catch (e) {
+    uni.showToast({ title: '解锁失败', icon: 'none' })
+  }
 }
 
 const contactManager = () => {
   showUnlockModal.value = false
-  // 模拟联系红娘，可以跳转到客服或者拨打电话
   uni.showToast({ title: '已通知专属红娘', icon: 'success' })
 }
 </script>
