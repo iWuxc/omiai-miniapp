@@ -54,5 +54,19 @@ export const cInteract = {
         target_client_id: Number(targetId)
       }
     })
+  },
+  // 谁喜欢我
+  getReceivedLikes: () => {
+    return uni.request({
+      url: '/api/c/interact/received_likes',
+      method: 'GET'
+    })
+  },
+  // 互相心动
+  getMutualMatches: () => {
+    return uni.request({
+      url: '/api/c/interact/mutual_matches',
+      method: 'GET'
+    })
   }
 }

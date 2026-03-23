@@ -143,6 +143,13 @@
         "navigationBarTitleText": "AI匹配详情",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/c_message/index",
+      "style": {
+        "navigationBarTitleText": "消息与互动",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {
@@ -180,6 +187,12 @@
         "text": "缘分",
         "iconPath": "static/tabbar/add.png",
         "selectedIconPath": "static/tabbar/add-active.png"
+      },
+      {
+        "pagePath": "pages/c_message/index",
+        "text": "消息",
+        "iconPath": "static/tabbar/profile.png",
+        "selectedIconPath": "static/tabbar/profile-active.png"
       },
       {
         "pagePath": "pages/profile/index",
