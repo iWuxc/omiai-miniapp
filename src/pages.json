@@ -115,6 +115,34 @@
         "navigationBarTitleText": "提醒列表",
         "enablePullDownRefresh": true
       }
+    },
+    {
+      "path": "pages/c_client/login",
+      "style": {
+        "navigationBarTitleText": "微信登录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/c_profile/edit",
+      "style": {
+        "navigationBarTitleText": "完善资料"
+      }
+    },
+    {
+      "path": "pages/c_recommend/index",
+      "style": {
+        "navigationBarTitleText": "发现缘分",
+        "navigationStyle": "custom",
+        "disableScroll": true
+      }
+    },
+    {
+      "path": "pages/c_recommend/detail",
+      "style": {
+        "navigationBarTitleText": "AI匹配详情",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {
@@ -144,6 +172,12 @@
       {
         "pagePath": "pages/form/index",
         "text": "录入",
+        "iconPath": "static/tabbar/add.png",
+        "selectedIconPath": "static/tabbar/add-active.png"
+      },
+      {
+        "pagePath": "pages/c_recommend/index",
+        "text": "缘分",
         "iconPath": "static/tabbar/add.png",
         "selectedIconPath": "static/tabbar/add-active.png"
       },
