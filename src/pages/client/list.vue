@@ -20,16 +20,40 @@
         </view>
       </view>
 
-      <!-- 2) 筛选栏 (简化版：状态切换) -->
-      <view class="filter-section">
-        <u-subsection 
-          :list="statusList" 
-          :current="currentStatusIndex" 
-          @change="onStatusChange"
-          activeColor="#FF5E78"
-          bgColor="#fff"
-          mode="subsection"
-        ></u-subsection>
+      <!-- 2) 状态筛选栏 (温润玉石风) -->
+      <view class="jade-tab-section">
+        <view class="jade-tab-container">
+          <view 
+            v-for="(item, index) in statusList" 
+            :key="index"
+            class="jade-tab-item"
+            :class="{ active: currentStatusIndex === index }"
+            @click="onStatusChange(index)"
+          >
+            <!-- 玉石质感背景 -->
+            <view class="jade-tab-bg">
+              <view class="jade-highlight"></view>
+              <view class="jade-shadow"></view>
+            </view>
+            
+            <!-- 内容层 -->
+            <view class="jade-content">
+              <text class="jade-name">{{ item.name }}</text>
+              <view v-if="item.count > 0" class="jade-orb">
+                <text class="jade-count">{{ item.count > 99 ? '99+' : item.count }}</text>
+              </view>
+            </view>
+            
+            <!-- 激活态装饰 -->
+            <view v-if="currentStatusIndex === index" class="jade-glow"></view>
+            <view v-if="currentStatusIndex === index" class="jade-underline">
+              <view class="jade-dot"></view>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 底部柔和阴影 -->
+        <view class="jade-section-shadow"></view>
       </view>
     </view>
 
@@ -206,13 +230,15 @@ const applyFilter = () => {
 };
 
 // 单人模式：移除公海池Tab，改为状态筛选
-const statusList = [
-  { name: '全部' },
-  { name: '单身' },
-  { name: '匹配中' },
-  { name: '已拉手' }
-];
+const statusList = ref([
+  { name: '全部', count: 0 },
+  { name: '单身', count: 0 },
+  { name: '匹配中', count: 0 },
+  { name: '已拉手', count: 0 }
+]);
 const currentStatusIndex = ref(0);
+const scrollLeft = ref(0);
+const tabItemWidth = 80; // 每个 tab 项的估算宽度
 
 const clientList = ref<Client[]>([]);
 const page = ref(1);
@@ -288,6 +314,9 @@ const onSearch = () => {
 
 const onStatusChange = (index: number) => {
   currentStatusIndex.value = index;
+  // 计算 scrollLeft 使选中的 tab 居中显示
+  const screenWidth = uni.getSystemInfoSync().windowWidth;
+  scrollLeft.value = index * tabItemWidth - screenWidth / 2 + tabItemWidth / 2;
   fetchData(true);
 };
 
@@ -346,8 +375,8 @@ const getCoverImage = (item: Client) => {
 }
 
 .container {
-  padding-top: 100px;
-  background-color: $omiai-bg-page;
+  padding-top: 132px;
+  background: linear-gradient(180deg, #F5F5F3 0%, $omiai-bg-page 200px);
   min-height: 100vh;
 }
 
@@ -393,8 +422,228 @@ const getCoverImage = (item: Client) => {
     }
   }
   
-  .filter-section {
-    padding: 0 16px;
+  /* ========== 温润玉石风 Tab 导航栏 ========== */
+  .jade-tab-section {
+    position: relative;
+    padding: 12px 16px 16px;
+    background: linear-gradient(180deg, #FAFAFA 0%, #F5F5F3 100%);
+    
+    .jade-tab-container {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .jade-tab-item {
+      position: relative;
+      flex: 1;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      
+      /* 玉石质感背景 */
+      .jade-tab-bg {
+        position: absolute;
+        inset: 0;
+        border-radius: 24px;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        
+        /* 基础层 - 象牙白 */
+        &::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(145deg, #FEFDFB 0%, #F7F5F2 50%, #EDE9E4 100%);
+          border-radius: 24px;
+        }
+        
+        /* 玉石光泽 */
+        .jade-highlight {
+          position: absolute;
+          top: 1px;
+          left: 15%;
+          right: 15%;
+          height: 45%;
+          background: linear-gradient(180deg, 
+            rgba(255,255,255,0.9) 0%, 
+            rgba(255,255,255,0.4) 50%,
+            transparent 100%
+          );
+          border-radius: 20px 20px 50% 50%;
+          opacity: 0.8;
+        }
+        
+        /* 底部阴影 */
+        .jade-shadow {
+          position: absolute;
+          bottom: -2px;
+          left: 10%;
+          right: 10%;
+          height: 60%;
+          background: linear-gradient(180deg, 
+            transparent 0%, 
+            rgba(139, 125, 107, 0.08) 100%
+          );
+          border-radius: 0 0 24px 24px;
+          filter: blur(4px);
+        }
+      }
+      
+      /* 内容层 */
+      .jade-content {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        
+        .jade-name {
+          font-size: 14px;
+          font-weight: 500;
+          color: #7A726A;
+          letter-spacing: 0.5px;
+          transition: all 0.3s ease;
+          font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        /* 玉佩式徽章 */
+        .jade-orb {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: linear-gradient(145deg, #E8E4DF 0%, #D4CFC8 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 
+            inset 0 1px 2px rgba(255,255,255,0.8),
+            inset 0 -1px 2px rgba(0,0,0,0.05),
+            0 1px 2px rgba(0,0,0,0.08);
+          
+          .jade-count {
+            font-size: 10px;
+            font-weight: 700;
+            color: #8B7D6B;
+            transform: scale(0.85);
+          }
+        }
+      }
+      
+      /* 激活态 - 胭脂玉色 */
+      &.active {
+        .jade-tab-bg {
+          &::before {
+            background: linear-gradient(145deg, #FFF5F5 0%, #FFE8E8 50%, #FFDADA 100%);
+          }
+          
+          .jade-shadow {
+            background: linear-gradient(180deg, 
+              transparent 0%, 
+              rgba(255, 94, 120, 0.12) 100%
+            );
+          }
+        }
+        
+        .jade-content {
+          .jade-name {
+            color: #C45C5C;
+            font-weight: 600;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+          }
+          
+          .jade-orb {
+            background: linear-gradient(145deg, #FF8FA3 0%, #FF5E78 100%);
+            box-shadow: 
+              inset 0 1px 2px rgba(255,255,255,0.4),
+              0 2px 4px rgba(255, 94, 120, 0.3);
+            
+            .jade-count {
+              color: #fff;
+            }
+          }
+        }
+      }
+      
+      /* 激活光晕 */
+      .jade-glow {
+        position: absolute;
+        inset: -2px;
+        border-radius: 26px;
+        background: linear-gradient(145deg, 
+          rgba(255, 143, 163, 0.3) 0%, 
+          rgba(255, 94, 120, 0.1) 50%,
+          transparent 70%
+        );
+        filter: blur(8px);
+        z-index: 1;
+        animation: jade-pulse 2s ease-in-out infinite;
+      }
+      
+      /* 底部装饰线 */
+      .jade-underline {
+        position: absolute;
+        bottom: 4px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        
+        &::before,
+        &::after {
+          content: '';
+          width: 8px;
+          height: 2px;
+          background: linear-gradient(90deg, transparent, #E8A5A5);
+          border-radius: 1px;
+        }
+        
+        &::after {
+          background: linear-gradient(90deg, #E8A5A5, transparent);
+        }
+        
+        .jade-dot {
+          width: 4px;
+          height: 4px;
+          background: #FF5E78;
+          border-radius: 50%;
+          box-shadow: 0 0 4px rgba(255, 94, 120, 0.5);
+        }
+      }
+      
+      &:active {
+        transform: scale(0.96);
+        
+        .jade-tab-bg::before {
+          background: linear-gradient(145deg, #F5F0EC 0%, #EBE5E0 100%);
+        }
+      }
+    }
+    
+    /* 底部柔和阴影 */
+    .jade-section-shadow {
+      position: absolute;
+      bottom: 0;
+      left: 20px;
+      right: 20px;
+      height: 20px;
+      background: linear-gradient(180deg, 
+        rgba(139, 125, 107, 0.03) 0%, 
+        transparent 100%
+      );
+      filter: blur(8px);
+      z-index: 1;
+    }
+  }
+  
+  @keyframes jade-pulse {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.02); }
   }
 }
 

@@ -272,16 +272,16 @@
           </view>
         </view>
 
-        <!-- 自我介绍 -->
+        <!-- 红娘备注 -->
         <view class="info-card">
           <view class="card-header">
             <view class="header-icon intro">
               <u-icon name="edit-pen-fill" size="16" color="#fff"></u-icon>
             </view>
-            <text class="header-title">自我介绍</text>
+            <text class="header-title">红娘备注</text>
           </view>
           <view class="card-body">
-            <text class="intro-text">{{ client.remark || '暂无自我介绍' }}</text>
+            <text class="intro-text">{{ client.remark || '暂无备注' }}</text>
           </view>
         </view>
 
