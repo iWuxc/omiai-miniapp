@@ -301,7 +301,7 @@
       keyName="name" 
       :defaultIndex="regionDefaultIndex"
       @confirm="onRegionConfirm" 
-      @cancel="showRegionPicker = false" 
+      @cancel="onRegionCancel"
       @change="onRegionChange" 
       :loading="regionLoading"
     ></u-picker>
@@ -339,6 +339,11 @@ const regionDefaultIndex = ref<number[]>([0, 0, 0]); // 默认选中索引
 const provinceList = ref<any[]>([]);
 const cityList = ref<any[]>([]);
 const districtList = ref<any[]>([]);
+
+// 用于保存上一次的状态，判断哪个字段发生了变化
+let lastProvinceCode = '';
+let lastCityCode = '';
+const regionPickerKey = ref(0); // 用于强制重新渲染 picker
 
 const currentYear = new Date().getFullYear();
 const yearOptions: string[] = [];
@@ -552,80 +557,88 @@ const confirmSubmit = async () => {
 // 地区选择器逻辑
 const openRegionPicker = async (type: 'work' | 'house') => {
   regionType.value = type;
-  // 强制重置选中项索引，解决回显异常
-  regionDefaultIndex.value = [0, 0, 0];
-  showRegionPicker.value = true;
+  regionLoading.value = true;
   
-  if (provinceList.value.length === 0) {
-    regionLoading.value = true;
-    try {
-      const res: any = await getProvinces();
-      provinceList.value = res || [];
-      regionColumns.value[0] = provinceList.value;
+  try {
+    // 先加载省份数据
+    const provincesRes: any = await getProvinces();
+    provinceList.value = provincesRes || [];
+    cityList.value = [];
+    districtList.value = [];
+    
+    if (provinceList.value.length > 0) {
+      // 加载第一个省份的城市
+      const citiesRes: any = await getCities(provinceList.value[0].code);
+      cityList.value = citiesRes || [];
       
-      // 默认加载第一个省的城市
-      if (provinceList.value.length > 0) {
-        const cities: any = await getCities(provinceList.value[0].code);
-        cityList.value = cities || [];
-        regionColumns.value[1] = cityList.value;
-        
-        // 默认加载第一个城市的区县
-        if (cityList.value.length > 0) {
-           const districts: any = await getDistricts(cityList.value[0].code);
-           districtList.value = districts || [];
-           regionColumns.value[2] = districtList.value;
-        } else {
-           regionColumns.value[2] = [];
-        }
+      if (cityList.value.length > 0) {
+        // 加载第一个城市的区县
+        const districtsRes: any = await getDistricts(cityList.value[0].code);
+        districtList.value = districtsRes || [];
       }
-    } catch (e) {
-      uni.showToast({ title: '加载地区数据失败', icon: 'none' });
-    } finally {
-      regionLoading.value = false;
     }
+    
+    // 数据加载完成后才更新 columns 并显示
+    regionColumns.value = [provinceList.value, cityList.value, districtList.value];
+    regionDefaultIndex.value = [0, 0, 0];
+    showRegionPicker.value = true;
+  } catch (e) {
+    uni.showToast({ title: '加载地区数据失败', icon: 'none' });
+  } finally {
+    regionLoading.value = false;
   }
 };
 
 const onRegionChange = async (e: any) => {
-  const { columnIndex, index, indexs } = e;
+  const { value } = e;
   
-  // 省份变动 -> 加载城市
-  if (columnIndex === 0) {
+  const currentProvince = value[0];
+  const currentCity = value[1];
+  
+  // 判断省份是否发生了变化
+  if (currentProvince && currentProvince.code !== lastProvinceCode) {
+    lastProvinceCode = currentProvince.code;
+    
     regionLoading.value = true;
     try {
-      const provinceCode = provinceList.value[index].code;
-      const cities: any = await getCities(provinceCode);
+      const cities: any = await getCities(currentProvince.code);
       cityList.value = cities || [];
       regionColumns.value[1] = cityList.value;
       
       // 重置区县
       if (cityList.value.length > 0) {
+        lastCityCode = '';
         const districts: any = await getDistricts(cityList.value[0].code);
         districtList.value = districts || [];
         regionColumns.value[2] = districtList.value;
       } else {
+        districtList.value = [];
         regionColumns.value[2] = [];
       }
     } finally {
       regionLoading.value = false;
     }
+    return;
   }
   
-  // 城市变动 -> 加载区县
-  if (columnIndex === 1) {
+  // 判断城市是否发生了变化
+  if (currentCity && currentCity.code !== lastCityCode) {
+    lastCityCode = currentCity.code;
+    
     regionLoading.value = true;
     try {
-      // 注意：这里需要根据当前选中的省份索引来获取城市列表
-      // 但由于 uView 的 picker 实现，change 事件触发时 columns[1] 已经是新的城市列表了
-      // 这里的 index 是城市在 columns[1] 中的索引
-      const cityCode = cityList.value[index].code;
-      const districts: any = await getDistricts(cityCode);
+      const districts: any = await getDistricts(currentCity.code);
       districtList.value = districts || [];
       regionColumns.value[2] = districtList.value;
     } finally {
       regionLoading.value = false;
     }
   }
+};
+
+const onRegionCancel = () => {
+  console.log('取消选择');
+  showRegionPicker.value = false;
 };
 
 const onRegionConfirm = (e: any) => {

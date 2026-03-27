@@ -480,7 +480,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
+import { onLoad, onShow } from '@dcloudio/uni-app';
 import { getClientDetail, matchClient, deleteClient, type Client } from '@/api/client';
 import { dissolveMatch } from '@/api/match';
 import { uploadFile } from '@/api/common';
@@ -583,9 +583,18 @@ const editClient = () => {
 };
 
 // 页面加载
+let clientId = 0;
+
 onLoad((options: any) => {
   if (options.id) {
-    loadDetail(parseInt(options.id));
+    clientId = parseInt(options.id);
+    loadDetail(clientId);
+  }
+});
+
+onShow(() => {
+  if (clientId) {
+    loadDetail(clientId);
   }
 });
 

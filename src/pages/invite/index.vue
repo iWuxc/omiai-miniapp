@@ -327,6 +327,10 @@ const provinceList = ref<any[]>([]);
 const cityList = ref<any[]>([]);
 const districtList = ref<any[]>([]);
 
+// 用于保存上一次的状态，判断哪个字段发生了变化
+let lastProvinceCode = '';
+let lastCityCode = '';
+
 const showSuccess = ref(false);
 
 const currentYear = new Date().getFullYear();
@@ -566,39 +570,44 @@ const openRegionPicker = async (type: 'work' | 'house') => {
 };
 
 const onRegionChange = async (e: any) => {
-  const { columnIndex, index, indexs } = e;
+  const { value } = e;
   
-  // 省份变动 -> 加载城市
-  if (columnIndex === 0) {
+  const currentProvince = value[0];
+  const currentCity = value[1];
+  
+  // 判断省份是否发生了变化
+  if (currentProvince && currentProvince.code !== lastProvinceCode) {
+    lastProvinceCode = currentProvince.code;
+    
     regionLoading.value = true;
     try {
-      const provinceCode = provinceList.value[index].code;
-      const cities: any = await getCities(provinceCode);
+      const cities: any = await getCities(currentProvince.code);
       cityList.value = cities || [];
       regionColumns.value[1] = cityList.value;
       
       // 重置区县
       if (cityList.value.length > 0) {
+        lastCityCode = '';
         const districts: any = await getDistricts(cityList.value[0].code);
         districtList.value = districts || [];
         regionColumns.value[2] = districtList.value;
       } else {
+        districtList.value = [];
         regionColumns.value[2] = [];
       }
     } finally {
       regionLoading.value = false;
     }
+    return;
   }
   
-  // 城市变动 -> 加载区县
-  if (columnIndex === 1) {
+  // 判断城市是否发生了变化
+  if (currentCity && currentCity.code !== lastCityCode) {
+    lastCityCode = currentCity.code;
+    
     regionLoading.value = true;
     try {
-      // 注意：这里需要根据当前选中的省份索引来获取城市列表
-      // 但由于 uView 的 picker 实现，change 事件触发时 columns[1] 已经是新的城市列表了
-      // 这里的 index 是城市在 columns[1] 中的索引
-      const cityCode = cityList.value[index].code;
-      const districts: any = await getDistricts(cityCode);
+      const districts: any = await getDistricts(currentCity.code);
       districtList.value = districts || [];
       regionColumns.value[2] = districtList.value;
     } finally {
