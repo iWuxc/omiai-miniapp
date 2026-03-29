@@ -1,5 +1,9 @@
 <template>
   <view class="container">
+    <view class="nav-header" @click="goBack">
+        <u-icon name="arrow-left" size="22" color="#1D2129"></u-icon>
+    </view>
+
     <view class="form-wrapper">
       <!-- 1) 标题区 (中式亲和力：大标题 + 温馨提示) -->
       <view class="header" :style="{ animationDelay: '0ms' }">
@@ -644,6 +648,10 @@ const onSuccessConfirm = () => {
   showSuccess.value = false;
   uni.reLaunch({ url: '/pages/home/index' });
 };
+
+const goBack = () => {
+  uni.navigateBack();
+};
 </script>
 
 <style lang="scss" scoped>
@@ -667,6 +675,21 @@ const onSuccessConfirm = () => {
   min-height: 100vh;
   background: linear-gradient(180deg, #F5F7FA 0%, #ffffff 20%, #F5F7FA 100%);
   padding: 20px 16px 60px;
+}
+
+.nav-header {
+    position: relative;
+    z-index: 100;
+    margin-bottom: 20px;
+    padding-top: 30px;
+    padding-left: 10px;
+    display: inline-flex;
+    padding-right: 20px;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 50%;
 }
 
 .form-wrapper {

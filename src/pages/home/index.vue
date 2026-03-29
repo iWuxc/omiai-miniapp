@@ -8,8 +8,8 @@
       <view class="header-content">
         <view class="greeting">
           <view class="welcome-badge">
-            <u-icon name="sun" size="14" color="#FF9F00"></u-icon>
-            <text>早安</text>
+            <u-icon :name="greetingIcon" size="14" color="#FFFFFF"></u-icon>
+            <text>{{ greetingText }}</text>
           </view>
           <text class="welcome-title">红娘姐姐</text>
           <text class="welcome-date">{{ currentDate }} · 又是充满希望的一天</text>
@@ -155,22 +155,23 @@
       </view>
       
       <view class="todo-list">
-        <view class="todo-item" v-for="(item, index) in todoList" :key="index" :style="{ animationDelay: `${index * 100}ms` }">
-          <view class="todo-priority" :class="item.priority">
+        <view class="todo-item" v-for="(item, index) in todoList" :key="item.id" :style="{ animationDelay: `${index * 100}ms` }">
+          <view class="todo-priority" :class="item.priorityClass">
             <view class="priority-dot"></view>
           </view>
           <view class="todo-content">
             <view class="todo-header">
               <text class="todo-title">{{ item.title }}</text>
-              <view class="todo-tag" :class="item.priority">{{ item.tag }}</view>
+              <view class="todo-tag" :class="item.priorityClass">{{ item.tag }}</view>
             </view>
             <view class="todo-desc">
               <u-icon name="account" size="12" color="#86909C"></u-icon>
-              <text>{{ item.client }}</text>
+              <text v-if="item.client">{{ item.client.name }}</text>
+              <text v-else>系统提醒</text>
               <text class="todo-time">{{ item.time }}</text>
             </view>
           </view>
-          <view class="todo-action">
+          <view class="todo-action" @click="goToReminder(item)">
             <u-icon name="arrow-right" size="16" color="#C0C4CC"></u-icon>
           </view>
         </view>
@@ -204,6 +205,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { getClientStats } from '@/api/client';
 import { getBannerList, type Banner } from '@/api/banner';
+import { getTodayReminders } from '@/api/reminder';
 import { config as appConfig } from '@/config';
 
 const banners = ref<Banner[]>([]);
@@ -213,11 +215,22 @@ const stats = ref({
   pending: 0
 });
 
-const todoList = ref([
-  { title: '王先生申请匹配审核', client: '王先生(ID:1024)', time: '10分钟前', priority: 'high', tag: '急' },
-  { title: '李女士资料待完善', client: '李女士(ID:1025)', time: '30分钟前', priority: 'normal', tag: '待处理' },
-  { title: '张先生匹配结果反馈', client: '张先生(ID:1026)', time: '1小时前', priority: 'low', tag: '跟进' }
-]);
+interface TodoItem {
+  id: number;
+  title: string;
+  content: string;
+  type: number;
+  priority: number;
+  is_done: number;
+  remind_at: string;
+  client_id?: number;
+  client?: { id: number; name: string };
+  time: string;
+  tag: string;
+  priorityClass: string;
+}
+
+const todoList = ref<TodoItem[]>([]);
 
 const currentDate = computed(() => {
   const date = new Date();
@@ -225,17 +238,107 @@ const currentDate = computed(() => {
   return `${date.getMonth() + 1}月${date.getDate()}日 ${weekDays[date.getDay()]}`;
 });
 
+const greetingText = computed(() => {
+  const hour = new Date().getHours();
+  if (hour < 6) return '凌晨好';
+  if (hour < 9) return '早上好';
+  if (hour < 12) return '上午好';
+  if (hour < 14) return '中午好';
+  if (hour < 18) return '下午好';
+  if (hour < 22) return '晚上好';
+  return '夜深了';
+});
+
+const greetingIcon = computed(() => {
+  const hour = new Date().getHours();
+  if (hour < 6) return 'moon';
+  if (hour < 9) return 'sun';
+  if (hour < 12) return 'sun';
+  if (hour < 14) return 'sun';
+  if (hour < 18) return 'sun';
+  if (hour < 22) return 'cloud-moon';
+  return 'moon';
+});
+
+const formatTime = (timeStr: string) => {
+  if (!timeStr) return '';
+  const date = new Date(timeStr);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const remindDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  if (remindDate.getTime() === today.getTime()) {
+    return `今天 ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  }
+
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+  if (remindDate.getTime() === yesterday.getTime()) {
+    return '昨天';
+  }
+
+  const diff = today.getTime() - remindDate.getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  if (days < 7) {
+    return `${days}天前`;
+  }
+
+  return `${date.getMonth() + 1}月${date.getDate()}日`;
+};
+
+const getPriorityClass = (priority: number) => {
+  if (priority === 3) return 'high';
+  if (priority === 2) return 'normal';
+  return 'low';
+};
+
+const getTagText = (item: any) => {
+  if (item.is_done === 1) return '已完成';
+  if (item.priority === 3) return '高优先级';
+  if (item.type === 1) return '跟进';
+  if (item.type === 2) return '生日';
+  if (item.type === 3) return '纪念日';
+  if (item.type === 4) return '提醒';
+  return '待处理';
+};
+
+const transformReminder = (item: any): TodoItem => {
+  return {
+    id: item.id,
+    title: item.title || '待办事项',
+    content: item.content || '',
+    type: item.type || 1,
+    priority: item.priority || 1,
+    is_done: item.is_done || 0,
+    remind_at: item.remind_at || '',
+    client_id: item.client_id,
+    client: item.client,
+    time: formatTime(item.remind_at),
+    tag: getTagText(item),
+    priorityClass: getPriorityClass(item.priority)
+  };
+};
+
 const fetchData = async () => {
   try {
-    const [statsRes, bannerRes]: any = await Promise.all([
+    const [statsRes, bannerRes, todayRes]: any = await Promise.all([
       getClientStats(),
-      getBannerList()
+      getBannerList(),
+      getTodayReminders()
     ]);
-    
+
     stats.value = statsRes || { total: 0, today: 0, pending: 0 };
     banners.value = bannerRes?.list || (Array.isArray(bannerRes) ? bannerRes : []);
+
+    const reminders = todayRes?.list || todayRes || [];
+    todoList.value = reminders.slice(0, 3).map(transformReminder);
   } catch (e) {
     console.error('Fetch home data failed:', e);
+    try {
+      const statsRes = await getClientStats();
+      stats.value = statsRes || { total: 0, today: 0, pending: 0 };
+    } catch (e2) {
+      console.error('Fetch stats failed:', e2);
+    }
   }
 };
 
@@ -272,6 +375,14 @@ const shareInvite = () => {
       uni.showToast({ title: '邀请链接已复制', icon: 'none' });
     }
   });
+};
+
+const goToReminder = (item: TodoItem) => {
+  if (item.client_id) {
+    uni.navigateTo({ url: `/pages/client/detail?id=${item.client_id}` });
+  } else {
+    uni.switchTab({ url: '/pages/reminder/list' });
+  }
 };
 </script>
 

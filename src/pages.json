@@ -110,6 +110,20 @@
       }
     },
     {
+      "path": "pages/profile/password",
+      "style": {
+        "navigationBarTitleText": "修改密码",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/profile/edit",
+      "style": {
+        "navigationBarTitleText": "编辑资料",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/reminder/list",
       "style": {
         "navigationBarTitleText": "提醒列表",

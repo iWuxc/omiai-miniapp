@@ -10,7 +10,7 @@ export function aiAnalyzeMatch(clientAId, clientBId) {
   return http.post('/ai/analyze', {
     client_a_id: clientAId,
     client_b_id: clientBId
-  })
+  }, { timeout: 60000 })
 }
 
 /**
@@ -22,5 +22,5 @@ export function getIceBreakerTopics(clientAId, clientBId) {
   return http.post('/ai/ice-breaker', {
     client_a_id: clientAId,
     client_b_id: clientBId
-  })
+  }, { timeout: 60000 })
 }

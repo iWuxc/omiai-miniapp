@@ -12,7 +12,7 @@ export function getReminderList(params) {
  * 获取今日提醒
  */
 export function getTodayReminders() {
-  return http.get('/reminders/today')
+  return http.get('/reminders/list')
 }
 
 /**
