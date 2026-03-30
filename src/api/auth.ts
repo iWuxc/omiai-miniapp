@@ -15,3 +15,14 @@ export const wxLogin = (code: string) => {
 export const getUserInfo = () => {
   return http.get('/user/info');
 };
+
+export const changePassword = (oldPassword: string, newPassword: string) => {
+  return http.post('/user/change_password', {
+    old_password: oldPassword,
+    new_password: newPassword
+  });
+};
+
+export const updateUserInfo = (data: { nickname?: string; avatar?: string }) => {
+  return http.post('/user/update', data);
+};

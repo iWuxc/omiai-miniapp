@@ -4,11 +4,11 @@
     <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="nav-content">
         <view class="back-btn" @click="goBack">
-          <u-icon name="arrow-left" size="22" color="#fff"></u-icon>
+          <u-icon name="arrow-left" size="22" color="#1D2129"></u-icon>
         </view>
         <text class="nav-title">牵手档案</text>
         <view class="more-btn" @click="showMoreMenu">
-          <u-icon name="more-dot-fill" size="22" color="#fff"></u-icon>
+          <u-icon name="more-dot-fill" size="22" color="#1D2129"></u-icon>
         </view>
       </view>
     </view>

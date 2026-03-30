@@ -137,9 +137,9 @@
         </view>
         <text class="section-title">关于</text>
       </view>
-      
+
       <view class="menu-list">
-        <view class="menu-item" :style="{ animationDelay: '0ms' }">
+        <view class="menu-item icp-item" :style="{ animationDelay: '0ms' }">
           <view class="item-left">
             <view class="icon-box bg-gray-soft">
               <u-icon name="info-circle" size="20" color="#86909C"></u-icon>
@@ -152,8 +152,8 @@
             <text class="version-text">v{{ version }}</text>
           </view>
         </view>
-        
-        <view class="menu-item" @click="contactSupport" :style="{ animationDelay: '50ms' }">
+
+        <view class="menu-item" :style="{ animationDelay: '50ms' }">
           <view class="item-left">
             <view class="icon-box bg-blue-soft">
               <u-icon name="server-man" size="20" color="#4A90E2"></u-icon>
@@ -168,6 +168,11 @@
           </view>
         </view>
       </view>
+    </view>
+
+    <!-- ICP备案 -->
+    <view class="icp-section" :style="{ animationDelay: '350ms' }">
+      <text class="icp-text">京ICP备2026007084号-2</text>
     </view>
 
     <!-- 退出登录 -->
@@ -220,7 +225,6 @@ onMounted(() => {
 });
 // #endif
 
-// #ifndef H5
 import { onShow } from '@dcloudio/uni-app';
 onShow(() => {
   loadUserInfo();
@@ -228,7 +232,6 @@ onShow(() => {
   calcCacheSize();
   getAppVersion();
 });
-// #endif
 
 const loadUserInfo = async () => {
   const localUser = getUserInfo();
@@ -278,11 +281,11 @@ const navigateTo = (url: string) => {
 };
 
 const editProfile = () => {
-  uni.showToast({ title: '功能开发中', icon: 'none' });
+  uni.navigateTo({ url: '/pages/profile/edit' });
 };
 
 const changePassword = () => {
-  uni.showToast({ title: '功能开发中', icon: 'none' });
+  uni.navigateTo({ url: '/pages/profile/password' });
 };
 
 const calcCacheSize = () => {
@@ -739,5 +742,16 @@ const handleLogout = async () => {
   font-size: 12px;
   color: #86909C;
   margin-top: 12px;
+}
+
+.icp-section {
+  text-align: center;
+  padding: 20px 0 40px;
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+.icp-text {
+  font-size: 12px;
+  color: #86909C;
 }
 </style>
