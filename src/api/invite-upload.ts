@@ -2,25 +2,17 @@ import { config as appConfig } from '@/config';
 
 const getUploadUrl = () => {
   if (import.meta.env.PROD) {
-    return `${appConfig.baseUrl}/common/upload`;
+    return `${appConfig.baseUrl}/invite/common/upload`;
   }
-  // 开发环境使用完整地址
-  return `http://localhost:10131/api/common/upload`;
+  return `http://localhost:10131/api/invite/common/upload`;
 };
 
-export const uploadFile = (filePath: string) => {
+export const inviteUploadFile = (filePath: string) => {
   return new Promise((resolve, reject) => {
-    const token = uni.getStorageSync('token');
-    const header: any = {};
-    if (token) {
-      header['Authorization'] = `Bearer ${token}`;
-    }
-
     uni.uploadFile({
       url: getUploadUrl(),
       filePath: filePath,
       name: 'file',
-      header: header,
       success: (res) => {
         if (res.statusCode !== 200) {
           console.error('Upload failed with status:', res.statusCode);

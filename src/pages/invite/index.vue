@@ -42,6 +42,7 @@
                   border-radius="50"
                   accept="image"
                   :capture="['album', 'camera']"
+                  :sizeType="['compressed', 'original']"
                >
                   <view class="avatar-placeholder">
                     <u-icon name="plus" size="32" color="#FF5E78"></u-icon>
@@ -250,6 +251,7 @@
                 height="90"
                 accept="image"
                 :capture="['album', 'camera']"
+                :sizeType="['compressed', 'original']"
               ></u-upload>
             </view>
           </view>
@@ -266,9 +268,25 @@
     </view>
     
     <u-modal :show="showConfirm" title="确认提交" content="请核对您的信息是否准确，提交后红娘姐姐将开始为您牵线匹配" @confirm="confirmSubmit" @cancel="showConfirm = false" showCancelButton></u-modal>
-    
-    <!-- 提交成功弹窗 -->
-    <u-modal :show="showSuccess" title="提交成功" content="红娘姐姐已收到您的资料，会尽快为您匹配哦！" @confirm="onSuccessConfirm"></u-modal>
+
+    <!-- 提交成功页面 -->
+    <view v-if="showSuccessPage" class="success-page">
+      <view class="success-content">
+        <view class="success-icon">
+          <u-icon name="checkmark-circle" size="80" color="#52C41A"></u-icon>
+        </view>
+        <text class="success-title">提交成功</text>
+        <text class="success-desc">感谢您的参与，红娘姐姐会尽快与您联系</text>
+        <text class="success-tip">请保持手机畅通</text>
+        
+        <view class="success-actions">
+          <view class="action-btn secondary" @click="fillForAnother">
+            <u-icon name="plus" size="16" color="#FF5E78"></u-icon>
+            <text>为他人填写</text>
+          </view>
+        </view>
+      </view>
+    </view>
 
     <!-- 地区选择器 -->
     <u-picker 
@@ -307,8 +325,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue';
-import { createClient } from '@/api/client';
-import { uploadFile } from '@/api/common';
+import { createInviteClient } from '@/api/invite';
+import { inviteUploadFile } from '@/api/invite-upload';
 import { getProvinces, getCities, getDistricts } from '@/api/china_region';
 import { config as appConfig } from '@/config';
 
@@ -331,7 +349,7 @@ const districtList = ref<any[]>([]);
 let lastProvinceCode = '';
 let lastCityCode = '';
 
-const showSuccess = ref(false);
+const showSuccessPage = ref(false);
 
 const currentYear = new Date().getFullYear();
 const yearOptions: string[] = [];
@@ -438,7 +456,7 @@ const afterReadAvatar = async (event: any) => {
   avatarList.value.push({ ...file, status: 'uploading', message: '上传中' });
   try {
     const filePath = file.url || file.path;
-    const res: any = await uploadFile(filePath);
+    const res: any = await inviteUploadFile(filePath);
     const url = res.url.startsWith('http') ? res.url : appConfig.assetsUrl + res.url;
     avatarList.value[0].url = url;
     avatarList.value[0].status = 'success';
@@ -470,7 +488,7 @@ const afterReadPhotos = async (event: any) => {
 
     try {
       const filePath = f.url || f.path;
-      const res: any = await uploadFile(filePath);
+      const res: any = await inviteUploadFile(filePath);
       const url = res.url.startsWith('http') ? res.url : appConfig.assetsUrl + res.url;
       item.url = url;
       item.status = 'success';
@@ -523,10 +541,15 @@ const confirmSubmit = async () => {
     if (payload.income) payload.income = Number(payload.income);
     if (payload.age) payload.age = Number(payload.age);
     
-    await createClient(payload);
-    showSuccess.value = true;
-  } catch (e) {
-    // Error handled
+    await createInviteClient(payload);
+    showSuccessPage.value = true;
+  } catch (e: any) {
+    const errorMsg = e?.msg || '';
+    if (errorMsg.includes('手机号已提交') || errorMsg.includes('已提交过档案')) {
+      uni.showToast({ title: '该手机号已提交过，请勿重复提交', icon: 'none' });
+    } else {
+      uni.showToast({ title: '提交失败，请重试', icon: 'none' });
+    }
   } finally {
     submitting.value = false;
   }
@@ -640,9 +663,48 @@ const onRegionConfirm = (e: any) => {
   showRegionPicker.value = false;
 };
 
-const onSuccessConfirm = () => {
-  showSuccess.value = false;
-  uni.reLaunch({ url: '/pages/home/index' });
+const fillForAnother = () => {
+  showSuccessPage.value = false;
+  form.name = '';
+  form.gender = 1;
+  form.birthday = '';
+  form.age = undefined;
+  form.zodiac = '';
+  form.phone = '';
+  form.height = undefined;
+  form.weight = undefined;
+  form.income = undefined;
+  form.education = 3;
+  form.marital_status = 1;
+  form.address = '';
+  form.profession = '';
+  form.work_unit = '';
+  form.work_city = '';
+  form.work_province_code = '';
+  form.work_city_code = '';
+  form.work_district_code = '';
+  form.position = '';
+  form.house_status = 1;
+  form.house_address = '';
+  form.house_province_code = '';
+  form.house_city_code = '';
+  form.house_district_code = '';
+  form.car_status = 1;
+  form.family_description = '';
+  form.parents_profession = '';
+  form.partner_requirements = '';
+  avatarList.value = [];
+  photoList.value = [];
+  form.avatar = '';
+  form.photos = '';
+  
+  provinceList.value = [];
+  cityList.value = [];
+  districtList.value = [];
+  lastProvinceCode = '';
+  lastCityCode = '';
+  
+  uni.showToast({ title: '已清空，可重新填写', icon: 'success' });
 };
 </script>
 
@@ -973,6 +1035,91 @@ const onSuccessConfirm = () => {
     text-align: center;
     font-size: 17px;
     color: #1D2129;
+  }
+}
+
+// Success Page
+.success-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, #F5F7FA 0%, #ffffff 50%, #F5F7FA 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.success-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 32px;
+  text-align: center;
+}
+
+.success-icon {
+  margin-bottom: 24px;
+  animation: scaleIn 0.5s ease-out;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.success-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1D2129;
+  margin-bottom: 16px;
+}
+
+.success-desc {
+  font-size: 16px;
+  color: #4E5969;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.success-tip {
+  font-size: 14px;
+  color: #86909C;
+  margin-bottom: 48px;
+}
+
+.success-actions {
+  width: 100%;
+  max-width: 280px;
+}
+
+.action-btn {
+  width: 100%;
+  height: 48px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  
+  &.secondary {
+    background: linear-gradient(135deg, #FFF0F2 0%, rgba(255, 94, 120, 0.1) 100%);
+    border: 1px solid rgba(255, 94, 120, 0.3);
+    color: #FF5E78;
+    
+    &:active {
+      background: linear-gradient(135deg, rgba(255, 94, 120, 0.15) 0%, #FFF0F2 100%);
+    }
   }
 }
 </style>
