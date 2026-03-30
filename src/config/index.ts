@@ -4,9 +4,9 @@ export const config = {
   baseUrl: import.meta.env.PROD
     ? (import.meta.env.VITE_API_BASE_URL || 'http://localhost:10131/api')
     : '/api',
-  
-  // H5 Domain for invitations
-  h5Domain: import.meta.env.VITE_H5_DOMAIN || 'http://localhost:5173/#',
+
+  // H5 Domain for invitations (邀请落地页)
+  h5Domain: import.meta.env.VITE_H5_DOMAIN || 'http://localhost:5173/h5',
 
   // Static Assets Base URL
   assetsUrl: import.meta.env.PROD

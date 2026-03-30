@@ -8,9 +8,9 @@ const apiPort = process.env.VITE_API_PORT || 10131;
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [uni()],
-  esbuild: {
-    drop: ['console', 'debugger'],
-  },
+  // esbuild: {
+  //   drop: ['console', 'debugger'],
+  // },
   server: {
     host,
     port: h5Port,
@@ -19,6 +19,11 @@ export default defineConfig({
         target: `http://${host}:${apiPort}`,
         changeOrigin: true,
         // 保留 /api 前缀
+      },
+      "/static": {
+        target: `http://${host}:${apiPort}`,
+        changeOrigin: true,
+        // 保留 /static 前缀
       },
     },
   },

@@ -198,15 +198,75 @@
         indicatorStyle="bottom: 10px"
       ></u-swiper>
     </view>
+
+    <!-- 海报抽屉 -->
+    <u-popup :show="showPosterDrawer" mode="bottom" round="20" @close="showPosterDrawer = false">
+      <view class="poster-drawer">
+        <view class="drawer-header">
+          <text class="drawer-title">邀请海报</text>
+          <u-icon name="close" size="20" color="#666" @click="showPosterDrawer = false"></u-icon>
+        </view>
+        <view class="poster-container">
+          <div class="poster" id="poster">
+            <div class="poster-content">
+              <div class="header">
+                <div class="logo">
+                  <span class="logo-text">❤</span>
+                </div>
+                <div class="brand">缘定今生</div>
+                <div class="slogan">执子之手 与子偕老</div>
+              </div>
+
+              <div class="image-area">
+                <img 
+                  src="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=400&h=400&fit=crop"
+                  class="poster-image"
+                />
+              </div>
+
+              <div class="title">
+                <div class="title-main">愿有岁月可回首</div>
+                <div class="title-sub">且以深情共白头 · 遇见最好的你</div>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="footer">
+                <div class="qr-box">
+                  <img :src="qrCodeUrl" class="qrcode-img" />
+                </div>
+                <div class="qr-info">
+                  <div class="qr-title">扫码填写档案</div>
+                  <div class="qr-desc">长按识别二维码<br>填写您的个人信息</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </view>
+        <view class="drawer-tip">
+          <text>点击下方按钮保存海报图片</text>
+        </view>
+        <view class="drawer-actions">
+          <u-button type="primary" shape="circle" color="#FF5E78" @click="savePoster">
+            保存图片
+          </u-button>
+        </view>
+      </view>
+    </u-popup>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { getClientStats } from '@/api/client';
 import { getBannerList, type Banner } from '@/api/banner';
 import { getTodayReminders } from '@/api/reminder';
 import { config as appConfig } from '@/config';
+import html2canvas from 'html2canvas';
+
+const showPosterDrawer = ref(false);
+const qrCodeUrl = ref('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==');
+const posterRef = ref();
 
 const banners = ref<Banner[]>([]);
 const stats = ref({
@@ -368,13 +428,59 @@ const navigateTo = (url: string) => {
 };
 
 const shareInvite = () => {
-  const inviteUrl = `${appConfig.h5Domain}/pages/invite/index?referrer=admin`;
-  uni.setClipboardData({
-    data: inviteUrl,
-    success: () => {
-      uni.showToast({ title: '邀请链接已复制', icon: 'none' });
+  const formUrl = 'https://www.omiai.top/#/pages/invite/index?referrer=admin';
+  qrCodeUrl.value = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=10&data=' + encodeURIComponent(formUrl);
+  showPosterDrawer.value = true;
+};
+
+const savePoster = async () => {
+  uni.showLoading({ title: '生成中...' });
+  
+  try {
+    const element = document.getElementById('poster');
+    if (!element) {
+      uni.hideLoading();
+      uni.showToast({ title: '无法获取海报', icon: 'none' });
+      return;
     }
-  });
+    
+    await nextTick();
+    
+    // 等待所有图片加载完成
+    const images = element.querySelectorAll('img');
+    await Promise.all(
+      Array.from(images).map(img => {
+        if (img.complete) {
+          return Promise.resolve();
+        }
+        return new Promise<void>((resolve) => {
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+        });
+      })
+    );
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#FFF5F8'
+    });
+    
+    const link = document.createElement('a');
+    link.download = '邀请海报.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    
+    uni.hideLoading();
+    uni.showToast({ title: '保存成功', icon: 'success' });
+  } catch (error) {
+    console.error('保存海报失败:', error);
+    uni.hideLoading();
+    uni.showToast({ title: '保存失败，请长按保存', icon: 'none' });
+  }
 };
 
 const goToReminder = (item: TodoItem) => {
@@ -883,5 +989,201 @@ const goToReminder = (item: TodoItem) => {
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   animation: fadeInUp 0.5s ease-out both;
+}
+
+// Poster Drawer
+.poster-drawer {
+  padding: 20px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.drawer-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1D2129;
+}
+
+.poster-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.poster {
+  width: 320px;
+  height: 600px;
+  background: linear-gradient(180deg, #FFF5F8 0%, #FFFEFF 30%, #FFFFFF 100%);
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 20px 50px rgba(255, 94, 120, 0.15);
+}
+
+.poster::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60%;
+  height: 40%;
+  background: radial-gradient(circle, rgba(255, 94, 120, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.poster::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 70%;
+  height: 50%;
+  background: radial-gradient(circle, rgba(255, 182, 193, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.poster-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 20px 32px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.logo {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 10px;
+  background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(255, 154, 158, 0.3);
+}
+
+.logo-text {
+  font-size: 26px;
+  color: white;
+}
+
+.brand {
+  font-size: 22px;
+  font-weight: 700;
+  color: #FF6B8A;
+  letter-spacing: 3px;
+}
+
+.slogan {
+  font-size: 11px;
+  color: #B8A4A4;
+  letter-spacing: 2px;
+  margin-top: 3px;
+}
+
+.image-area {
+  width: 100%;
+  height: 200px;
+  margin: 12px 0;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.poster-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.title-main {
+  font-size: 17px;
+  color: #333333;
+  font-weight: 600;
+  margin-bottom: 5px;
+  letter-spacing: 1.5px;
+}
+
+.title-sub {
+  font-size: 11px;
+  color: #999999;
+  line-height: 1.6;
+}
+
+.divider {
+  height: 1px;
+  margin: 0 16px 16px;
+  background: linear-gradient(90deg, transparent, rgba(255, 154, 158, 0.3), transparent);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-top: 12px;
+}
+
+.qr-box {
+  width: 78px;
+  height: 78px;
+  background: white;
+  border-radius: 10px;
+  padding: 5px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(255, 154, 158, 0.2);
+  border: 1px solid #FFE6E9;
+}
+
+.qrcode-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.qr-info {
+  flex: 1;
+}
+
+.qr-title {
+  font-size: 13px;
+  color: #333333;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.qr-desc {
+  font-size: 10px;
+  color: #999999;
+  line-height: 1.5;
+}
+
+.drawer-tip {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #999;
+}
+
+.drawer-actions {
+  margin-top: 16px;
 }
 </style>
