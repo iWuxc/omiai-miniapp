@@ -136,7 +136,7 @@
           </view>
           <text class="action-text">添加回访</text>
         </view>
-        <view class="action-item" @click="navigateToCompare">
+        <view class="action-item" @click="showViewProfileMenu">
           <view class="action-icon secondary">
             <u-icon name="file-text-fill" size="20" color="#fff"></u-icon>
           </view>
@@ -427,6 +427,44 @@
       </view>
     </u-popup>
 
+    <!-- 解除匹配 Modal -->
+    <u-popup :show="showDissolveModal" mode="bottom" @close="showDissolveModal = false" round="20">
+      <view class="modal-container">
+        <view class="modal-header">
+          <text class="modal-title">解除匹配</text>
+          <u-icon name="close" size="24" color="#909399" @click="showDissolveModal = false"></u-icon>
+        </view>
+
+        <view class="modal-body">
+          <view class="warning-box">
+            <u-icon name="error-circle-fill" size="40" color="#FF4D4F"></u-icon>
+            <text class="warning-text">此操作将解除双方的匹配关系，状态将更新为"分手"，请谨慎操作！</text>
+          </view>
+
+          <view class="form-group">
+            <text class="form-label">解除原因 <text class="required">*</text></text>
+            <textarea 
+              v-model="dissolveForm.reason" 
+              class="form-textarea"
+              placeholder="请输入解除匹配的原因..."
+              maxlength="200"
+            ></textarea>
+            <text class="char-count">{{ dissolveForm.reason.length }}/200</text>
+          </view>
+        </view>
+
+        <view class="modal-footer">
+          <button class="btn-secondary" @click="showDissolveModal = false">取消</button>
+          <button class="btn-danger" @click="submitDissolve" :disabled="dissolveLoading">
+            <text v-if="!dissolveLoading">确认解除</text>
+            <view v-else class="btn-loading">
+              <view class="spinner"></view>
+            </view>
+          </button>
+        </view>
+      </view>
+    </u-popup>
+
     <!-- 日期选择器 -->
     <u-calendar 
       :show="showDatePicker" 
@@ -441,9 +479,8 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue';
 import { onLoad, onReady } from '@dcloudio/uni-app';
-import { getFollowUps, createFollowUp, updateMatchStatus, getStatusHistory } from '@/api/match';
+import { getFollowUps, createFollowUp, updateMatchStatus, getStatusHistory, getMatchDetail, dissolveMatch } from '@/api/match';
 import type { MatchStatusHistory } from '@/api/match';
-import http from '@/utils/request';
 
 // 状态栏高度
 const statusBarHeight = ref(44);
@@ -460,10 +497,12 @@ const statusHistory = ref<MatchStatusHistory[]>([]);
 const showFollowUpModal = ref(false);
 const showStatusModal = ref(false);
 const showDatePicker = ref(false);
+const showDissolveModal = ref(false);
 const matchId = ref(0);
 const minDate = ref(Date.now());
 const uFormRef = ref();
 const loading = ref(false);
+const dissolveLoading = ref(false);
 
 const defaultAvatar = 'https://cdn.uviewui.com/uview/album/1.jpg';
 
@@ -487,6 +526,10 @@ const followUpForm = reactive({
 
 const statusForm = reactive({
   status: 1,
+  reason: ''
+});
+
+const dissolveForm = reactive({
   reason: ''
 });
 
@@ -543,20 +586,37 @@ const showMoreMenu = () => {
       } else if (res.tapIndex === 1) {
         uni.navigateTo({ url: `/pages/client/detail?id=${record.value.female_client?.id}` });
       } else if (res.tapIndex === 2) {
-        uni.showModal({
-          title: '确认解除',
-          content: '确定要解除这对情侣的匹配关系吗？',
-          confirmColor: '#FF4D4F',
-          success: (res) => {
-            if (res.confirm) {
-              // TODO: 调用解除匹配API
-              uni.showToast({ title: '功能开发中', icon: 'none' });
-            }
-          }
-        });
+        showDissolveModal.value = true;
       }
     }
   });
+};
+
+// 提交解除匹配
+const submitDissolve = async () => {
+  if (!dissolveForm.reason.trim()) {
+    uni.showToast({ title: '请输入解除原因', icon: 'none' });
+    return;
+  }
+
+  dissolveLoading.value = true;
+  try {
+    await dissolveMatch({
+      client_id: record.value.male_client?.id,
+      reason: dissolveForm.reason
+    });
+    uni.showToast({ title: '解除匹配成功', icon: 'success' });
+    showDissolveModal.value = false;
+    dissolveForm.reason = '';
+    
+    setTimeout(() => {
+      uni.navigateBack();
+    }, 1500);
+  } catch (e) {
+    uni.showToast({ title: '解除失败', icon: 'none' });
+  } finally {
+    dissolveLoading.value = false;
+  }
 };
 
 // 预览头像
@@ -566,10 +626,26 @@ const previewAvatar = (avatar: string) => {
   }
 };
 
+// 显示查看档案菜单
+const showViewProfileMenu = () => {
+  uni.showActionSheet({
+    itemList: ['查看男方档案', '查看女方档案', '对比分析'],
+    success: (res) => {
+      if (res.tapIndex === 0) {
+        uni.navigateTo({ url: `/pages/client/detail?id=${record.value.male_client?.id}` });
+      } else if (res.tapIndex === 1) {
+        uni.navigateTo({ url: `/pages/client/detail?id=${record.value.female_client?.id}` });
+      } else if (res.tapIndex === 2) {
+        navigateToCompare();
+      }
+    }
+  });
+};
+
 // 跳转到对比页面
 const navigateToCompare = () => {
   uni.navigateTo({
-    url: `/pages/match/compare?maleId=${record.value.male_client?.id}&femaleId=${record.value.female_client?.id}`
+    url: `/pages/match/compare?clientId=${record.value.male_client?.id}&candidateId=${record.value.female_client?.id}`
   });
 };
 
@@ -584,9 +660,9 @@ onLoad((options: any) => {
 
 const fetchDetail = async () => {
   try {
-    const res: any = await http.get(`/couples/list`, { params: { id: matchId.value } });
-    if (res && res.length > 0) {
-      record.value = res[0];
+    const res: any = await getMatchDetail(matchId.value);
+    if (res) {
+      record.value = res;
       statusForm.status = record.value.status;
     }
   } catch (e) {}
@@ -1719,6 +1795,51 @@ const getStatusClass = (status: number) => {
         }
       }
     }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #FF7875 0%, #FF4D4F 100%);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(255, 77, 79, 0.3);
+
+      &:active {
+        transform: scale(0.98);
+        box-shadow: 0 2px 8px rgba(255, 77, 79, 0.25);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+      }
+
+      .btn-loading {
+        .spinner {
+          width: 20px;
+          height: 20px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+      }
+    }
+  }
+}
+
+// 警告提示框
+.warning-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+  background: linear-gradient(135deg, #FFF1F0 0%, #FFF5F5 100%);
+  border-radius: 16px;
+  margin-bottom: 20px;
+
+  .warning-text {
+    margin-top: 12px;
+    font-size: 14px;
+    color: #FF4D4F;
+    text-align: center;
+    line-height: 1.6;
   }
 }
 

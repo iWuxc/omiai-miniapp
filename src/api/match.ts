@@ -38,6 +38,10 @@ export const getMatchList = (params: any) => {
   return http.get('/couples/list', { params });
 };
 
+export const getMatchDetail = (id: number) => {
+  return http.get(`/couples/detail/${id}`);
+};
+
 export const createMatch = (data: MatchRecord) => {
   return http.post('/couples/create', data);
 };
